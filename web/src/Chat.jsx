@@ -191,7 +191,7 @@ export default function Chat({
                     style={{ animationDelay: `${i * 140}ms` }}
                   />
                 ))}
-                <span className="ml-2 text-xs text-muted-foreground">Mapping your idea…</span>
+                <span className="ml-2 text-xs text-muted-foreground">Claude is mapping everything it would build… (about 30–60 s)</span>
               </div>
             )}
           </div>

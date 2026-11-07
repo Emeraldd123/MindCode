@@ -10,6 +10,8 @@ export interface Deps {
   ai: AI;
   /** Start generating build `bid`. Netlify: trigger the background function. Tests / fake mode: run inline. */
   startBuild(sid: string, bid: string): Promise<void>;
+  /** Start processing the pending chat turn. Netlify: background function. Omitted (tests / fake mode): run inline. */
+  startTurn?(sid: string): Promise<void>;
   newId?: () => string;
 }
 
@@ -32,6 +34,35 @@ async function callAI<T>(p: () => Promise<T>): Promise<T> {
     console.error("AI call failed", e);
     throw new HttpError(502, `AI call failed: ${(e as Error).message}`);
   }
+}
+
+/**
+ * Process the pending chat turn: ask the AI to update the map, merge, and save.
+ * Used by the turn background function and inline in tests and fake mode.
+ * On failure the user's message is removed again, so a retry starts clean.
+ */
+export async function runTurn(deps: Pick<Deps, "storage" | "ai">, sid: string): Promise<void> {
+  const s = await deps.storage.get(sid);
+  if (!s || s.turn?.status !== "pending") return;
+  let out: Awaited<ReturnType<AI["updateMap"]>>;
+  try {
+    out = await deps.ai.updateMap(s.messages, s.map);
+  } catch (e) {
+    console.error("AI call failed", e);
+    const latest = (await deps.storage.get(sid)) ?? s;
+    const last = latest.messages.at(-1);
+    if (last?.role === "user") latest.messages = latest.messages.slice(0, -1);
+    latest.turn = { status: "error", error: `AI call failed: ${(e as Error).message}`, changed: [], started_at: s.turn.started_at };
+    await deps.storage.put(latest);
+    return;
+  }
+  // Re-read so approvals/locks made while Claude was thinking are kept (mergeMap protects them).
+  const latest = (await deps.storage.get(sid)) ?? s;
+  latest.messages = [...latest.messages, { role: "assistant", text: out.reply ?? "" }];
+  const changed = mergeMap(latest, out.map ?? {}, userTurn(latest));
+  if (changed.length >= BIG_CHANGE) addCheckpoint(latest, `Turn ${userTurn(latest)}: ${changed.length} bubbles changed`);
+  latest.turn = { status: "done", changed, started_at: s.turn.started_at };
+  await deps.storage.put(latest);
 }
 
 /** Run a build to completion and save it. Used by the background function and by fake mode. */
@@ -107,13 +138,18 @@ async function route(req: Request, deps: Deps): Promise<Response> {
 
   if (m === "POST" && rest.length === 1 && rest[0] === "messages") {
     const text = await readText(req);
-    const msgs = [...s.messages, { role: "user" as const, text }];
-    const out = await callAI(() => ai.updateMap(msgs, s.map));
-    s.messages = [...msgs, { role: "assistant", text: out.reply ?? "" }];
-    const changed = mergeMap(s, out.map ?? {}, userTurn(s));
-    if (changed.length >= BIG_CHANGE) addCheckpoint(s, `Turn ${userTurn(s)}: ${changed.length} bubbles changed`);
+    if (s.turn?.status === "pending") throw new HttpError(409, "Claude is still working on the previous message");
+    s.messages = [...s.messages, { role: "user" as const, text }];
+    s.turn = { status: "pending", changed: [], started_at: Date.now() };
     await save();
-    return json({ reply: out.reply ?? "", map: s.map, changed });
+    if (deps.startTurn) await deps.startTurn(s.id);
+    else await runTurn(deps, s.id);
+    const after = (await storage.get(s.id)) ?? s;
+    const t = after.turn;
+    if (t?.status === "pending") return json({ pending: true, turn: t }, 202);
+    if (t?.status === "error") throw new HttpError(502, t.error || "AI call failed");
+    const reply = [...after.messages].reverse().find((x) => x.role === "assistant")?.text ?? "";
+    return json({ reply, map: after.map, changed: t?.changed ?? [] });
   }
 
   if (rest[0] === "nodes" && rest[1]) {

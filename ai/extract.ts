@@ -40,8 +40,8 @@ Respond with a JSON object containing:
 
 ### SIZE LIMITS (strict, the response must stay small):
 - Return ONLY new or changed nodes. Never repeat unchanged nodes; the app keeps them automatically.
-- First turn: 8 to 12 nodes total (root + all four facets). Later turns: usually 0 to 5 nodes.
-- label: at most 4 words. detail: one sentence, at most 20 words. evidence: at most 2 short quotes.
+- First turn: the full plan (root + 4 facets + their topics + concrete pages/features/APIs), typically 25 to 35 nodes. Later turns: usually 0 to 8 nodes.
+- label: at most 6 words. detail: at most 10 words. evidence: at most 1 short quote. Keep JSON compact (no extra whitespace).
 - Node fields to output: id, label, detail, kind, source, facet, inventiveness, importance, parent, evidence. Omit status and turn.
 - No markdown, no code fences. Raw JSON only.
 

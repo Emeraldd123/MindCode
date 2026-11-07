@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { handle, runBuild, type Deps } from "./router";
+import { handle, runBuild, runTurn, type Deps } from "./router";
 import { memoryStorage } from "./storage";
 import { traceOf } from "./store";
 import { stubAI } from "./stubs";
@@ -288,5 +288,35 @@ describe("facets (Ben's prompt-engineering map)", () => {
     ai.updateMap = async () => ({ reply: "ok", map: { nodes: [{ id: "n2", label: "Students" }] } });
     m = (await call("POST", `/sessions/${id}/messages`, { text: "students" })).body.map;
     expect(byId(m.nodes).n2.facet).toBe("audience");
+  });
+});
+
+describe("async chat turns (background function)", () => {
+  it("returns 202 while the turn is pending, blocks a second message, then GET shows the result", async () => {
+    const id = await sid();
+    let started = "";
+    deps.startTurn = async (s) => { started = s; };
+    const r = await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    expect([r.status, r.body.pending, r.body.turn.status]).toEqual([202, true, "pending"]);
+    expect(started).toBe(id);
+    expect((await call("POST", `/sessions/${id}/messages`, { text: "again" })).status).toBe(409);
+    // the background function runs the turn
+    await runTurn({ storage: deps.storage, ai }, id);
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.turn.status).toBe("done");
+    expect(s.turn.changed.length).toBe(5);
+    expect(s.messages.map((m: { role: string }) => m.role)).toEqual(["user", "assistant"]);
+  });
+
+  it("a failed turn removes the user's message and reports the error", async () => {
+    const id = await sid();
+    deps.startTurn = async () => {};
+    await call("POST", `/sessions/${id}/messages`, { text: "hi" });
+    ai.updateMap = async () => { throw new Error("timeout"); };
+    await runTurn({ storage: deps.storage, ai }, id);
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.turn.status).toBe("error");
+    expect(s.turn.error).toContain("timeout");
+    expect(s.messages).toHaveLength(0);
   });
 });
