@@ -412,6 +412,8 @@ try {
   if (addNodeRes.status !== 201 || addNodeRes.body?.label !== "Dark mode") {
     fail("Failed to add node for incremental rebuild");
   }
+  const sDemo1 = await storage.get(demoSid);
+  if (sDemo1) { sDemo1.last_build_at = 0; await storage.put(sDemo1); }
   const incBuildRes = await req("POST", `/sessions/${demoSid}/build`);
   let b3 = incBuildRes.body;
   if (![200, 202].includes(incBuildRes.status) || !b3?.id) {
@@ -430,6 +432,8 @@ try {
     fail(`Incremental build unexpected result: mode=${b3?.mode}, status=${b3?.status}`);
   }
 
+  const sDemo2 = await storage.get(demoSid);
+  if (sDemo2) { sDemo2.last_build_at = 0; await storage.put(sDemo2); }
   const fullBuildRes = await req("POST", `/sessions/${demoSid}/build`, { full: true });
   let b4 = fullBuildRes.body;
   if (![200, 202].includes(fullBuildRes.status) || !b4?.id) {
