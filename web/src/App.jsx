@@ -7,7 +7,7 @@ import TreeMap from './TreeMap';
 import Preview from './Preview';
 import NodeDrawer from './NodeDrawer';
 import Checkpoints from './Checkpoints';
-import GraphRecommendations from './GraphRecommendations';
+import GraphRecommendations from './GraphRecommendations.jsx'; // explicit: graphRecommendations.js differs only by case (breaks on Windows)
 import { Plus } from 'lucide-react';
 import { Button } from '@/ui/primitives/button';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/primitives/resizable';
