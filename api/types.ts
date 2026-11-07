@@ -16,6 +16,7 @@ export interface MapNode {
   parent: string | null;
   evidence: string[];
   turn: number;
+  facet?: "design" | "audience" | "functionality" | "cost" | "goal"; // ai/taxonomy.ts
 }
 
 export interface Edge { from: string; to: string; relation: "has" | "needs" | "informs" }
@@ -49,6 +50,15 @@ export interface Session {
   builds: Build[];
   checkpoints: Checkpoint[];
   node_chats: Record<string, Message[]>; // not returned to the client
+  /** The latest chat turn. Turns run in a background function (a full plan can exceed the 30 s sync limit). */
+  turn?: Turn | null;
+}
+
+export interface Turn {
+  status: "pending" | "done" | "error";
+  error?: string;
+  changed: string[];
+  started_at: number;
 }
 
 /** What the AI layer may return for a map: partial nodes, the server fills defaults and enforces rules. */

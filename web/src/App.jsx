@@ -106,23 +106,44 @@ export default function App() {
   const handleSendMessage = async (text) => {
     if (!session?.id) return;
     setError(null);
-    const userMsg = { role: 'user', text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { role: 'user', text }]);
     setChatLoading(true);
+
+    const applyChanged = (changed) => {
+      if (changed && changed.length > 0) {
+        setChangedIds(changed);
+        setTimeout(() => setChangedIds([]), 4000);
+      }
+    };
 
     try {
       const res = await api.sendMessage(session.id, text);
-      if (res.reply) {
-        setMessages((prev) => [...prev, { role: 'assistant', text: res.reply }]);
-      }
-      if (res.map) {
-        setMap(res.map);
-      }
-      if (res.changed && res.changed.length > 0) {
-        setChangedIds(res.changed);
-        setTimeout(() => setChangedIds([]), 4000);
+      if (res.pending) {
+        // A full build plan can take Opus longer than Netlify's 30 s sync limit, so the turn runs
+        // in a background function and we poll the session until it's done.
+        const started = Date.now();
+        for (;;) {
+          await new Promise((r) => setTimeout(r, 1500));
+          const s = await api.getSession(session.id);
+          const t = s.turn;
+          if (t?.status === 'pending' && Date.now() - started < 4 * 60 * 1000) continue;
+          if (t?.status === 'done') {
+            setMessages(s.messages || []);
+            setMap(s.map || { nodes: [], edges: [] });
+            applyChanged(t.changed);
+          } else {
+            setMessages(s.messages || []);
+            setError(`Failed to send message: ${t?.error || 'Claude took too long, please try again'}`);
+          }
+          break;
+        }
+      } else {
+        if (res.reply) setMessages((prev) => [...prev, { role: 'assistant', text: res.reply }]);
+        if (res.map) setMap(res.map);
+        applyChanged(res.changed);
       }
     } catch (err) {
+      setMessages((prev) => prev.slice(0, -1)); // the server didn't keep it
       setError(`Failed to send message: ${err.message}`);
     } finally {
       setChatLoading(false);

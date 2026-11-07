@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { handle, runBuild, type Deps } from "./router";
+import { handle, runBuild, runTurn, type Deps } from "./router";
 import { memoryStorage } from "./storage";
 import { traceOf } from "./store";
 import { stubAI } from "./stubs";
@@ -336,5 +336,72 @@ describe("demo session", () => {
     // the copy keeps working: preview renders with the trace script
     const html = (await call("GET", `/sessions/${a.id}/builds/${a.builds[0].id}/preview`)).body as string;
     expect(html).toContain("mc-hover");
+  });
+});
+
+describe("facets (Ben's prompt-engineering map)", () => {
+  it("keeps a valid facet, drops an invalid one, and keeps the old facet when the AI omits it", async () => {
+    const id = await sid();
+    ai.updateMap = async () => ({
+      reply: "ok",
+      map: { nodes: [
+        { id: "n1", label: "App", kind: "goal", source: "user", facet: "goal", parent: null, evidence: ["app"] },
+        { id: "n2", label: "Who is it for?", kind: "constraint", source: "unknown", facet: "audience", parent: "n1" },
+        { id: "n3", label: "Bogus", source: "inferred", facet: "vibes" as never, parent: "n1" },
+      ] },
+    });
+    let m = (await call("POST", `/sessions/${id}/messages`, { text: "app" })).body.map;
+    let n = byId(m.nodes);
+    expect([n.n1.facet, n.n2.facet, n.n3.facet]).toEqual(["goal", "audience", undefined]);
+    ai.updateMap = async () => ({ reply: "ok", map: { nodes: [{ id: "n2", label: "Students" }] } });
+    m = (await call("POST", `/sessions/${id}/messages`, { text: "students" })).body.map;
+    expect(byId(m.nodes).n2.facet).toBe("audience");
+  });
+});
+
+describe("async chat turns (background function)", () => {
+  it("returns 202 while the turn is pending, blocks a second message, then GET shows the result", async () => {
+    const id = await sid();
+    let started = "";
+    deps.startTurn = async (s) => { started = s; };
+    const r = await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    expect([r.status, r.body.pending, r.body.turn.status]).toEqual([202, true, "pending"]);
+    expect(started).toBe(id);
+    expect((await call("POST", `/sessions/${id}/messages`, { text: "again" })).status).toBe(409);
+    // the background function runs the turn
+    await runTurn({ storage: deps.storage, ai }, id);
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.turn.status).toBe("done");
+    expect(s.turn.changed.length).toBe(5);
+    expect(s.messages.map((m: { role: string }) => m.role)).toEqual(["user", "assistant"]);
+  });
+
+  it("a failed turn removes the user's message and reports the error", async () => {
+    const id = await sid();
+    deps.startTurn = async () => {};
+    await call("POST", `/sessions/${id}/messages`, { text: "hi" });
+    ai.updateMap = async () => { throw new Error("timeout"); };
+    await runTurn({ storage: deps.storage, ai }, id);
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.turn.status).toBe("error");
+    expect(s.turn.error).toContain("timeout");
+    expect(s.messages).toHaveLength(0);
+  });
+});
+
+describe("bubble chat vs. locking mid-reply", () => {
+  it("a lock made while Claude is replying is kept, and the locked bubble's text is not rewritten", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    ai.nodeChat = async () => {
+      // the user locks the bubble while Claude is still thinking
+      await call("PATCH", `/sessions/${id}/nodes/n2`, { status: "locked" });
+      return { reply: "ok", label: "REWRITTEN", detail: "REWRITTEN" };
+    };
+    const r = (await call("POST", `/sessions/${id}/nodes/n2/chat`, { text: "rename it" })).body;
+    expect([r.node.status, r.node.label]).toEqual(["locked", "Main page"]);
+    const n2 = byId((await call("GET", `/sessions/${id}`)).body.map.nodes).n2;
+    expect([n2.status, n2.label]).toEqual(["locked", "Main page"]);
+    expect(r.history).toHaveLength(2);
   });
 });

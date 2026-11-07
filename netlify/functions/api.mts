@@ -1,7 +1,7 @@
 // Every /api/* route. Logic lives in api/router.ts.
 import type { Config } from "@netlify/functions";
 import { ai } from "../../api/ai";
-import { handle, runBuild } from "../../api/router";
+import { handle, runBuild, runTurn } from "../../api/router";
 import { blobStorage } from "../../api/storage";
 
 export default async (req: Request) => {
@@ -17,6 +17,15 @@ export default async (req: Request) => {
         body: JSON.stringify({ sid, bid }),
       });
       if (!res.ok) throw new Error(`could not start build: ${res.status}`);
+    },
+    async startTurn(sid) {
+      if (process.env.MINDCODE_FAKE_LLM === "1") return runTurn({ storage, ai }, sid);
+      // A full plan from Opus can exceed the 30 s sync limit, so hand off to the background function.
+      const res = await fetch(new URL("/.netlify/functions/turn-background", req.url), {
+        method: "POST",
+        body: JSON.stringify({ sid }),
+      });
+      if (!res.ok) throw new Error(`could not start turn: ${res.status}`);
     },
   });
 };

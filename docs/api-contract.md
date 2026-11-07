@@ -22,6 +22,7 @@ interface Node {
   parent: string | null; // tree parent node id; root goal has null
   evidence: string[];    // exact user quotes that support it (empty for inferred/unknown)
   turn: number;          // chat turn that created it
+  facet?: "design" | "audience" | "functionality" | "cost" | "goal"; // Ben's prompt-engineering facet (ai/taxonomy.ts). Optional; UI may group/color by it.
 }
 
 interface Edge { from: string; to: string; relation: "has" | "needs" | "informs"; }
@@ -50,12 +51,15 @@ interface Build {
 
 interface Checkpoint { id: string; label: string; turn: number; map: MindMap; build_id?: string; }
 
+interface Turn { status: "pending" | "done" | "error"; error?: string; changed: string[]; started_at: number }
+
 interface Session {
   id: string;
   messages: Message[];   // main chat only
   map: MindMap;
   builds: Build[];
   checkpoints: Checkpoint[];
+  turn?: Turn | null;  // latest chat turn (async on Netlify)
 }
 ```
 
@@ -69,7 +73,7 @@ interface Session {
 | POST | `/api/sessions` | - | `Session` (empty map) | built |
 | POST | `/api/sessions/demo` | - | `Session`: a fresh, independent copy of the recorded real-Opus demo session (`api/demo/study-group.json`: 8 bubbles, 3 approved, finished traced build b1, 2 checkpoints). The web app calls it for `/?demo=1`. | built |
 | GET | `/api/sessions/{sid}` | - | `Session` | built |
-| POST | `/api/sessions/{sid}/messages` | `{ "text": string }` | `{ "reply": string, "map": MindMap, "changed": string[] }`; `changed` = new or updated node ids | built |
+| POST | `/api/sessions/{sid}/messages` | `{ "text": string }` | **202** `{ "pending": true, "turn": Turn }` on Netlify: the turn runs in the `turn-background` function (a full plan from Opus takes ~40 s, past the 30 s sync limit). Poll `GET /api/sessions/{sid}` until `turn.status` is `done` (then read `messages`, `map`, `turn.changed`) or `error` (`turn.error`; the user message is removed). Fake mode/tests: 200 `{ "reply", "map", "changed" }`. 409 while a turn is pending. | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`; Claude may rewrite `label`/`detail` (not if locked) | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/approve` | - | `Node` (status `approved`; a locked node stays locked) | built |
 | PATCH | `/api/sessions/{sid}/nodes/{nid}` | `{ "label"?, "detail"?, "status"?: "locked" \| "approved" \| "proposed" }` | `Node` | built |
