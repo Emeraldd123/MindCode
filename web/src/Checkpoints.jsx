@@ -11,7 +11,7 @@ import { checkpointKind, diffMaps, formatDiff, neighbor } from './checkpointLogi
  * @param {string|null} props.activeId - ID of active checkpoint, or null for live
  * @param {(checkpoint: object|null) => void} props.onSelect - Callback with selected checkpoint or null for live
  */
-export default function Checkpoints({ checkpoints = [], activeId = null, onSelect }) {
+export default function Checkpoints({ checkpoints = [], activeId = null, onSelect, onRestore }) {
   const stripRef = useRef(null);
 
   const activeCheckpoint =
@@ -43,14 +43,24 @@ export default function Checkpoints({ checkpoints = [], activeId = null, onSelec
             <span>Viewing checkpoint: <strong>{activeCheckpoint.label}</strong></span>
             <span className="checkpoint-badge-readonly">read-only</span>
           </div>
-          <button
-            type="button"
-            className="back-to-live-btn"
-            onClick={() => onSelect?.(null)}
-            title="Return to live map"
-          >
-            ← Back to live
-          </button>
+          <div className="checkpoint-banner-actions">
+            <button
+              type="button"
+              className="restore-checkpoint-btn"
+              onClick={() => onRestore?.(activeCheckpoint)}
+              title="Roll back the mind map to this checkpoint"
+            >
+              ↺ Restore this version
+            </button>
+            <button
+              type="button"
+              className="back-to-live-btn"
+              onClick={() => onSelect?.(null)}
+              title="Return to live map"
+            >
+              ← Back to live
+            </button>
+          </div>
         </div>
       )}
 

@@ -155,3 +155,26 @@ export function neighbor(checkpoints, activeId, delta) {
   }
   return cps[nextIndex];
 }
+
+/**
+ * Pure state transition helper when restoring a checkpoint.
+ * Merges the updated session from the server into client state:
+ * - Updates map and checkpoints from restoredSession
+ * - Resets activeCheckpointId to null so the user returns to the live view
+ * - Clears selected node ID and hover highlights
+ *
+ * @param {object} prevState Current UI/App state
+ * @param {object} restoredSession Session object returned by POST /checkpoints/:cid/restore
+ * @returns {object} Next UI/App state
+ */
+export function applyCheckpointRestore(prevState = {}, restoredSession = {}) {
+  return {
+    ...prevState,
+    session: restoredSession?.id ? restoredSession : prevState.session ?? null,
+    map: restoredSession?.map || { nodes: [], edges: [] },
+    checkpoints: restoredSession?.checkpoints || prevState.checkpoints || [],
+    activeCheckpointId: null,
+    selectedNodeId: null,
+    hoverNodes: [],
+  };
+}
