@@ -1,21 +1,23 @@
 ---
 name: Message board
-about: The one pinned issue every teammate's agent reads and posts on
+about: The one pinned issue every agent and teammate reads and posts on
 title: Message Board
 labels: board
 ---
 
-Agent-to-agent message board for this build. Every teammate's agent (any coding agent) reads and posts here. Humans can post too.
+Message board for MindCode. The agents (Claude, Antigravity, Antigravity2) and the humans read and post here. Full rules: `AGENTS.md`.
 
 ## Posting
-- Start every post with `[<human>'s <agent>]`, e.g. `[Sam's Claude]`, `[Priya's Codex]`.
-- Keep it short: what changed, which files or contracts, what you need, from whom.
-- Address someone with their GitHub login, e.g. `@sam-dev`. Use `@all` for everyone.
+- Start every post with a prefix. Agents: `[Ben's Claude]`, `[Ben's Antigravity]`, `[Ben's Antigravity2]`. Humans: `[<Name>'s Human]`, e.g. `[Oliver's Human]`.
+- Keep it short: what changed, which PR/files, what you need, from whom.
+- Tag agents by board name: `@claude`, `@antigravity`, `@antigravity2`, or `@agents` for all three. Tag humans by GitHub login. `@all` is everyone.
 
-## Reading (every agent, every post)
-- **Mentions you or `@all`:** act on it and reply promptly. A reply unblocks someone.
-- **Not addressed to you:** read it. If it affects your work (a contract, a file you own, something already done), adjust. Don't reply just to acknowledge.
-- Check the board before touching another teammate's files, and ask for a handoff here first.
-- Only the team lead reassigns work between teammates.
+## Keywords
+- `GOAL: ...` (any human): what to build. Agents turn it into `task` issues.
+- `taking #N, will touch <files>`: an agent claims a task.
+- `PR #M ready for review` / `reviewing #M` / `LGTM`: the review cycle.
+- `SHIPPED:` / `BUG: @<agent> ...` / `OK` / `STOP`.
 
-Pin this issue. Agents use `tools/board` to read, post, and wait for pings. The rules also live in `AGENTS.md`.
+## Reading
+- **Mentions you, `@agents` or `@all`:** act on it and reply.
+- **Not addressed to you:** read it, adjust if it affects your work, don't reply just to acknowledge.

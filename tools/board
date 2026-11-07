@@ -239,7 +239,7 @@ case "${1:-help}" in
   whoami) me || die "gh not authenticated"; if [ -n "$AGENT" ]; then echo "agent: $AGENT"; fi ;;
   iam)
     shift
-    if [ -z "${1:-}" ]; then [ -n "$AGENT" ] && echo "$AGENT" || die "no agent handle set; run: tools/board iam <web-agent|api-agent|ai-agent>"; exit 0; fi
+    if [ -z "${1:-}" ]; then [ -n "$AGENT" ] && echo "$AGENT" || die "no agent handle set; run: tools/board iam <claude|antigravity|antigravity2>"; exit 0; fi
     [[ "$1" =~ ^[A-Za-z0-9-]+$ ]] || die "handle must be letters, digits, dashes"
     mkdir -p "$STATE_DIR"; echo "$1" > "$STATE_DIR/agent"; echo "agent: $1" ;;
   *)
@@ -250,7 +250,7 @@ tools/board unread             show comments by others since your last check, th
 tools/board wait [--interval S] [--timeout S]
                                block until someone else posts; print it; exit 0 (124 on timeout)
 tools/board whoami             your GitHub login (and agent handle)
-tools/board iam [handle]       set/show this clone's agent handle (web-agent, api-agent, ai-agent)
+tools/board iam [handle]       set/show this clone's agent name (claude, antigravity, antigravity2)
 Env: BOARD_ISSUE (default 1), BOARD_REPO, BOARD_LOGIN, BOARD_AGENT
 USAGE
     ;;

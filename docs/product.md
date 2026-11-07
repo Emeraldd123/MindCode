@@ -1,6 +1,6 @@
 # Product
 
-Owned by 内山天満. Filled in after each GOAL.
+Filled in by the agent that plans each GOAL; humans check the acceptance criteria.
 
 ## Goal
 

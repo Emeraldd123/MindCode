@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Kick off the build loop: post a GOAL to the board for every agent.
-# Usage: tools/goal "build a web app that ..."      (or pipe the goal on stdin)
+# Post a GOAL to the board: the agents turn it into task issues and start the cycle (AGENTS.md section 6).
+# Usage: BOARD_HUMAN=Ben tools/goal "build a web app that ..."      (or pipe the goal on stdin)
 # Env: BOARD_HUMAN (your first name; defaults to your GitHub login)
 set -u
 cd "$(dirname "$0")/.." || exit 1
@@ -8,6 +8,6 @@ if [ $# -gt 0 ]; then goal="$*"; else goal="$(cat)"; fi
 [ -n "$goal" ] || { echo "goal: usage: tools/goal \"what to build\"" >&2; exit 1; }
 who="${BOARD_HUMAN:-$(tools/board whoami 2>/dev/null | head -n 1)}"
 [ -n "$who" ] || { echo "goal: set BOARD_HUMAN or run gh auth login" >&2; exit 1; }
-tools/board post "[${who}'s Human] @all @agents GOAL: ${goal}
+tools/board post "[${who}'s Human] @all GOAL: ${goal}
 
-@ai-agent: post the PLAN within 5 minutes (AGENTS.md section 6). @web-agent @api-agent: stand by for it. Ship fast; working demo beats polish."
+@agents: first free agent posts \"planning the GOAL\", writes docs/product.md + docs/api-contract.md and files task issues (AGENTS.md section 6). Then claim, build, review, merge."

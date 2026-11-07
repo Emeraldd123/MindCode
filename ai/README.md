@@ -1,1 +1,1 @@
-AI lane (OpenRouter client, prompts, MCP tools). Owned by Ben. Imported by api/. Empty until a GOAL.
+AI code: OpenRouter client, prompts, MCP tools. Imported by api/. Empty until a GOAL.
