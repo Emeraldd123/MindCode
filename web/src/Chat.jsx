@@ -200,7 +200,7 @@ export default function Chat({
       </div>
 
       {error && (
-        <div className="mx-4 mb-2 rounded-md border border-unknown/40 bg-unknown/10 px-3 py-2 text-xs text-red-300">
+        <div className="mc-scroll mx-4 mb-2 max-h-24 overflow-y-auto break-words rounded-md border border-unknown/40 bg-unknown/10 px-3 py-2 text-xs text-red-300 [overflow-wrap:anywhere]">
           {error}
         </div>
       )}
