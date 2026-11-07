@@ -17,8 +17,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.4rem 1rem;
-  background-color: rgba(245, 158, 11, 0.15);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+  background-color: rgba(56, 189, 248, 0.12);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.35); /* read-only = neutral sky; orange/green mean user/AI */
   font-size: 0.8rem;
   color: var(--text-main);
   animation: bannerFadeIn 0.15s ease-out;
@@ -48,9 +48,9 @@
   letter-spacing: 0.05em;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  background-color: rgba(245, 158, 11, 0.25);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  background-color: rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.5);
 }
 
 .back-to-live-btn {
