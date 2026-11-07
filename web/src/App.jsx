@@ -3,6 +3,8 @@ import * as api from './api';
 import Chat from './Chat';
 import MindMap from './MindMap';
 import Preview from './Preview';
+import NodeDrawer from './NodeDrawer';
+import Checkpoints from './Checkpoints';
 
 const STORAGE_KEY = 'mindcode_session_id';
 
@@ -18,6 +20,24 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeCheckpointId, setActiveCheckpointId] = useState(null); // null = live
+
+  // Checkpoint view: show that checkpoint's map (read-only) and its build, if any.
+  const activeCheckpoint = activeCheckpointId ? checkpoints.find((c) => c.id === activeCheckpointId) : null;
+  const viewMap = activeCheckpoint ? activeCheckpoint.map : map;
+  const selectedNode = !activeCheckpoint && selectedNodeId ? map.nodes.find((n) => n.id === selectedNodeId) : null;
+
+  // Refresh checkpoints after each chat turn and whenever a build finishes.
+  const buildStatusKey = builds.map((b) => `${b.id}:${b.status}`).join(',');
+  useEffect(() => {
+    if (!session?.id) return;
+    api.getCheckpoints(session.id).then(setCheckpoints).catch(() => {});
+  }, [session?.id, messages.length, buildStatusKey]);
+
+  const handleNodeChange = (node) => {
+    if (!node) return;
+    setMap((prev) => ({ ...prev, nodes: prev.nodes.map((n) => (n.id === node.id ? node : n)) }));
+  };
 
   // Initialize or restore session from localStorage
   useEffect(() => {
@@ -70,6 +90,7 @@ export default function App() {
       setBuilds([]);
       setCheckpoints([]);
       setSelectedNodeId(null);
+      setActiveCheckpointId(null);
       setHoverNodes([]);
       setChangedIds([]);
     } catch (err) {
@@ -154,22 +175,38 @@ export default function App() {
           </div>
           <div className="pane-body">
             <MindMap
-              map={map}
+              map={viewMap}
               highlighted={hoverNodes}
-              changedIds={changedIds}
+              changedIds={activeCheckpoint ? [] : changedIds}
               selectedId={selectedNodeId}
               onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
             />
           </div>
+          <Checkpoints
+            checkpoints={checkpoints}
+            activeId={activeCheckpointId}
+            onSelect={(cp) => setActiveCheckpointId(cp ? cp.id : null)}
+          />
+          {selectedNode && (
+            <NodeDrawer
+              key={selectedNode.id}
+              sessionId={session?.id}
+              node={selectedNode}
+              onNodeChange={handleNodeChange}
+              onClose={() => setSelectedNodeId(null)}
+              onError={setError}
+            />
+          )}
         </section>
 
         {/* Right Pane: build preview with two-way trace highlighting (#9) */}
         <section className="pane preview-pane" aria-label="Preview pane">
           <Preview
             sessionId={session?.id}
-            map={map}
+            map={viewMap}
             builds={builds}
             setBuilds={setBuilds}
+            buildId={activeCheckpoint?.build_id}
             highlightNodes={selectedNodeId ? [selectedNodeId] : []}
             onHoverNodes={setHoverNodes}
             onError={setError}
