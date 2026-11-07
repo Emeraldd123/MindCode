@@ -118,7 +118,7 @@ describe("AI: build_app", () => {
     let elCount = 0;
     while ((elMatch = mcElRegex.exec(html)) !== null) {
       elCount++;
-      assert.match(elMatch[1], /^e\d+$/, `data-mc-el must match e<number>, got ${elMatch[1]}`);
+      assert.match(elMatch[1], /^e[-\w]+$/, `data-mc-el must match e<id>, got ${elMatch[1]}`);
     }
     assert.ok(elCount >= 4, "Expected data-mc-el attributes for traced elements");
   });

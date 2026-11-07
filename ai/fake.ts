@@ -185,9 +185,9 @@ export function fakeNodeChat(
   }
 
   return {
-    reply: `Understood: "${text}". I have updated this requirement accordingly.`,
-    label: node.label,
-    detail: text || node.detail
+    reply: `Let's brainstorm on "${node.label}". You mentioned: "${text}". We can refine the scope or change its requirements as you see fit.`,
+    label: undefined,
+    detail: undefined
   };
 }
 
@@ -303,6 +303,7 @@ export function fakeBuildApp(
 <head>
   <meta charset="utf-8">
   <title>${appTitle}</title>
+  <script>// MindCode interactive trace script stub</script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
     .header { border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
