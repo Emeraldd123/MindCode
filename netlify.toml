@@ -1,0 +1,24 @@
+# MindCode on Netlify: React app in web/ + TypeScript functions in netlify/functions/.
+# Root package.json holds the function deps (Netlify installs it automatically).
+
+[build]
+  command = "npm ci --prefix web && npm run build --prefix web"
+  publish = "web/dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# `npx netlify dev` -> http://localhost:8888 serves the Vite app and /api/* from the functions.
+[dev]
+  framework = "#custom"
+  command = "npm run dev --prefix web"
+  targetPort = 5173
+  port = 8888
+  autoLaunch = false
+
+# Single-page app: unknown paths fall back to index.html (functions with config.path take priority).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

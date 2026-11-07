@@ -2,7 +2,7 @@
 
 The only routes the frontend may call. Any PR that adds or changes a route updates this file in the same PR and posts on the board when it lands.
 
-Base URL: `VITE_API_URL` (default `http://localhost:8000`). All bodies are JSON. State lives in server memory (lost on restart).
+Base URL: same origin, paths start with `/api` (served by `netlify/functions/api.mts`; locally `npx netlify dev` on http://localhost:8888). All bodies are JSON. Sessions are stored in Netlify Blobs (store `sessions`, key = session id).
 
 ## Types
 
@@ -32,6 +32,8 @@ interface Message { role: "user" | "assistant"; text: string; node_id?: string; 
 
 interface Build {
   id: string;            // "b1", "b2", ...
+  status: "pending" | "done" | "error"; // builds run in a background function; poll until not pending
+  error?: string;
   html: string;          // full standalone HTML; every traced element has data-mc="n3 n7"
   trace: Record<string, string[]>; // node id -> list of data-mc-el ids it informed
   checkpoint_id: string;
@@ -54,28 +56,29 @@ interface Session {
 
 | Method | Path | Request | Response | Status |
 |---|---|---|---|---|
-| GET | `/health` | — | `{ "ok": true }` | planned |
-| POST | `/sessions` | — | `Session` (empty map) | planned |
-| GET | `/sessions/{sid}` | — | `Session` | planned |
-| POST | `/sessions/{sid}/messages` | `{ "text": string }` | `{ "reply": string, "map": MindMap, "changed": string[] }`: `changed` = new or updated node ids | planned |
-| POST | `/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`: Claude may rewrite `label`/`detail` | planned |
-| POST | `/sessions/{sid}/nodes/{nid}/approve` | — | `Node` (status `approved`) | planned |
-| PATCH | `/sessions/{sid}/nodes/{nid}` | `{ "label"?, "detail"?, "status"?: "locked" \| "approved" \| "proposed" }` | `Node` | planned |
-| POST | `/sessions/{sid}/build` | — | `Build` (also appends a `Checkpoint`) | planned |
-| GET | `/sessions/{sid}/builds/{bid}/preview` | — | `text/html`: build HTML with the trace script injected (iframe `src`) | planned |
-| GET | `/sessions/{sid}/checkpoints` | — | `Checkpoint[]` | planned |
+| GET | `/api/health` | - | `{ "ok": true }` | built |
+| POST | `/api/sessions` | - | `Session` (empty map) | built |
+| GET | `/api/sessions/{sid}` | - | `Session` | built |
+| POST | `/api/sessions/{sid}/messages` | `{ "text": string }` | `{ "reply": string, "map": MindMap, "changed": string[] }`; `changed` = new or updated node ids | built |
+| POST | `/api/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`; Claude may rewrite `label`/`detail` (not if locked) | built |
+| POST | `/api/sessions/{sid}/nodes/{nid}/approve` | - | `Node` (status `approved`; a locked node stays locked) | built |
+| PATCH | `/api/sessions/{sid}/nodes/{nid}` | `{ "label"?, "detail"?, "status"?: "locked" \| "approved" \| "proposed" }` | `Node` | built |
+| POST | `/api/sessions/{sid}/build` | - | `Build`: **202 + status `pending`** (poll), or 200 when already finished (fake mode). Also appends a `Checkpoint`. 409 if a build is already pending. | built |
+| GET | `/api/sessions/{sid}/builds/{bid}` | - | `Build` (poll every ~2 s until status is `done` or `error`) | built |
+| GET | `/api/sessions/{sid}/builds/{bid}/preview` | - | `text/html`: build HTML with the trace script injected (iframe `src`); 409 until done | built |
+| GET | `/api/sessions/{sid}/checkpoints` | - | `Checkpoint[]` | built |
 
 Errors: `404 {"detail": "..."}` for unknown session/node, `502` when the LLM call fails or returns invalid JSON after one retry.
 
-## AI module interface (`ai/` → imported by `api/`)
+## AI module interface (`ai/`, wired in `api/ai.ts`)
 
-```python
-# ai/extract.py
-def update_map(messages: list[dict], current: dict) -> dict:  # returns {"reply": str, "map": MindMap}
-# ai/node_chat.py
-def node_chat(node: dict, map: dict, history: list[dict], text: str) -> dict:  # {"reply": str, "label": str, "detail": str}
-# ai/build.py
-def build_app(map: dict, previous_html: str | None) -> str:  # HTML with data-mc / data-mc-el attributes
+```ts
+// see api/types.ts: interface AI
+updateMap(messages: Message[], current: MindMap): Promise<{ reply: string; map: ProposedMap }>;
+nodeChat(node: Node, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string }>;
+buildApp(map: MindMap, previousHtml: string | null): Promise<string>; // HTML with data-mc / data-mc-el
 ```
 
-All three honour `MINDCODE_FAKE_LLM=1` (deterministic canned output, no network) so tests and the UI work without a key.
+`updateMap` may return partial nodes; the API fills defaults and enforces the rules: approved/locked nodes are never changed, `source` is fixed at creation, only the user approves, and omitted nodes are kept. `updateMap` and `nodeChat` must finish well inside the 30 s function limit (cap `max_tokens`). `buildApp` runs in the background function (15 min).
+
+With `MINDCODE_FAKE_LLM=1`, `api/ai.ts` uses deterministic canned output (no network, no key), and builds run inline.

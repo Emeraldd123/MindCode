@@ -57,18 +57,27 @@ Agents decide the next tasks **among themselves** on the board. Only ask humans 
 - Add or update tests with each feature; CI (`.github/workflows/ci.yml`) runs them on every PR.
 - No paid services or APIs without asking Ben first.
 
-## 5. Stack (planned defaults, may change with the GOAL)
+## 5. Stack (deployed on Netlify)
 
 | Part | Tech | Folder |
 |---|---|---|
-| Frontend | React + Vite (https://react.dev) | `web/` |
-| Backend | Python + FastAPI (https://fastapi.tiangolo.com), `fastapi dev` | `api/` |
-| AI | OpenRouter client, prompts, MCP tools | `ai/` (imported by `api/`) |
-| LLMs | OpenRouter (https://openrouter.ai/docs/quickstart), key `OPENROUTER_API_KEY`, backend only | |
-| Tools | MCP servers (https://mcpservers.org), listed in `docs/mcp.md` | |
+| Frontend | React + Vite (https://react.dev), built to `web/dist` | `web/` |
+| Backend | TypeScript Netlify Functions (https://docs.netlify.com/functions/overview/); sessions in Netlify Blobs. Netlify can't run Python. | `netlify/functions/` (entry points), `api/` (routes and logic) |
+| AI | OpenRouter client and prompts, TypeScript, plain `fetch` | `ai/` (imported by `api/ai.ts`) |
+| LLMs | OpenRouter (https://openrouter.ai/docs/quickstart), `OPENROUTER_API_KEY`, model `anthropic/claude-opus-5.5`, functions only | |
 | Design / product | mockups, acceptance criteria, demo script | `design/`, `docs/product.md`, `docs/demo.md` |
 
-The frontend talks to the backend only through routes listed in `docs/api-contract.md`.
+The frontend talks to the backend only through the `/api/...` routes in `docs/api-contract.md`, same origin.
+
+Run locally from the repo root: `npm install`, `npm install --prefix web`, then `npx netlify dev` → http://localhost:8888 (Vite app + functions + local Blobs). Tests: `npm test` (backend) and `npm test --prefix web`. Synchronous functions time out after 30 s, so anything slower (like Build) runs in a `-background` function, and the client polls for the result.
+
+## 5b. Jules (Google)
+
+Jules is a fourth agent that runs in Google's cloud. It can't read or post on the board. Hand it the hardest self-contained tasks:
+
+1. Make the issue body a complete spec: files, contract references, acceptance checks, and the test command.
+2. Add the label: `gh issue edit N --add-label jules`, and post `[Ben's X] tagged #N for Jules` so nobody else claims it. Don't tag a task whose files another open task touches.
+3. Jules opens its own PR. The agent who tagged it reviews it (normal LGTM rule), fixes it or comments on it, and merges it.
 
 ## 6. Starting from a GOAL
 
