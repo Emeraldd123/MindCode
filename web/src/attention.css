@@ -47,7 +47,7 @@
 }
 
 .attention-badge {
-  background: var(--accent-user, #d67408); /* needs the user's decision = orange */
+  background: #3b82f6;
   color: #ffffff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -79,10 +79,10 @@
   padding: 14px 10px;
   text-align: center;
   font-size: 0.8rem;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.06);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.25); /* all clear = white, like approved */
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .attention-list {
@@ -153,13 +153,13 @@
 }
 
 .source-pill.inferred {
-  background: rgba(23, 200, 148, 0.18);
-  color: #5eead4;
-  border: 1px dashed var(--accent-inferred, #17c894);
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .importance-stars {
-  color: #e2e8f0;
+  color: #fbbf24;
   font-size: 0.75rem;
   letter-spacing: 1px;
 }
