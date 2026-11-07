@@ -97,7 +97,7 @@ Errors: `404 {"detail": "..."}` for unknown session/node, `502` when the LLM cal
 ```ts
 // see api/types.ts: interface AI
 updateMap(messages: Message[], current: MindMap): Promise<{ reply: string; map: ProposedMap }>;
-nodeChat(node: Node, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string }>;
+nodeChat(node: Node, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string; suggest?: Array<{ label: string; detail: string; kind?: string }> }>;
 buildApp(map: MindMap, previousHtml: string | null): Promise<string>; // HTML with data-mc / data-mc-el
 ```
 

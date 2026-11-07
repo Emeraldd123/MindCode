@@ -156,8 +156,8 @@ export function fakeNodeChat(
   _map: MindMap,
   _history: Message[],
   text: string
-): { reply: string; label?: string; detail?: string } {
-  // If the node is locked, do not allow changing label or detail
+): { reply: string; label?: string; detail?: string; suggest?: Array<{ label: string; detail: string; kind?: string }> } {
+  // If the node is locked, do not allow changing label or detail or suggesting new bubbles
   if (node.status === "locked") {
     return {
       reply: `This bubble is locked, so its label and details are preserved: ${text ? `"${text}" noted.` : ""}`.trim()
@@ -171,7 +171,14 @@ export function fakeNodeChat(
     return {
       reply: "Great idea! I've simplified it to a nickname-only login with no password needed.",
       label: "Nickname login",
-      detail: "Just a nickname, no passwords required."
+      detail: "Just a nickname, no passwords required.",
+      suggest: [
+        {
+          label: "Session storage",
+          detail: "Keep nickname stored locally in browser session.",
+          kind: "data"
+        }
+      ]
     };
   }
 
@@ -187,7 +194,19 @@ export function fakeNodeChat(
   return {
     reply: `Let's brainstorm on "${node.label}". You mentioned: "${text}". We can refine the scope or change its requirements as you see fit.`,
     label: undefined,
-    detail: undefined
+    detail: undefined,
+    suggest: [
+      {
+        label: "Typing indicator",
+        detail: "Shows when another participant is typing a message.",
+        kind: "feature"
+      },
+      {
+        label: "Read receipts",
+        detail: "Indicates when messages have been viewed by group members.",
+        kind: "feature"
+      }
+    ]
   };
 }
 
