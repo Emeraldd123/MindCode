@@ -48,4 +48,22 @@ describe('MindMap logic and helpers', () => {
     expect(n5Class.sourceClass).toBe('source-unknown');
     expect(n5Class.isApproved).toBe(true);
   });
+
+  it('determines importance classes (1-5, default 3)', () => {
+    function getImportanceClass(node) {
+      const rawImportance = Number(node?.importance);
+      const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5
+        ? rawImportance
+        : 3;
+      return `importance-${importance}`;
+    }
+
+    expect(getImportanceClass({ importance: 5 })).toBe('importance-5');
+    expect(getImportanceClass({ importance: 1 })).toBe('importance-1');
+    expect(getImportanceClass({ importance: 4 })).toBe('importance-4');
+    expect(getImportanceClass({})).toBe('importance-3');
+    expect(getImportanceClass({ importance: 'invalid' })).toBe('importance-3');
+    expect(getImportanceClass({ importance: 0 })).toBe('importance-3');
+    expect(getImportanceClass({ importance: 6 })).toBe('importance-3');
+  });
 });
