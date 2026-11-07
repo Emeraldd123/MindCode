@@ -73,6 +73,7 @@ interface Session {
 | POST | `/api/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`; Claude may rewrite `label`/`detail` (not if locked) | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/approve` | - | `Node` (status `approved`; a locked node stays locked) | built |
 | PATCH | `/api/sessions/{sid}/nodes/{nid}` | `{ "label"?, "detail"?, "status"?: "locked" \| "approved" \| "proposed" }` | `Node` | built |
+| GET | `/api/sessions/{sid}/map/export` | Query: `format=mermaid` or `json` (default: `json`) | `text/vnd.mermaid; charset=utf-8` (Mermaid flowchart) or `application/json; charset=utf-8` (`{ id, exportedAt, nodes, edges }` with `Content-Disposition: attachment; filename="mindcode-map-{sid}.json"`) | built |
 | POST | `/api/sessions/{sid}/build` | - | `Build`: **202 + status `pending`** (poll), or 200 when already finished (fake mode). Also appends a `Checkpoint`. 409 if a build is already pending. | built |
 | GET | `/api/sessions/{sid}/builds/{bid}` | - | `Build` (poll every ~2 s until status is `done` or `error`) | built |
 | GET | `/api/sessions/{sid}/builds/{bid}/preview` | - | `text/html`: build HTML with the trace script injected (iframe `src`); 409 until done | built |
