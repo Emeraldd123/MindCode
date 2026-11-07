@@ -137,13 +137,13 @@ export default function Chat({
 
             <div className="mc-chat-color-key" aria-label="Bubble color key">
               <span className="mc-key-item">
-                <span className="mc-key-dot blue" /> blue = you said it
+                <span className="mc-key-dot user orange" /> orange = you said it
               </span>
               <span className="mc-key-item">
-                <span className="mc-key-dot amber" /> amber = Claude assumed
+                <span className="mc-key-dot inferred green" /> green = Claude assumed
               </span>
               <span className="mc-key-item">
-                <span className="mc-key-dot red" /> red = open question
+                <span className="mc-key-dot unknown red" /> red = open question
               </span>
             </div>
           </div>

@@ -168,18 +168,23 @@
   display: inline-block;
 }
 
+.mc-key-dot.orange,
+.mc-key-dot.user,
 .mc-key-dot.blue {
-  background: var(--accent-user);
-  box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+  background: var(--accent-user, #d67408);
+  box-shadow: 0 0 4px rgba(214, 116, 8, 0.4);
 }
 
+.mc-key-dot.green,
+.mc-key-dot.inferred,
 .mc-key-dot.amber {
-  background: var(--accent-inferred);
-  box-shadow: 0 0 4px rgba(245, 158, 11, 0.4);
+  background: var(--accent-inferred, #17c894);
+  box-shadow: 0 0 4px rgba(23, 200, 148, 0.4);
 }
 
-.mc-key-dot.red {
-  background: var(--accent-unknown);
+.mc-key-dot.red,
+.mc-key-dot.unknown {
+  background: var(--accent-unknown, #ef4444);
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
 }
 

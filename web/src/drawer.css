@@ -113,17 +113,17 @@
 }
 
 .badge-user {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-  border: 1px solid var(--accent-user);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+  background: rgba(214, 116, 8, 0.15);
+  color: #fed7aa;
+  border: 1px solid var(--accent-user, #d67408);
+  box-shadow: 0 0 8px rgba(214, 116, 8, 0.2);
 }
 
 .badge-inferred {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fde68a;
-  border: 1px dashed var(--accent-inferred);
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.18);
+  background: rgba(23, 200, 148, 0.15);
+  color: #a7f3d0;
+  border: 1px dashed var(--accent-inferred, #17c894);
+  box-shadow: 0 0 8px rgba(23, 200, 148, 0.18);
 }
 
 .badge-unknown {
