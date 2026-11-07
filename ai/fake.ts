@@ -108,6 +108,7 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
     const loginNodeIndex = existingNodes.findIndex(n => n.id === "n5" || /log in/i.test(n.label));
     if (loginNodeIndex !== -1 && existingNodes[loginNodeIndex].status !== "locked") {
       const target = existingNodes[loginNodeIndex];
+      // If not locked, we can update or clarify
       existingNodes[loginNodeIndex] = {
         ...target,
         label: "Nickname login",
@@ -156,27 +157,152 @@ export function fakeNodeChat(
   _history: Message[],
   text: string
 ): { reply: string; label?: string; detail?: string } {
-  const isNickname = /nickname|password/i.test(text) || node.id === "n5" || /log in/i.test(node.label);
-  if (isNickname) {
+  // If the node is locked, do not allow changing label or detail
+  if (node.status === "locked") {
     return {
-      reply: "Great, I've simplified it to a nickname-only login with no password needed.",
-      label: "Nickname login",
-      detail: "Just a nickname, no passwords required.",
+      reply: `This bubble is locked, so its label and details are preserved: ${text ? `"${text}" noted.` : ""}`.trim()
     };
   }
+
+  const lower = text.toLowerCase();
+  const isNickname = lower.includes("nickname") || lower.includes("password") || node.id === "n5" || /log in/i.test(node.label);
+
+  if (isNickname) {
+    return {
+      reply: "Great idea! I've simplified it to a nickname-only login with no password needed.",
+      label: "Nickname login",
+      detail: "Just a nickname, no passwords required."
+    };
+  }
+
+  if (lower.startsWith("rename to ") || lower.startsWith("call it ")) {
+    const newLabel = text.replace(/^(rename to|call it)\s+/i, "").trim();
+    return {
+      reply: `I've updated the bubble label to "${newLabel}".`,
+      label: newLabel,
+      detail: `Updated requirement based on brainstorm: ${newLabel}.`
+    };
+  }
+
   return {
     reply: `Understood: "${text}". I have updated this requirement accordingly.`,
     label: node.label,
-    detail: text || node.detail,
+    detail: text || node.detail
   };
 }
 
-export function fakeBuildApp(_map: MindMap, _previousHtml: string | null = null): string {
+/**
+ * Extracts and preserves elements matching data-mc containing locked node IDs from previousHtml.
+ */
+function extractLockedElements(previousHtml: string, lockedNodeIds: Set<string>): Map<string, string> {
+  const result = new Map<string, string>();
+  if (!previousHtml || lockedNodeIds.size === 0) return result;
+
+  const regex = /<([a-zA-Z0-9]+)[^>]*data-mc=["']([^"']*)["'][^>]*>([\s\S]*?)<\/\1>/gi;
+  let match;
+  while ((match = regex.exec(previousHtml)) !== null) {
+    const fullTag = match[0];
+    const mcAttr = match[2];
+    const ids = mcAttr.split(/\s+/).filter(Boolean);
+    for (const id of ids) {
+      if (lockedNodeIds.has(id)) {
+        result.set(id, fullTag);
+      }
+    }
+  }
+  return result;
+}
+
+export function fakeBuildApp(
+  map: MindMap = { nodes: [], edges: [] },
+  previousHtml: string | null = null
+): string {
+  const hasNodes = map.nodes && map.nodes.length > 0;
+  const validNodeIds = hasNodes ? new Set(map.nodes.map(n => n.id)) : null;
+  const lockedNodeIds = new Set((map.nodes || []).filter(n => n.status === "locked").map(n => n.id));
+
+  // Determine locked elements to preserve from previousHtml if present
+  const preservedLockedElements = previousHtml ? extractLockedElements(previousHtml, lockedNodeIds) : new Map<string, string>();
+
+  // Filter helper to ensure data-mc only contains IDs that exist in map.nodes (if map has nodes)
+  const sanitizeDataMc = (rawIds: string): string => {
+    if (!validNodeIds) return rawIds;
+    return rawIds
+      .split(/\s+/)
+      .filter(id => validNodeIds.has(id))
+      .join(" ");
+  };
+
+  const getElementOrPreserved = (
+    nodeId: string,
+    defaultHtml: string
+  ): string => {
+    if (lockedNodeIds.has(nodeId) && preservedLockedElements.has(nodeId)) {
+      return preservedLockedElements.get(nodeId)!;
+    }
+    return defaultHtml;
+  };
+
+  const rootNode = map.nodes?.find(n => n.parent === null) || map.nodes?.[0];
+  const appTitle = rootNode ? rootNode.label : "Study Group Chat";
+
+  const headerHtml = getElementOrPreserved(
+    "n1",
+    `<div class="header">
+    <h1 data-mc-el="e-title" data-mc="${sanitizeDataMc("n1 n2")}">${appTitle}</h1>
+    <span data-mc-el="e-realtime" data-mc="${sanitizeDataMc("n4")}" class="live-badge">● Real-time sync active</span>
+  </div>`
+  );
+
+  const loginCardHtml = getElementOrPreserved(
+    "n5",
+    `<div data-mc-el="e-login" data-mc="${sanitizeDataMc("n5")}" class="card login-card">
+      <h3>Join Study Group</h3>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 12px;">Quick access with nickname only</p>
+      <div class="input-group">
+        <input type="text" placeholder="Your nickname" value="Alex" />
+        <button>Join</button>
+      </div>
+    </div>`
+  );
+
+  const chatWindowHtml = getElementOrPreserved(
+    "n4",
+    `<div data-mc-el="e-messages" data-mc="${sanitizeDataMc("n1 n3 n4")}" class="card chat-window">
+      <h3>Group Messages</h3>
+      <div class="messages">
+        <div class="msg">
+          <div class="author">Emma (Calculus II)</div>
+          <div>Has anyone solved problem 4 on chapter 7 yet?</div>
+        </div>
+        <div class="msg">
+          <div class="author">David</div>
+          <div>Yes! Use integration by parts with u = ln(x).</div>
+        </div>
+      </div>
+      <div class="input-group" style="flex-direction: row;">
+        <input type="text" placeholder="Type a message..." style="flex: 1;" />
+        <button>Send</button>
+      </div>
+    </div>`
+  );
+
+  // Extra features list for any other nodes present in the map
+  const otherNodes = (map.nodes || []).filter(n => !["n1", "n2", "n3", "n4", "n5"].includes(n.id));
+  const extraNodesHtml = otherNodes.length > 0
+    ? `<div class="card" style="margin-top: 20px;">
+        <h3>Additional Planned Features</h3>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${otherNodes.map((n, idx) => `<li data-mc-el="e-extra-${idx + 1}" data-mc="${sanitizeDataMc(n.id)}"><strong>${n.label}</strong>: ${n.detail}</li>`).join("\n          ")}
+        </ul>
+      </div>`
+    : "";
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Study Group Chat</title>
+  <title>${appTitle}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
     .header { border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -195,37 +321,12 @@ export function fakeBuildApp(_map: MindMap, _previousHtml: string | null = null)
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1 data-mc-el="e-title" data-mc="n1 n2">Study Group Chat</h1>
-    <span data-mc-el="e-realtime" data-mc="n4" class="live-badge">● Real-time sync active</span>
-  </div>
+  ${headerHtml}
   <div class="main-layout">
-    <div data-mc-el="e-login" data-mc="n5" class="card login-card">
-      <h3>Join Study Group</h3>
-      <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 12px;">Quick access with nickname only</p>
-      <div class="input-group">
-        <input type="text" placeholder="Your nickname" value="Alex" />
-        <button>Join</button>
-      </div>
-    </div>
-    <div data-mc-el="e-messages" data-mc="n1 n3 n4" class="card chat-window">
-      <h3>Group Messages</h3>
-      <div class="messages">
-        <div class="msg">
-          <div class="author">Emma (Calculus II)</div>
-          <div>Has anyone solved problem 4 on chapter 7 yet?</div>
-        </div>
-        <div class="msg">
-          <div class="author">David</div>
-          <div>Yes! Use integration by parts with u = ln(x).</div>
-        </div>
-      </div>
-      <div class="input-group" style="flex-direction: row;">
-        <input type="text" placeholder="Type a message..." style="flex: 1;" />
-        <button>Send</button>
-      </div>
-    </div>
+    ${loginCardHtml}
+    ${chatWindowHtml}
   </div>
+  ${extraNodesHtml}
 </body>
 </html>`;
 }
