@@ -122,6 +122,20 @@ render() {
   done
 }
 
+# stdin: rows. Drops your own agent's posts, but keeps posts a human on your
+# account wrote with a `[<name>'s Human]` prefix (e.g. a GOAL from tools/goal),
+# so the agent sharing that GitHub login still wakes up for them.
+keep_for() {
+  local login="$1" id user ts b
+  while IFS=$'\t' read -r id user ts b; do
+    [ -n "$id" ] || continue
+    if [ "$(printf '%s' "$user" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$login" | tr '[:upper:]' '[:lower:]')" ] \
+       || printf '%s' "$b" | b64d | head -n 1 | grep -qE "^\[[^]]*'s Human\]"; then
+      printf '%s\t%s\t%s\t%s\n' "$id" "$user" "$ts" "$b"
+    fi
+  done
+}
+
 # Emit unread comments by others, advance cursor. Returns 0 and prints nothing if none. 1 on fetch failure.
 do_unread() {
   local all login cur cid cts new maxrow
@@ -137,7 +151,7 @@ do_unread() {
   fi
   [ -n "$new" ] || return 0
   maxrow="$(printf '%s\n' "$new" | sort -n -t"$(printf '\t')" -k1,1 | tail -1)"
-  new="$(printf '%s\n' "$new" | awk -F'\t' -v me="$login" 'NF && tolower($2) != tolower(me)')"
+  new="$(printf '%s\n' "$new" | keep_for "$login")"
   if [ -n "$new" ]; then
     printf '%s\n' "$new" | render "$login"
   fi

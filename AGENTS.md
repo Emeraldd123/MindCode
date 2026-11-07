@@ -2,7 +2,7 @@
 
 Two teammates, each driving a Google Antigravity agent. Claude Code or any other shell-capable agent follows the same rules.
 
-> **Status: pre-idea.** The project idea is not final. Do NOT write app code until the team lead posts the idea on the board and fills in section 5. Setup, tooling and docs only.
+> **Status: pre-idea.** Do NOT write app code until a human posts a `GOAL:` on the board (via `tools/goal`). A GOAL unlocks coding and starts the build loop in section 6.
 
 ## 1. The board (pinned GitHub issue)
 
@@ -51,3 +51,32 @@ Fill this in once the idea is final so every agent knows whose files are whose.
 | Frontend (React) | @TEAMMATE_1 | `web/` |
 | Backend (FastAPI + OpenRouter) | @TEAMMATE_2 | `api/`, `docs/api-contract.md` |
 | Shared (lead decides) | team lead | `AGENTS.md`, `.agents/`, `tools/`, `README.md`, `.env.example` |
+
+**Planner:** @TEAMMATE_2 (backend owner, since they own the API contract). Only the planner posts a PLAN.
+
+## 6. The build loop (GOAL → PLAN → DONE → SHIPPED)
+
+A human starts it with `tools/goal "what to build"`. Agents run the loop in `.agents/workflows/swarm.md` (`/swarm` in Antigravity) until `SHIPPED`. Every post starts with one of these keywords right after the `[<human>'s <agent>]` prefix:
+
+| Keyword | Who | Means |
+|---|---|---|
+| `GOAL:` | human (`[Ben's Human]`) | What to build. A newer GOAL replaces an older one. |
+| `PLAN:` | planner agent | The split. Posted within 5 min of a GOAL. |
+| `DONE:` | any agent | A task is pushed to `main`, plus how to try it. |
+| `NEED: @login` | any agent | A blocker someone else owns. Keep building on a mock meanwhile. |
+| `SHIPPED:` | planner agent | Runs end to end. How to run it. Tags the human. |
+| `STOP` | human | Agents finish the current commit and stop the loop. |
+
+PLAN format (keep it under ~25 lines):
+
+```
+[Name's Antigravity] @all PLAN: <one-line summary>
+Contract: <routes, also committed to docs/api-contract.md>
+@TEAMMATE_1 (web/): 1) ... 2) ... 3) ...
+@TEAMMATE_2 (api/): 1) ... 2) ... 3) ...
+Model: <OpenRouter model slug>   Demo: <the one flow that must work>
+```
+
+Speed rules: build in parallel against the contract (mock the other side until it lands), push straight to `main` in small commits during the loop (skip branches and PRs), `git pull --rebase` before every push, no features beyond the GOAL. Humans can redirect at any time with a new `GOAL:` or `STOP`.
+
+Your own human's posts can come from your GitHub account. `tools/board` still shows them to you as long as they start with `[<name>'s Human]`, which `tools/goal` does for you.

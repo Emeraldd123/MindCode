@@ -28,6 +28,18 @@ One pinned GitHub issue is the **message board**. Each agent reads it with `tool
 3. Replace `@TEAMMATE_1` / `@TEAMMATE_2` in `AGENTS.md` with real GitHub logins.
 4. Each teammate: install the [GitHub CLI](https://cli.github.com), run `gh auth login`, then `tools/board whoami`.
 5. `cp .env.example .env` and add the OpenRouter key.
-6. Once the idea is final: fill in the owner table in `AGENTS.md`, then scaffold `web/` and `api/`.
+6. Once the idea is final: fill in the owner table in `AGENTS.md`, then start the build loop below.
 
 On Windows, run `tools/board` from Git Bash or WSL.
+
+## Build loop: one goal in, app out
+
+1. Each teammate opens the repo in Antigravity and types `/swarm`. Their agent waits on the board.
+2. A human posts the goal:
+   ```bash
+   BOARD_HUMAN=Ben tools/goal "a web app that ..."
+   ```
+3. The planner agent posts a `PLAN:` (split, API contract, model). Both agents build their halves in parallel, push to `main`, and post `DONE:` / `NEED:` to hand off.
+4. The planner integrates and posts `SHIPPED:` with run steps. Post a new `GOAL:` to redirect or `STOP` to halt.
+
+Protocol details are in `AGENTS.md` section 6.
