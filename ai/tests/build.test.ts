@@ -184,7 +184,7 @@ describe("AI: build_app", () => {
     try {
       const html = await build_app(sampleMap, null);
 
-      assert.equal(passedOptions.max_tokens, 3500);
+      assert.equal(passedOptions.max_tokens, 16000);
       assert.ok(!html.includes("```"), "Should strip markdown fences");
       assert.ok(html.includes("<!doctype html>"), "Must be valid HTML");
       assert.ok(html.includes('data-mc="n1"'), "Must preserve valid node id");
