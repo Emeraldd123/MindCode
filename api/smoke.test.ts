@@ -113,6 +113,11 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     }
     expect(build.status).toBe("done");
 
+    // - Verify build.audit is populated
+    expect(build.audit).toBeDefined();
+    expect(build.audit?.totalElements).toBeGreaterThan(0);
+    expect(build.audit?.coveragePct).toBeGreaterThanOrEqual(0);
+
     // 7. Preview HTML & Traceability: GET /api/sessions/:sid/builds/:bid/preview
     const previewRes = await request(deps, "GET", `/sessions/${sid}/builds/${bid}/preview`);
     expect(previewRes.status).toBe(200);
@@ -141,7 +146,16 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
       expect(nodeIds.has(refId)).toBe(true);
     }
 
-    // 8. Checkpoints: GET /api/sessions/:sid/checkpoints
+    // 8. Standalone Download Check: GET /api/sessions/:sid/builds/:bid/download
+    const downloadRes = await request(deps, "GET", `/sessions/${sid}/builds/${bid}/download`);
+    expect(downloadRes.status).toBe(200);
+    expect(downloadRes.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    expect(downloadRes.headers.get("content-disposition")).toBe(`attachment; filename="mindcode-${bid}.html"`);
+    const downloadHtml = downloadRes.body as string;
+    expect(downloadHtml).not.toMatch(/mc-hover/);
+    expect(downloadHtml).toBe(build.html);
+
+    // 9. Checkpoints: GET /api/sessions/:sid/checkpoints
     const checkpointsRes = await request(deps, "GET", `/sessions/${sid}/checkpoints`);
     expect(checkpointsRes.status).toBe(200);
     const checkpoints = checkpointsRes.body as Checkpoint[];
@@ -155,5 +169,17 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
       expect(Array.isArray(cp.map.nodes)).toBe(true);
       expect(Array.isArray(cp.map.edges)).toBe(true);
     }
+
+    // 10. Checkpoint Restore Check: POST /api/sessions/:sid/checkpoints/:cid/restore
+    const c1 = checkpoints[0];
+    const restoreRes = await request(deps, "POST", `/sessions/${sid}/checkpoints/${c1.id}/restore`);
+    expect(restoreRes.status).toBe(200);
+    const restoredSession = restoreRes.body as Session;
+    expect(restoredSession.map).toEqual(c1.map);
+
+    const postRestoreCheckpointsRes = await request(deps, "GET", `/sessions/${sid}/checkpoints`);
+    expect(postRestoreCheckpointsRes.status).toBe(200);
+    const postRestoreCheckpoints = postRestoreCheckpointsRes.body as Checkpoint[];
+    expect(postRestoreCheckpoints.some((cp) => cp.label.startsWith("Restored to "))).toBe(true);
   });
 });
