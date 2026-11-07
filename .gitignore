@@ -1,0 +1,22 @@
+# message board local state
+.board/
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# node
+node_modules/
+dist/
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/
