@@ -53,6 +53,38 @@
   border: 1px solid rgba(56, 189, 248, 0.5);
 }
 
+.checkpoint-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.restore-checkpoint-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.restore-checkpoint-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #fff;
+}
+
+.restore-checkpoint-btn:active {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(1px);
+}
+
 .back-to-live-btn {
   background: var(--primary);
   color: #fff;

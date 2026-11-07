@@ -106,3 +106,12 @@ export function getBuildDownloadUrl(sessionId, buildId) {
 export async function getCheckpoints(sessionId) {
   return request(`/sessions/${encodeURIComponent(sessionId)}/checkpoints`);
 }
+
+export async function restoreCheckpoint(sessionId, checkpointId) {
+  return request(
+    `/sessions/${encodeURIComponent(sessionId)}/checkpoints/${encodeURIComponent(checkpointId)}/restore`,
+    {
+      method: 'POST',
+    }
+  );
+}

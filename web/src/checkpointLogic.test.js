@@ -1,6 +1,6 @@
 // web/src/checkpointLogic.test.js
 import { describe, it, expect } from 'vitest';
-import { checkpointKind, diffMaps, formatDiff, neighbor } from './checkpointLogic';
+import { checkpointKind, diffMaps, formatDiff, neighbor, applyCheckpointRestore } from './checkpointLogic';
 
 describe('checkpointKind', () => {
   it('returns "build" when build_id is present', () => {
@@ -195,5 +195,47 @@ describe('neighbor', () => {
   it('handles unknown activeId by defaulting to live behavior', () => {
     expect(neighbor(checkpoints, 'unknown_id', -1)).toEqual(checkpoints[2]);
     expect(neighbor(checkpoints, 'unknown_id', 1)).toBeNull();
+  });
+});
+
+describe('applyCheckpointRestore', () => {
+  it('transitions state by updating map, checkpoints, and returning to live view', () => {
+    const prevState = {
+      session: { id: 's1' },
+      map: { nodes: [{ id: 'n2', label: 'Recent Idea' }], edges: [] },
+      checkpoints: [
+        { id: 'c1', label: 'Initial', map: { nodes: [{ id: 'n1', label: 'First Idea' }], edges: [] } },
+      ],
+      activeCheckpointId: 'c1',
+      selectedNodeId: 'n1',
+      hoverNodes: ['n1'],
+    };
+
+    const restoredSession = {
+      id: 's1',
+      map: { nodes: [{ id: 'n1', label: 'First Idea' }], edges: [] },
+      checkpoints: [
+        { id: 'c1', label: 'Initial', map: { nodes: [{ id: 'n1', label: 'First Idea' }], edges: [] } },
+        { id: 'c2', label: 'Restored to Initial', map: { nodes: [{ id: 'n1', label: 'First Idea' }], edges: [] } },
+      ],
+    };
+
+    const nextState = applyCheckpointRestore(prevState, restoredSession);
+
+    expect(nextState.activeCheckpointId).toBeNull();
+    expect(nextState.selectedNodeId).toBeNull();
+    expect(nextState.hoverNodes).toEqual([]);
+    expect(nextState.map).toEqual(restoredSession.map);
+    expect(nextState.checkpoints).toHaveLength(2);
+    expect(nextState.checkpoints[1].label).toBe('Restored to Initial');
+  });
+
+  it('handles empty or missing parameters gracefully', () => {
+    const nextState = applyCheckpointRestore();
+    expect(nextState.activeCheckpointId).toBeNull();
+    expect(nextState.selectedNodeId).toBeNull();
+    expect(nextState.hoverNodes).toEqual([]);
+    expect(nextState.map).toEqual({ nodes: [], edges: [] });
+    expect(nextState.checkpoints).toEqual([]);
   });
 });
