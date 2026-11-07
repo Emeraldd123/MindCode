@@ -106,15 +106,16 @@ describe("MindMap Extraction & Fake Generator", () => {
 
     const turn2 = await update_map(messages, initial.map);
 
-    // Initial IDs n1..n5 must all be present
-    for (let i = 1; i <= 5; i++) {
-      assert.ok(turn2.map.nodes.some(n => n.id === `n${i}`), `Node n${i} must be preserved`);
+    // Initial IDs must all be preserved
+    for (const node of initial.map.nodes) {
+      assert.ok(turn2.map.nodes.some(n => n.id === node.id), `Node ${node.id} must be preserved`);
     }
 
-    // New node must have id n6
-    const n6 = turn2.map.nodes.find(n => n.id === "n6");
-    assert.ok(n6, "New node n6 must be added");
-    assert.ok(turn2.changed.includes("n6"), "n6 must be in changed array");
+    // New node must have the next sequential ID
+    const nextId = `n${initial.map.nodes.length + 1}`;
+    const newNode = turn2.map.nodes.find(n => n.id === nextId);
+    assert.ok(newNode, `New node ${nextId} must be added`);
+    assert.ok(turn2.changed.includes(nextId), `${nextId} must be in changed array`);
   });
 
   test("handles login unknown answer by updating node in fake mode", async () => {
@@ -132,11 +133,11 @@ describe("MindMap Extraction & Fake Generator", () => {
 
     const turn2 = await update_map(messages, initial.map);
 
-    const loginNode = turn2.map.nodes.find(n => n.id === "n5");
-    assert.ok(loginNode, "n5 must exist");
+    const loginNode = turn2.map.nodes.find(n => /nickname login/i.test(n.label));
+    assert.ok(loginNode, "Login node must exist");
     assert.equal(loginNode?.label, "Nickname login");
     assert.equal(loginNode?.source, "user");
-    assert.ok(turn2.changed.includes("n5"), "n5 must be in changed list");
+    assert.ok(turn2.changed.includes(loginNode!.id), "Login node must be in changed list");
   });
 
   test("fakeNodeChat rewrites login node to Nickname login for demo prompt", () => {
