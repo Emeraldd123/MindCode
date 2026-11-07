@@ -5,6 +5,9 @@ import MindMap from './MindMap';
 import Preview from './Preview';
 import NodeDrawer from './NodeDrawer';
 import Checkpoints from './Checkpoints';
+import { Plus } from 'lucide-react';
+import { Button } from '@/ui/primitives/button';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/primitives/resizable';
 
 const STORAGE_KEY = 'mindcode_session_id';
 
@@ -128,90 +131,118 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="app-loading">
-        <div className="spinner" />
-        <p>Connecting to MindCode session...</p>
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background font-sans text-muted-foreground">
+        <div className="size-6 animate-spin rounded-full border-2 border-hairline border-t-ai" />
+        <p className="text-[13px]">Connecting to MindCode…</p>
       </div>
     );
   }
 
+  const approvedCount = (map.nodes || []).filter((n) => n.status === 'approved').length;
+  const lastBuild = [...builds].reverse().find((b) => b.status === 'done');
+
   return (
-    <div className="app-root">
-      <header className="app-header">
-        <div className="brand">
-          <h1 className="logo-title">MindCode</h1>
-          <span className="tagline">Prompt Engineering via Mind Map</span>
+    <div className="flex h-screen flex-col overflow-hidden bg-background font-sans text-foreground">
+      {/* Header: slim, hairline-separated (Obsidian / Claude style) */}
+      <header className="flex h-11 shrink-0 items-center justify-between border-b border-hairline px-4">
+        <div className="flex items-baseline gap-2.5">
+          <span className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
+            <span className="inline-block size-2.5 rounded-full bg-gradient-to-br from-user to-ai" aria-hidden />
+            MindCode
+          </span>
+          <span className="hidden text-xs text-dim md:inline">See every assumption before Claude builds</span>
         </div>
-        <div className="header-meta">
+        <div className="hidden items-center gap-1.5 text-xs text-muted-foreground lg:flex" aria-live="polite">
+          <span>{map.nodes?.length || 0} bubbles</span>
+          <span className="text-dim">·</span>
+          <span>{approvedCount} approved</span>
+          {lastBuild && (
+            <>
+              <span className="text-dim">·</span>
+              <span>last build {lastBuild.id}</span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
           {session && (
-            <span className="session-pill" title={`Session: ${session.id}`}>
-              Session: <code>{session.id.slice(0, 8)}</code>
+            <span className="font-mono text-[11px] text-dim" title={`Session ${session.id}`}>
+              {session.id.slice(0, 8)}
             </span>
           )}
-          <button className="new-session-btn" onClick={handleNewSession} title="Start fresh session">
-            + New Session
-          </button>
+          <Button variant="ghost" size="sm" onClick={handleNewSession} title="Start a fresh session">
+            <Plus /> New session
+          </Button>
         </div>
       </header>
 
-      <main className="three-pane-layout">
-        {/* Left Pane: Chat */}
-        <section className="pane chat-pane" aria-label="Chat pane">
-          <Chat
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            loading={chatLoading}
-            error={error}
-          />
-        </section>
+      <main className="min-h-0 flex-1">
+        <ResizablePanelGroup id="mc-layout">
+          {/* Chat */}
+          <ResizablePanel id="chat" defaultSize="28%" minSize="300px">
+            <section className="flex h-full min-w-0 flex-col bg-surface" aria-label="Chat pane">
+              <Chat
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                loading={chatLoading}
+                error={error}
+              />
+            </section>
+          </ResizablePanel>
+          <ResizableHandle />
 
-        {/* Center Pane: Mind Map (Task #7) */}
-        <section className="pane mindmap-pane" aria-label="Mind map pane">
-          <div className="pane-header">
-            <h2>Mind Map</h2>
-            <span className="node-count">
-              {map.nodes?.length || 0} bubble{map.nodes?.length === 1 ? '' : 's'}
-            </span>
-          </div>
-          <div className="pane-body">
-            <MindMap
-              map={viewMap}
-              highlighted={hoverNodes}
-              changedIds={activeCheckpoint ? [] : changedIds}
-              selectedId={selectedNodeId}
-              onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
-            />
-          </div>
-          <Checkpoints
-            checkpoints={checkpoints}
-            activeId={activeCheckpointId}
-            onSelect={(cp) => setActiveCheckpointId(cp ? cp.id : null)}
-          />
-          {selectedNode && (
-            <NodeDrawer
-              key={selectedNode.id}
-              sessionId={session?.id}
-              node={selectedNode}
-              onNodeChange={handleNodeChange}
-              onClose={() => setSelectedNodeId(null)}
-              onError={setError}
-            />
-          )}
-        </section>
+          {/* Mind map (bubbles are owned by Oliver & Tenma: MindMap.jsx / mindmap.css) */}
+          <ResizablePanel id="map" defaultSize="44%" minSize="420px">
+            <section className="relative flex h-full min-w-0 flex-col bg-background" aria-label="Mind map pane">
+              <div className="flex h-10 shrink-0 items-center justify-between border-b border-hairline px-4">
+                <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Mind map</h2>
+                <span className="rounded-full border border-hairline px-2 py-0.5 text-[11px] text-muted-foreground">
+                  {map.nodes?.length || 0} bubble{map.nodes?.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="relative min-h-0 flex-1">
+                <MindMap
+                  map={viewMap}
+                  highlighted={hoverNodes}
+                  changedIds={activeCheckpoint ? [] : changedIds}
+                  selectedId={selectedNodeId}
+                  onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
+                />
+              </div>
+              <Checkpoints
+                checkpoints={checkpoints}
+                activeId={activeCheckpointId}
+                onSelect={(cp) => setActiveCheckpointId(cp ? cp.id : null)}
+              />
+              {selectedNode && (
+                <NodeDrawer
+                  key={selectedNode.id}
+                  sessionId={session?.id}
+                  node={selectedNode}
+                  onNodeChange={handleNodeChange}
+                  onClose={() => setSelectedNodeId(null)}
+                  onError={setError}
+                />
+              )}
+            </section>
+          </ResizablePanel>
+          <ResizableHandle />
 
-        {/* Right Pane: build preview with two-way trace highlighting (#9) */}
-        <section className="pane preview-pane" aria-label="Preview pane">
-          <Preview
-            sessionId={session?.id}
-            map={viewMap}
-            builds={builds}
-            setBuilds={setBuilds}
-            buildId={activeCheckpoint?.build_id}
-            highlightNodes={selectedNodeId ? [selectedNodeId] : []}
-            onHoverNodes={setHoverNodes}
-            onError={setError}
-          />
-        </section>
+          {/* Preview */}
+          <ResizablePanel id="preview" defaultSize="28%" minSize="320px">
+            <section className="flex h-full min-w-0 flex-col bg-surface" aria-label="Preview pane">
+              <Preview
+                sessionId={session?.id}
+                map={viewMap}
+                builds={builds}
+                setBuilds={setBuilds}
+                buildId={activeCheckpoint?.build_id}
+                highlightNodes={selectedNodeId ? [selectedNodeId] : []}
+                onHoverNodes={setHoverNodes}
+                onError={setError}
+              />
+            </section>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </main>
     </div>
   );
