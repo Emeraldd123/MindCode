@@ -25,6 +25,8 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 6 | 2026-11-07 16:45 | main (#102 + Jules merges) | Pin mode in the preview; right-click bubble-id fix; compact header | **Live.** Bundle has Pin (mc-inspect). |
 
-| 7 | 2026-11-07 17:00 | main (#104) | Ben raised the OpenRouter key limit; readable AI errors (402/401/429), no retry on credit errors | (verify) |
+| 7 | 2026-11-07 17:00 | main (#104) | Ben raised the OpenRouter key limit; readable AI errors (402/401/429), no retry on credit errors | **Live.** Real chat turn 37 bubbles in 40 s. |
 
-Deploys used: **7 / 15**
+| 8 | 2026-11-07 16:35 | main (#107, #$N) | API limits (protects the key), bubble suggestions, quality score, Jules docs/tests | (verify) |
+
+Deploys used: **8 / 15**
