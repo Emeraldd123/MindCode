@@ -87,13 +87,14 @@ Please update the mind map based on the conversation so far. Remember:
     { role: "user", content: userPrompt }
   ], { maxTokens: 4000 });
 
-  return normalizeAndValidateMapResult(data, current, turn);
+  return normalizeAndValidateMapResult(data, current, turn, messages);
 }
 
-function normalizeAndValidateMapResult(
+export function normalizeAndValidateMapResult(
   raw: any,
   current: MindMap,
-  turn: number
+  turn: number,
+  messages: Message[] = []
 ): UpdateMapResult {
   const reply: string = typeof raw?.reply === "string" ? raw.reply : "Updated mind map.";
   const rawNodes: any[] = Array.isArray(raw?.nodes) ? raw.nodes : [];
@@ -151,20 +152,47 @@ function normalizeAndValidateMapResult(
 
     seenIds.add(id);
 
-    const source: Source = validSources.includes(rn.source) ? rn.source : "inferred";
+    let source: Source = validSources.includes(rn.source) ? rn.source : "inferred";
     const status: Status = validStatuses.includes(rn.status) ? rn.status : "proposed";
     const kind: NodeKind = validKinds.includes(rn.kind) ? rn.kind : "feature";
 
+    const userCorpus = messages
+      .filter((m) => m.role === "user")
+      .map((m) => m.text.toLowerCase());
+
+    let finalEvidence: string[] = [];
     let inventiveness = typeof rn.inventiveness === "number" ? Math.max(0, Math.min(1, rn.inventiveness)) : 0;
-    if (source === "user" || source === "unknown") {
-      inventiveness = 0;
+
+    if (source === "user") {
+      const rawEvidence: string[] = Array.isArray(rn.evidence)
+        ? rn.evidence
+            .filter((e: any) => typeof e === "string")
+            .map((e: string) => e.trim())
+            .filter((e: string) => e.length > 0)
+        : [];
+
+      // Every quote string, after trimming and case-insensitive check, must appear as a substring in userCorpus
+      finalEvidence = rawEvidence.filter((quote) =>
+        userCorpus.some((u) => u.includes(quote.toLowerCase()))
+      );
+
+      // If all evidence quotes are discarded and the node is marked user, but user never spoke words supporting it,
+      // demote the node to inferred (with evidence: [] and default inventiveness: 0.3)
+      if (finalEvidence.length === 0) {
+        source = "inferred";
+        inventiveness = 0.3;
+      } else {
+        inventiveness = 0;
+      }
+    } else {
+      // For inferred and unknown nodes, enforce evidence: []
+      finalEvidence = [];
+      if (source === "unknown") {
+        inventiveness = 0;
+      }
     }
 
     let importance = typeof rn.importance === "number" ? Math.round(Math.max(1, Math.min(5, rn.importance))) : 3;
-
-    const evidence: string[] = Array.isArray(rn.evidence)
-      ? rn.evidence.filter((e: any) => typeof e === "string")
-      : [];
 
     const label = (typeof rn.label === "string" ? rn.label : "").trim().slice(0, 50) || `Idea ${id}`;
     const detail = (typeof rn.detail === "string" ? rn.detail : "").trim() || label;
@@ -182,7 +210,7 @@ function normalizeAndValidateMapResult(
       importance,
       status,
       parent,
-      evidence: source === "user" ? evidence : [],
+      evidence: finalEvidence,
       turn: nodeTurn
     };
 
