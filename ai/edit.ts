@@ -2,8 +2,8 @@
 // The user right-clicks an element in the preview and says what to change; we send Claude the
 // current HTML, the element and the instruction, and get the full updated document back.
 import type { MindMap } from "./types.ts";
-import { callOpenRouter } from "./client.ts";
-import { cleanHtmlOutput, ensureTracedElementIds, sanitizeTracedElements } from "./html_utils.ts";
+import { ensureTracedElementIds, sanitizeTracedElements } from "./html_utils.ts";
+import { generateHtml } from "./longform.ts";
 
 export interface ChangeRequest {
   base: string;
@@ -39,17 +39,14 @@ ${bubbles || "(none)"}
 CURRENT APP HTML:
 ${html}`;
 
-  const { rawText } = await callOpenRouter(
+  // Runs in the build background function (15 min); continues past the token cap if needed.
+  let out = await generateHtml(
     [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userPrompt },
     ],
-    // Runs in the build background function (15 min), so allow a full document back.
-    { jsonMode: false, maxTokens: 16000, timeoutMs: 8 * 60 * 1000, temperature: 0.2 },
+    { maxTokens: 24000, timeoutMs: 6 * 60 * 1000, temperature: 0.2 },
   );
-
-  let out = cleanHtmlOutput(rawText);
-  if (!/<\/html>\s*$/i.test(out)) throw new Error("The edited app was cut off before </html>. Try again.");
   out = sanitizeTracedElements(out, new Set((map.nodes || []).map((n) => n.id)));
   out = ensureTracedElementIds(out);
   if (!out.toLowerCase().includes("<!doctype html")) out = `<!doctype html>\n${out}`;

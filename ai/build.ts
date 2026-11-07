@@ -1,6 +1,7 @@
 import type { MindMap } from "./types.ts";
 import { fakeBuildApp } from "./fake.ts";
 import { callOpenRouter } from "./client.ts";
+import { generateHtml } from "./longform.ts";
 import {
   findFullElement,
   extractLockedElements,
@@ -98,25 +99,15 @@ ${lockedInstructions}
 
 Return only the complete HTML document, starting with <!doctype html> and ending with </html>.`;
 
-  const { rawText } = await callOpenRouter(
+  // Runs in the build background function (15 min limit). Full-plan apps can exceed one response,
+  // so generateHtml continues where Claude stopped (up to 3 parts) instead of failing.
+  let html = await generateHtml(
     [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userPrompt }
+      { role: "user", content: userPrompt },
     ],
-    {
-      jsonMode: false,
-      // Runs in the build background function (15 min limit), so allow a full app.
-      maxTokens: 16000,
-      timeoutMs: 8 * 60 * 1000,
-      temperature: 0.4,
-    }
+    { maxTokens: 24000, timeoutMs: 6 * 60 * 1000, temperature: 0.4 },
   );
-
-  let html = cleanHtmlOutput(rawText);
-  // A response cut off at the token limit is broken code; fail loudly instead of previewing it.
-  if (!/<\/html>\s*$/i.test(html)) {
-    throw new Error("The generated app was cut off before </html>. Try Rebuild.");
-  }
   html = sanitizeTracedElements(html, validNodeIds);
   html = ensureTracedElementIds(html);
   html = preserveLockedElements(html, previousHtml, lockedNodeIds);
