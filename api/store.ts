@@ -1,5 +1,5 @@
 // Pure session logic: no I/O. Persistence is in storage.ts.
-import type { Checkpoint, Edge, MapNode, ProposedMap, Session } from "./types";
+import type { Checkpoint, Edge, MapNode, MindMap, ProposedMap, Session } from "./types";
 
 /** A message that adds/changes at least this many nodes also gets a checkpoint. */
 export const BIG_CHANGE = 3;
@@ -236,4 +236,44 @@ export function traceOf(html: string, nodeIds: Set<string>): Record<string, stri
     }
   }
   return trace;
+}
+
+
+/** What changed in the plan between two maps (used for fast incremental rebuilds). */
+export interface MapDiff {
+  added: MapNode[];
+  removed: MapNode[];
+  changed: Array<{ before: MapNode; after: MapNode }>;
+}
+
+export function mapDiff(before: MindMap, after: MindMap): MapDiff {
+  const old = new Map(before.nodes.map((n) => [n.id, n]));
+  const now = new Map(after.nodes.map((n) => [n.id, n]));
+  const added = after.nodes.filter((n) => !old.has(n.id));
+  const removed = before.nodes.filter((n) => !now.has(n.id));
+  const changed = after.nodes
+    .filter((n) => old.has(n.id))
+    .map((n) => ({ before: old.get(n.id)!, after: n }))
+    .filter(({ before: b, after: a }) => b.label !== a.label || b.detail !== a.detail || b.status !== a.status || b.source !== a.source);
+  return { added, removed, changed };
+}
+
+export const diffSize = (d: MapDiff) => d.added.length + d.removed.length + d.changed.length;
+
+/** Plain-language change list for Claude, e.g. for an incremental rebuild. */
+export function describeDiff(d: MapDiff): string {
+  const line = (n: MapNode) => `"${n.label}" (${n.id}, ${n.kind})${n.detail ? `: ${n.detail}` : ""}`;
+  const parts: string[] = [];
+  if (d.added.length) parts.push("ADD to the app (new bubbles):\n" + d.added.map((n) => "- " + line(n)).join("\n"));
+  if (d.changed.length)
+    parts.push(
+      "UPDATE the app (changed bubbles):\n" +
+        d.changed
+          .map(({ before: b, after: a }) =>
+            `- ${a.id}: "${b.label}" -> "${a.label}"${b.detail !== a.detail ? `; detail now: ${a.detail}` : ""}${b.status !== a.status ? `; status ${b.status} -> ${a.status}` : ""}`,
+          )
+          .join("\n"),
+    );
+  if (d.removed.length) parts.push("REMOVE from the app (deleted bubbles, delete their UI and logic):\n" + d.removed.map((n) => "- " + line(n)).join("\n"));
+  return parts.join("\n\n");
 }

@@ -1,9 +1,12 @@
 // All /api routes from docs/api-contract.md. Pure Request -> Response so tests can call it directly.
-import { addCheckpoint, addEdge, addNode, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, removeEdge, removeNode, traceOf, userTurn } from "./store";
+import { describeDiff, diffSize, mapDiff, addCheckpoint, addEdge, addNode, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, removeEdge, removeNode, traceOf, userTurn } from "./store";
 import type { Storage } from "./storage";
 import { auditTrace, inject } from "./trace";
 import type { AI, ChangeRequest, Session } from "./types";
 import demoSession from "./demo/study-group.json";
+
+/** Rebuilds with at most this many changed bubbles are applied as patches to the last build. */
+export const INCREMENTAL_MAX = 8;
 
 export interface Deps {
   storage: Storage;
@@ -73,13 +76,26 @@ export async function runBuild(deps: Pick<Deps, "storage" | "ai">, sid: string, 
   const cp = s.checkpoints.find((c) => c.id === b.checkpoint_id)!;
   const prev = [...s.builds].reverse().find((x) => x.status === "done" && x.id !== bid)?.html ?? null;
   const base = b.request ? s.builds.find((x) => x.id === b.request!.base) : undefined;
+  // Incremental rebuild: if the plan changed only a little since the last finished build, apply just
+  // those changes as patches (seconds) instead of regenerating the whole app (minutes).
+  const lastDone = [...s.builds].reverse().find((x) => x.status === "done" && x.id !== bid);
+  const lastMap = lastDone ? s.checkpoints.find((c) => c.id === lastDone.checkpoint_id)?.map : undefined;
+  const diff = !b.request && b.mode !== "full" && lastDone && lastMap ? mapDiff(lastMap, cp.map) : null;
+  const incremental = !!diff && diffSize(diff) >= 1 && diffSize(diff) <= INCREMENTAL_MAX;
   let patch: Partial<typeof b>;
   try {
     const html = b.request && base
       ? await deps.ai.editApp(base.html, cp.map, b.request)
-      : await deps.ai.buildApp(cp.map, prev);
+      : incremental
+        ? await deps.ai.editApp(lastDone!.html, cp.map, {
+            base: lastDone!.id,
+            instruction: `The user's plan changed since this build. Update the app so it matches the plan exactly:\n\n${describeDiff(diff!)}`,
+            nodes: [...diff!.added, ...diff!.changed.map((c) => c.after)].map((n) => n.id),
+          })
+        : await deps.ai.buildApp(cp.map, prev);
     patch = {
       status: "done",
+      mode: b.request ? "edit" : incremental ? "incremental" : "full",
       html,
       trace: traceOf(html, new Set(cp.map.nodes.map((n) => n.id))),
       audit: auditTrace(html, cp.map),
@@ -268,9 +284,10 @@ async function route(req: Request, deps: Deps): Promise<Response> {
   if (m === "POST" && rest.length === 1 && rest[0] === "build") {
     if (!s.map.nodes.length) throw new HttpError(422, "map is empty; send a message first");
     if (s.builds.some((b) => b.status === "pending")) throw new HttpError(409, "a build is already running");
+    const opts = (await req.json().catch(() => ({}))) as { full?: boolean };
     const bid = `b${s.builds.length + 1}`;
     const cp = addCheckpoint(s, `Build ${bid}`, bid);
-    const b = { id: bid, status: "pending" as const, html: "", trace: {}, checkpoint_id: cp.id };
+    const b = { id: bid, status: "pending" as const, html: "", trace: {}, checkpoint_id: cp.id, ...(opts?.full ? { mode: "full" as const } : {}) };
     s.builds.push(b);
     await save();
     await deps.startBuild(s.id, bid);

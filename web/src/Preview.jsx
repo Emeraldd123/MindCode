@@ -69,7 +69,9 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
       if (finishedBuild && finishedBuild.status === 'done') {
         const durationFormatted = formatElapsed(elapsedMs || 1000);
         const count = traceCount(finishedBuild);
-        const message = `Built ${finishedBuild.id} in ${durationFormatted} · ${count} traced element${count === 1 ? '' : 's'}`;
+        const how = finishedBuild.mode === 'incremental' ? 'Updated' : finishedBuild.mode === 'edit' ? 'Edited' : 'Built';
+        const what = finishedBuild.mode === 'incremental' ? ' (only the changes)' : '';
+        const message = `${how} ${finishedBuild.id} in ${durationFormatted}${what} · ${count} traced element${count === 1 ? '' : 's'}`;
         setToast({ message, id: Date.now() });
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
@@ -165,10 +167,10 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
     }
   }
 
-  async function handleBuild() {
+  async function handleBuild(full = false) {
     if (!sessionId || pending) return;
     try {
-      const b = await api.build(sessionId);
+      const b = await api.build(sessionId, { full });
       setBuilds((prev) => upsertBuild(prev, b));
     } catch (e) {
       onError?.(`Build failed: ${e.message}`);
@@ -229,9 +231,25 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               ↓ HTML
             </a>
           )}
-          <button className="build-btn" onClick={handleBuild} disabled={!canBuild} title={canBuild ? 'Generate the app from the map' : 'Describe your app first'}>
-            {pending ? 'Building…' : shown ? '⚡ Rebuild' : '⚡ Build App'}
+          <button
+            className="build-btn"
+            onClick={() => handleBuild(false)}
+            disabled={!canBuild}
+            title={!canBuild ? 'Describe your app first' : shown ? 'Apply your map changes (small changes are patched in seconds)' : 'Generate the app from the map'}
+          >
+            {pending ? 'Building…' : shown ? '⚡ Update' : '⚡ Build App'}
           </button>
+          {shown && !pending && (
+            <button
+              type="button"
+              className="preview-download"
+              onClick={() => handleBuild(true)}
+              disabled={!canBuild}
+              title="Regenerate the whole app from the map (slower)"
+            >
+              Full rebuild
+            </button>
+          )}
         </div>
       </div>
 
@@ -364,7 +382,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               <h4>Build Failed</h4>
             </div>
             <p className="error-text">{lastError.error || 'An unexpected error occurred during build.'}</p>
-            <button type="button" className="retry-btn" onClick={handleBuild} disabled={!canBuild}>
+            <button type="button" className="retry-btn" onClick={() => handleBuild(true)} disabled={!canBuild}>
               Retry build
             </button>
           </div>
