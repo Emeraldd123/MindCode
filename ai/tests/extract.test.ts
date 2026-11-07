@@ -1,6 +1,6 @@
 import { describe, test } from "vitest";
 import assert from "node:assert/strict";
-import { update_map } from "../extract.ts";
+import { update_map, normalizeAndValidateMapResult } from "../extract.ts";
 import { fakeUpdateMap, fakeNodeChat, fakeBuildApp } from "../fake.ts";
 import { callOpenRouter } from "../client.ts";
 import type { MindMap, Node } from "../types.ts";
@@ -156,6 +156,141 @@ describe("MindMap Extraction & Fake Generator", () => {
     const res = fakeNodeChat(node, { nodes: [node], edges: [] }, [], "just a nickname, no passwords");
     assert.equal(res.label, "Nickname login");
     assert.ok(res.reply.includes("nickname"));
+  });
+
+  test("validates user evidence quotes strictly against user messages", () => {
+    const messages = [
+      { role: "user" as const, text: "I want an offline markdown notes app with tags" },
+      { role: "assistant" as const, text: "Got it! How about sync?" },
+      { role: "user" as const, text: "No cloud sync please, local only" }
+    ];
+
+    const raw = {
+      reply: "Notes app map",
+      nodes: [
+        {
+          id: "n1",
+          label: "Markdown notes",
+          detail: "Offline notes app",
+          source: "user",
+          kind: "goal",
+          evidence: ["markdown notes", "offline", "hallucinated quote"]
+        }
+      ],
+      edges: []
+    };
+
+    const result = normalizeAndValidateMapResult(raw, { nodes: [], edges: [] }, 1, messages);
+    const n1 = result.map.nodes.find(n => n.id === "n1")!;
+
+    assert.equal(n1.source, "user");
+    assert.deepEqual(n1.evidence, ["markdown notes", "offline"]);
+    assert.equal(n1.inventiveness, 0);
+  });
+
+  test("strips hallucinated evidence from inferred and unknown nodes", () => {
+    const messages = [
+      { role: "user" as const, text: "I want a simple calculator" }
+    ];
+
+    const raw = {
+      reply: "Calculator map",
+      nodes: [
+        {
+          id: "n1",
+          label: "Calculator",
+          detail: "Simple calculator",
+          source: "user",
+          kind: "goal",
+          evidence: ["simple calculator"]
+        },
+        {
+          id: "n2",
+          label: "Math Engine",
+          detail: "Evaluates expressions",
+          source: "inferred",
+          kind: "api",
+          inventiveness: 0.2,
+          evidence: ["simple calculator", "math engine"]
+        },
+        {
+          id: "n3",
+          label: "Scientific mode?",
+          detail: "Should it support sin/cos?",
+          source: "unknown",
+          kind: "constraint",
+          evidence: ["calculator"]
+        }
+      ],
+      edges: []
+    };
+
+    const result = normalizeAndValidateMapResult(raw, { nodes: [], edges: [] }, 1, messages);
+    const n2 = result.map.nodes.find(n => n.id === "n2")!;
+    const n3 = result.map.nodes.find(n => n.id === "n3")!;
+
+    assert.equal(n2.source, "inferred");
+    assert.deepEqual(n2.evidence, []);
+    assert.equal(n2.inventiveness, 0.2);
+
+    assert.equal(n3.source, "unknown");
+    assert.deepEqual(n3.evidence, []);
+    assert.equal(n3.inventiveness, 0);
+  });
+
+  test("demotes user node to inferred when all evidence quotes are invalid or user never spoke words", () => {
+    const messages = [
+      { role: "user" as const, text: "Build a todo list" }
+    ];
+
+    const raw = {
+      reply: "Todo map",
+      nodes: [
+        {
+          id: "n1",
+          label: "Todo list",
+          detail: "Todo list app",
+          source: "user",
+          kind: "goal",
+          evidence: ["todo list"]
+        },
+        {
+          id: "n2",
+          label: "Export to PDF",
+          detail: "Export todos as PDF document",
+          source: "user",
+          kind: "feature",
+          evidence: ["export as PDF", "completely made up"]
+        },
+        {
+          id: "n3",
+          label: "Dark Mode",
+          detail: "Dark theme support",
+          source: "user",
+          kind: "feature",
+          evidence: []
+        }
+      ],
+      edges: []
+    };
+
+    const result = normalizeAndValidateMapResult(raw, { nodes: [], edges: [] }, 1, messages);
+    const n1 = result.map.nodes.find(n => n.id === "n1")!;
+    const n2 = result.map.nodes.find(n => n.id === "n2")!;
+    const n3 = result.map.nodes.find(n => n.id === "n3")!;
+
+    assert.equal(n1.source, "user");
+    assert.deepEqual(n1.evidence, ["todo list"]);
+
+    // n2 had quotes that never appeared in user messages -> demoted
+    assert.equal(n2.source, "inferred");
+    assert.deepEqual(n2.evidence, []);
+    assert.equal(n2.inventiveness, 0.3);
+
+    // n3 had empty evidence -> demoted
+    assert.equal(n3.source, "inferred");
+    assert.deepEqual(n3.evidence, []);
+    assert.equal(n3.inventiveness, 0.3);
   });
 
   test("fakeBuildApp produces HTML with demo traces matching n1, n2, n3, n4, n5", () => {
