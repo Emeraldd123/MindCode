@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowUp, Check, Link2, Lock, Pencil, Plus, Trash2, Unlock, X } from 'lucide-react';
 import * as api from './api';
 import { canApprove, nextLockStatus, canChat, normalizeInventiveness } from './nodeDrawerLogic';
+import { formatApiError, formatCooldown } from './chatLogic';
 import { cn } from '@/lib/utils';
 import { ancestorsOf } from './treeLayout';
 import { Button } from '@/ui/primitives/button';
@@ -52,6 +53,8 @@ export default function NodeDrawer({
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownTimerRef = useRef(null);
   const chatEndRef = useRef(null);
 
   // Reset the mini chat when opening or switching to a different node
@@ -66,7 +69,36 @@ export default function NodeDrawer({
     setChildLabel('');
     setConnectTo('');
     setSuggestions([]);
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
+    setCooldownSeconds(0);
   }, [currentNodeId]);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, []);
+
+  const startCooldown = (seconds) => {
+    let remaining = seconds || 5;
+    setCooldownSeconds(remaining);
+    onError(formatCooldown(remaining));
+    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    cooldownTimerRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+        setCooldownSeconds(0);
+      } else {
+        setCooldownSeconds(remaining);
+        onError(formatCooldown(remaining));
+      }
+    }, 1000);
+  };
 
   // Escape closes the drawer
   useEffect(() => {
@@ -98,7 +130,7 @@ export default function NodeDrawer({
     try {
       onNodeChange(await api.approveNode(sessionId, node.id));
     } catch (err) {
-      onError(err?.message || 'Failed to approve node');
+      onError(formatApiError(err) || 'Failed to approve node');
     } finally {
       setActionLoading(false);
     }
@@ -110,7 +142,7 @@ export default function NodeDrawer({
     try {
       onNodeChange(await api.patchNode(sessionId, node.id, { status: nextLockStatus(node) }));
     } catch (err) {
-      onError(err?.message || 'Failed to update lock status');
+      onError(formatApiError(err) || 'Failed to update lock status');
     } finally {
       setActionLoading(false);
     }
@@ -119,7 +151,7 @@ export default function NodeDrawer({
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
     const text = chatInput.trim();
-    if (!text || chatLoading || !chatAllowed) return;
+    if (!text || chatLoading || !chatAllowed || cooldownSeconds > 0) return;
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setChatInput('');
     setChatLoading(true);
@@ -132,7 +164,11 @@ export default function NodeDrawer({
         setSuggestions(Array.isArray(res.suggest) ? res.suggest : []);
       }
     } catch (err) {
-      onError(err?.message || 'Failed to send message to Claude');
+      if (err.status === 429) {
+        startCooldown(err.retry_after_s || 5);
+      } else {
+        onError(formatApiError(err) || 'Failed to send message to Claude');
+      }
     } finally {
       setChatLoading(false);
     }
@@ -153,7 +189,11 @@ export default function NodeDrawer({
     try {
       onNodeChange(await api.patchNode(sessionId, node.id, { [field]: value }));
     } catch (err) {
-      onError(err?.message || 'Failed to save the bubble');
+      if (err.status === 429) {
+        startCooldown(err.retry_after_s || 5);
+      } else {
+        onError(formatApiError(err) || 'Failed to save the bubble');
+      }
     }
   };
 
@@ -171,7 +211,7 @@ export default function NodeDrawer({
   const handleAddChild = async (e) => {
     e?.preventDefault();
     const label = childLabel.trim();
-    if (!label || actionLoading) return;
+    if (!label || actionLoading || cooldownSeconds > 0) return;
     setActionLoading(true);
     try {
       const created = await api.createNode(sessionId, { label, parent: node.id, kind: 'feature' });
@@ -179,7 +219,11 @@ export default function NodeDrawer({
       setPanel(null);
       await onMapChange(created?.id);
     } catch (err) {
-      onError(err?.message || 'Failed to add the bubble');
+      if (err.status === 429) {
+        startCooldown(err.retry_after_s || 5);
+      } else {
+        onError(formatApiError(err) || 'Failed to add the bubble');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -195,7 +239,7 @@ export default function NodeDrawer({
       setPanel(null);
       await onMapChange();
     } catch (err) {
-      onError(err?.message || 'Failed to connect the bubbles');
+      onError(formatApiError(err) || 'Failed to connect the bubbles');
     } finally {
       setActionLoading(false);
     }
@@ -210,7 +254,7 @@ export default function NodeDrawer({
       await onMapChange(null);
       onClose();
     } catch (err) {
-      onError(err?.message || 'Failed to delete the bubble');
+      onError(formatApiError(err) || 'Failed to delete the bubble');
     } finally {
       setActionLoading(false);
     }
@@ -221,14 +265,18 @@ export default function NodeDrawer({
   const labelOf = (id) => (map.nodes || []).find((n) => n.id === id)?.label || '?';
 
   const addSuggestion = async (sg) => {
-    if (actionLoading) return;
+    if (actionLoading || cooldownSeconds > 0) return;
     setActionLoading(true);
     try {
       await api.createNode(sessionId, { label: sg.label, detail: sg.detail, kind: sg.kind || 'feature', parent: node.id });
       setSuggestions((prev) => prev.filter((x) => x !== sg));
       await onMapChange();
     } catch (err) {
-      onError(err?.message || 'Failed to add the suggested bubble');
+      if (err.status === 429) {
+        startCooldown(err.retry_after_s || 5);
+      } else {
+        onError(formatApiError(err) || 'Failed to add the suggested bubble');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -534,14 +582,14 @@ export default function NodeDrawer({
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleChatKeyDown}
-              placeholder={isLocked ? 'Bubble is locked' : 'Message Claude about this bubble…'}
+              placeholder={isLocked ? 'Bubble is locked' : cooldownSeconds > 0 ? formatCooldown(cooldownSeconds) : 'Message Claude about this bubble…'}
               rows={1}
-              disabled={!chatAllowed || chatLoading}
+              disabled={!chatAllowed || chatLoading || cooldownSeconds > 0}
               aria-label="Message Claude about this bubble"
             />
             <button
               type="submit"
-              disabled={!chatAllowed || chatLoading || !chatInput.trim()}
+              disabled={!chatAllowed || chatLoading || !chatInput.trim() || cooldownSeconds > 0}
               aria-label="Send"
               className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-ai text-[#0b1a14] disabled:cursor-default disabled:bg-accent disabled:text-dim"
             >

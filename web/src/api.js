@@ -23,8 +23,9 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     let errorDetail = `HTTP ${response.status} ${response.statusText}`;
+    let errJson = null;
     try {
-      const errJson = await response.json();
+      errJson = await response.json();
       if (errJson) {
         if (errJson.detail) {
           errorDetail = errJson.detail;
@@ -37,6 +38,12 @@ async function request(path, options = {}) {
     }
     const err = new Error(errorDetail);
     err.status = response.status;
+    if (errJson?.retry_after_s != null) {
+      err.retry_after_s = errJson.retry_after_s;
+    }
+    if (errJson?.detail) {
+      err.detail = errJson.detail;
+    }
     throw err;
   }
 
