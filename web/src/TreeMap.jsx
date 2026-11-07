@@ -149,6 +149,18 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
     return () => clearTimeout(t);
   }, [nodes.length]);
 
+  // Selecting a bubble: zoom to its path (root -> bubble -> children), kept clear of the side panel
+  // that opens over the right of the map.
+  useEffect(() => {
+    if (!selectedId) return undefined;
+    const focus = [...ancestorsOf(map, selectedId), ...descendantsOf(map, selectedId).slice(0, 12)].map((id) => ({ id }));
+    const t = setTimeout(
+      () => fitView({ nodes: focus, duration: 350, maxZoom: 1, padding: { top: '40px', bottom: '60px', left: '30px', right: '400px' } }),
+      60,
+    );
+    return () => clearTimeout(t);
+  }, [selectedId]);
+
   if (!map.nodes?.length) {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center font-sans text-[13px] text-dim">
