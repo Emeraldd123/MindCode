@@ -79,6 +79,6 @@ nodeChat(node: Node, map: MindMap, history: Message[], text: string): Promise<{ 
 buildApp(map: MindMap, previousHtml: string | null): Promise<string>; // HTML with data-mc / data-mc-el
 ```
 
-`updateMap` may return partial nodes; the API fills defaults and enforces the rules: approved/locked nodes are never changed, `source` is fixed at creation, only the user approves, and omitted nodes are kept. `updateMap` and `nodeChat` must finish well inside the 30 s function limit (cap `max_tokens`). `buildApp` runs in the background function (15 min).
+`updateMap` may return partial nodes; the API fills defaults and enforces the rules: approved/locked nodes are never changed, `source` is fixed at creation (one exception: an `unknown` the user answers, with a quote, becomes `user`), only the user approves, and omitted nodes are kept. `updateMap` and `nodeChat` must finish well inside the 30 s function limit (cap `max_tokens`). `buildApp` runs in the background function (15 min).
 
 With `MINDCODE_FAKE_LLM=1`, `api/ai.ts` uses deterministic canned output (no network, no key), and builds run inline.

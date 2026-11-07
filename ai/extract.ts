@@ -12,6 +12,7 @@ The mind map must break down the user's ideas into structured bubbles with expli
    - 'user': The user explicitly said or requested this. You MUST provide 'evidence' as an array of exact short quotes from the user's messages. 'inventiveness' must be 0.
    - 'inferred': Claude assumed this necessity; the user never mentioned it. 'evidence' MUST be empty []. 'inventiveness' must be a float between 0.0 and 1.0 (0.0 = obvious technical necessity like an API or schema; 1.0 = creative product leap or novel feature).
    - 'unknown': A critical decision or requirement that is currently missing and needs the user to weigh in (e.g. "How do users log in?", "What data storage?"). Label should be phrasing the question or decision. 'evidence' MUST be empty [].
+   - When the user ANSWERS an existing 'unknown' node, return that same id with source 'user', the answer as the new label/detail, and the user's quote in 'evidence'. (This is the only allowed source change.)
 2. 'id': Must be stable!
    - Every existing node in 'current_map' MUST keep its exact id ('n1', 'n2', etc.).
    - New nodes must be assigned the next available ids ('n' + next integer).
@@ -31,10 +32,17 @@ The mind map must break down the user's ideas into structured bubbles with expli
 ### RESPONSE FORMAT:
 Respond with a JSON object containing:
 {
-  "reply": "Conversational message back to the user explaining what you added, calling attention to assumed features and asking for decisions on unknown nodes.",
-  "nodes": [ ... array of Node objects ... ],
-  "edges": [ ... array of Edge objects ... ]
+  "reply": "At most 3 short plain-text sentences: what you added, which assumptions to check, and the single most important open question.",
+  "nodes": [ ... ONLY nodes that are new or changed this turn ... ],
+  "edges": [ ... ONLY new edges ... ]
 }
+
+### SIZE LIMITS (strict, the response must stay small):
+- Return ONLY new or changed nodes. Never repeat unchanged nodes; the app keeps them automatically.
+- First turn: 6 to 10 nodes total. Later turns: usually 0 to 5 nodes.
+- label: at most 4 words. detail: one sentence, at most 20 words. evidence: at most 2 short quotes.
+- Node fields to output: id, label, detail, kind, source, inventiveness, importance, parent, evidence. Omit status and turn.
+- No markdown, no code fences. Raw JSON only.
 `;
 
 export async function update_map(
@@ -71,12 +79,13 @@ Please update the mind map based on the conversation so far. Remember:
 - Preserve existing node ids.
 - Every new node gets 'proposed' status and an id like n<next_index>.
 - Classify source accurately ('user' with quote in evidence, 'inferred' with inventiveness 0..1, 'unknown' for open decisions).
+- Return ONLY new or changed nodes and new edges, within the size limits.
 - Return valid JSON matching the specified schema.`;
 
   const { data } = await callOpenRouter<{ reply: string; nodes: any[]; edges: any[] }>([
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: userPrompt }
-  ]);
+  ], { maxTokens: 4000 });
 
   return normalizeAndValidateMapResult(data, current, turn);
 }
@@ -185,12 +194,14 @@ function normalizeAndValidateMapResult(
     }
   }
 
-  // Ensure at least one node exists
-  if (finalNodes.length === 0) {
-    return fakeUpdateMap([], current);
+  // The model returns only new/changed nodes; an empty list is valid (nothing changed this turn).
+  // The API merge (api/store.ts mergeMap) keeps every node it omits.
+  if (finalNodes.length === 0 && (current.nodes || []).length === 0) {
+    throw new Error("Model returned no nodes for an empty map");
   }
 
-  // Process and sanitize edges
+  // Process and sanitize edges. Edges may point at existing nodes the model did not repeat.
+  const knownIds = new Set([...seenIds, ...(current.nodes || []).map((n) => n.id)]);
   const finalEdges: Edge[] = [];
   const edgeSet = new Set<string>();
 
@@ -200,7 +211,7 @@ function normalizeAndValidateMapResult(
     const to = typeof re.to === "string" ? re.to : "";
     const relation: EdgeRelation = validRelations.includes(re.relation) ? re.relation : "has";
 
-    if (from && to && from !== to && seenIds.has(from) && seenIds.has(to)) {
+    if (from && to && from !== to && knownIds.has(from) && knownIds.has(to)) {
       const key = `${from}->${to}:${relation}`;
       if (!edgeSet.has(key)) {
         edgeSet.add(key);
@@ -212,7 +223,7 @@ function normalizeAndValidateMapResult(
   // If no edges, construct tree edges from parent pointers
   if (finalEdges.length === 0) {
     for (const node of finalNodes) {
-      if (node.parent && seenIds.has(node.parent)) {
+      if (node.parent && knownIds.has(node.parent)) {
         finalEdges.push({ from: node.parent, to: node.id, relation: "has" });
       }
     }

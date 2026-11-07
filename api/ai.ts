@@ -1,8 +1,15 @@
 // The one place the API picks its AI implementation.
-// When ai/ lands (#4, #5), replace this with the real module, e.g.:
-//   import { realAI } from "../ai/index";
-//   export const ai: AI = process.env.MINDCODE_FAKE_LLM === "1" ? stubAI : realAI;
-import type { AI } from "./types";
+// updateMap: real ai/ module (#4). It handles MINDCODE_FAKE_LLM=1 itself with the canned demo map.
+// nodeChat / buildApp: stubs until #5 lands, then swap them in here the same way.
+import { update_map } from "../ai/extract.ts";
 import { stubAI } from "./stubs";
+import type { AI } from "./types";
 
-export const ai: AI = stubAI;
+export const ai: AI = {
+  updateMap: async (messages, current) => {
+    const { reply, map } = await update_map(messages, current);
+    return { reply, map };
+  },
+  nodeChat: stubAI.nodeChat,
+  buildApp: stubAI.buildApp,
+};
