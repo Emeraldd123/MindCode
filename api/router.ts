@@ -15,8 +15,15 @@ export interface Deps {
   newId?: () => string;
 }
 
+export const MAX_CHAT_TEXT_LEN = 4000;
+export const MAX_LABEL_LEN = 80;
+export const MAX_DETAIL_LEN = 500;
+export const MAX_MAP_NODES = 60;
+export const BUILD_COOLDOWN_MS = 20_000; // 20 s
+export const CHAT_COOLDOWN_MS = 5_000;   // 5 s
+
 class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public extra?: Record<string, unknown>) { super(message); }
 }
 
 const json = (data: unknown, status = 200) => Response.json(data, { status });
@@ -26,6 +33,9 @@ async function readText(req: Request): Promise<string> {
   try { body = await req.json(); } catch { throw new HttpError(422, "body must be JSON"); }
   const text = typeof body.text === "string" ? body.text.trim() : "";
   if (!text) throw new HttpError(422, "text is empty");
+  if (text.length > MAX_CHAT_TEXT_LEN) {
+    throw new HttpError(413, `chat text exceeds maximum length of ${MAX_CHAT_TEXT_LEN} characters`);
+  }
   return text;
 }
 
@@ -99,7 +109,9 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   try {
     return await route(req, deps);
   } catch (e) {
-    if (e instanceof HttpError) return json({ detail: e.message }, e.status);
+    if (e instanceof HttpError) {
+      return json({ detail: e.message, ...(e.extra ?? {}) }, e.status);
+    }
     console.error(e);
     return json({ detail: "internal error" }, 500);
   }
@@ -142,8 +154,14 @@ async function route(req: Request, deps: Deps): Promise<Response> {
   if (m === "POST" && rest.length === 1 && rest[0] === "messages") {
     const text = await readText(req);
     if (s.turn?.status === "pending") throw new HttpError(409, "Claude is still working on the previous message");
+    const now = Date.now();
+    if (s.last_turn_at && now - s.last_turn_at < CHAT_COOLDOWN_MS) {
+      const retry_after_s = Math.max(1, Math.ceil((CHAT_COOLDOWN_MS - (now - s.last_turn_at)) / 1000));
+      throw new HttpError(429, "chat cooldown in effect; please wait before sending another message", { retry_after_s });
+    }
+    s.last_turn_at = now;
     s.messages = [...s.messages, { role: "user" as const, text }];
-    s.turn = { status: "pending", changed: [], started_at: Date.now() };
+    s.turn = { status: "pending", changed: [], started_at: now };
     await save();
     if (deps.startTurn) await deps.startTurn(s.id);
     else await runTurn(deps, s.id);
@@ -156,6 +174,9 @@ async function route(req: Request, deps: Deps): Promise<Response> {
   }
 
   if (rest[0] === "nodes" && rest.length === 1 && m === "POST") {
+    if (s.map.nodes.length >= MAX_MAP_NODES) {
+      throw new HttpError(409, `maximum map node limit of ${MAX_MAP_NODES} reached`);
+    }
     let body: { label?: unknown; detail?: unknown; kind?: unknown; parent?: unknown };
     try {
       body = await req.json();
@@ -164,9 +185,16 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     }
     const label = typeof body?.label === "string" ? body.label.trim() : "";
     if (!label) throw new HttpError(400, "label required");
+    if (label.length > MAX_LABEL_LEN) {
+      throw new HttpError(413, `label exceeds maximum length of ${MAX_LABEL_LEN} characters`);
+    }
+    const detail = typeof body?.detail === "string" ? body.detail : undefined;
+    if (detail && detail.length > MAX_DETAIL_LEN) {
+      throw new HttpError(413, `detail exceeds maximum length of ${MAX_DETAIL_LEN} characters`);
+    }
     const node = addNode(s, {
       label,
-      detail: typeof body?.detail === "string" ? body.detail : undefined,
+      detail,
       kind: typeof body?.kind === "string" ? (body.kind as any) : undefined,
       parent: body?.parent === null || typeof body?.parent === "string" ? body.parent : undefined,
     });
@@ -258,8 +286,18 @@ async function route(req: Request, deps: Deps): Promise<Response> {
         if (!["proposed", "approved", "locked"].includes(body.status)) throw new HttpError(422, "status must be proposed, approved or locked");
         n.status = body.status as Session["map"]["nodes"][number]["status"];
       }
-      if (typeof body.label === "string") n.label = body.label;
-      if (typeof body.detail === "string") n.detail = body.detail;
+      if (typeof body.label === "string") {
+        if (body.label.length > MAX_LABEL_LEN) {
+          throw new HttpError(413, `label exceeds maximum length of ${MAX_LABEL_LEN} characters`);
+        }
+        n.label = body.label;
+      }
+      if (typeof body.detail === "string") {
+        if (body.detail.length > MAX_DETAIL_LEN) {
+          throw new HttpError(413, `detail exceeds maximum length of ${MAX_DETAIL_LEN} characters`);
+        }
+        n.detail = body.detail;
+      }
       await save();
       return json(n);
     }
@@ -268,6 +306,12 @@ async function route(req: Request, deps: Deps): Promise<Response> {
   if (m === "POST" && rest.length === 1 && rest[0] === "build") {
     if (!s.map.nodes.length) throw new HttpError(422, "map is empty; send a message first");
     if (s.builds.some((b) => b.status === "pending")) throw new HttpError(409, "a build is already running");
+    const now = Date.now();
+    if (s.last_build_at && now - s.last_build_at < BUILD_COOLDOWN_MS) {
+      const retry_after_s = Math.max(1, Math.ceil((BUILD_COOLDOWN_MS - (now - s.last_build_at)) / 1000));
+      throw new HttpError(429, "build cooldown in effect; please wait before starting another build", { retry_after_s });
+    }
+    s.last_build_at = now;
     const bid = `b${s.builds.length + 1}`;
     const cp = addCheckpoint(s, `Build ${bid}`, bid);
     const b = { id: bid, status: "pending" as const, html: "", trace: {}, checkpoint_id: cp.id };
@@ -338,9 +382,15 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     if (m === "POST" && rest[2] === "edit") {
       if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
       if (s.builds.some((x) => x.status === "pending")) throw new HttpError(409, "a build is already running");
+      const now = Date.now();
+      if (s.last_build_at && now - s.last_build_at < BUILD_COOLDOWN_MS) {
+        const retry_after_s = Math.max(1, Math.ceil((BUILD_COOLDOWN_MS - (now - s.last_build_at)) / 1000));
+        throw new HttpError(429, "build cooldown in effect; please wait before starting another build", { retry_after_s });
+      }
       const body = (await req.json().catch(() => ({}))) as Partial<ChangeRequest>;
       const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
       if (!instruction) throw new HttpError(422, "instruction is empty");
+      s.last_build_at = now;
       const nid = `b${s.builds.length + 1}`;
       const cp = addCheckpoint(s, `Edit ${nid}: ${instruction.slice(0, 40)}`, nid);
       const nb = {
