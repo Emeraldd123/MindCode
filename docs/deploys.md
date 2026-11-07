@@ -15,4 +15,6 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 |---|---|---|---|---|
 | 1 | 2026-11-07 13:30 | main @ #36 (site created by Ben) | First link of the site | **Failed** in secrets scanning: `OPENROUTER_MODEL`'s value (a public model slug) appears in the code. Fixed by `SECRETS_SCAN_OMIT_KEYS` (#42). The key itself was not leaked. |
 
-Deploys used: **1 / 15**
+| 2 | 2026-11-07 13:35 | 35237e4 (#42, `[deploy]`) | First real deploy: gate + secrets-scan fix | **Live** at https://mindcode1.netlify.app. Health ok; real Opus message 200 in 9 s; real background build done in 123 s (25 KB). `/api/sessions/demo` 404s because #36 reverted it (fixed in #43). |
+
+Deploys used: **2 / 15**
