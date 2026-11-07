@@ -391,3 +391,29 @@ describe("OpenRouter Client", () => {
     }
   });
 });
+
+describe("OpenRouter JSON extraction (#78 follow-up)", () => {
+  test("keeps JSON whose string values contain code fences", async () => {
+    const original = globalThis.fetch;
+    process.env.OPENROUTER_API_KEY = "test";
+    const payload = { reply: "Use this:\n```js\nconsole.log(1)\n```\nDone.", nodes: [] };
+    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }) })) as any;
+    try {
+      const { callOpenRouter } = await import("../client.ts");
+      const { data } = await callOpenRouter<any>([{ role: "user", content: "x" }]);
+      assert.equal(data.reply, payload.reply);
+    } finally { globalThis.fetch = original; }
+  });
+
+  test("extracts JSON after chatty preamble, and from a fenced answer", async () => {
+    const original = globalThis.fetch;
+    process.env.OPENROUTER_API_KEY = "test";
+    const replies = ['Sure! Here it is: {"reply":"a","nodes":[]} hope that helps', '```json\n{"reply":"b","nodes":[]}\n```'];
+    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: replies.shift() } }] }) })) as any;
+    try {
+      const { callOpenRouter } = await import("../client.ts");
+      assert.equal((await callOpenRouter<any>([{ role: "user", content: "x" }])).data.reply, "a");
+      assert.equal((await callOpenRouter<any>([{ role: "user", content: "x" }])).data.reply, "b");
+    } finally { globalThis.fetch = original; }
+  });
+});

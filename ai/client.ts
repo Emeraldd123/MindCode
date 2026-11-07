@@ -78,9 +78,11 @@ export async function callOpenRouter<T = any>(
       // Try parsing JSON
       try {
         let cleanText = rawText.trim();
-        const match = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-        if (match) {
-            cleanText = match[1];
+        // Only strip fences that wrap the WHOLE answer. A lazy global match would stop at a code
+        // block inside the JSON (e.g. a reply that contains ``` itself).
+        const wrapped = cleanText.match(/^```(?:json)?\s*([\s\S]*)\s*```$/i);
+        if (wrapped) {
+            cleanText = wrapped[1];
         } else {
             const firstBrace = cleanText.indexOf('{');
             const firstBracket = cleanText.indexOf('[');
