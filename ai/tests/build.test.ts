@@ -8,6 +8,7 @@ import {
   extractLockedElements,
   ensureTracedElementIds,
   findFullElement,
+  SYSTEM_PROMPT,
 } from "../build.ts";
 import { fakeBuildApp } from "../fake.ts";
 import type { MindMap } from "../types.ts";
@@ -246,5 +247,17 @@ describe("AI: build_app", () => {
       if (oldKey !== undefined) process.env.OPENROUTER_API_KEY = oldKey;
       else delete process.env.OPENROUTER_API_KEY;
     }
+  });
+  test("SYSTEM_PROMPT enforces ship-ready builds with no Assumed disclaimers or placeholder names", () => {
+    assert.ok(SYSTEM_PROMPT.includes('NEVER output "Assumed: ..."'), "Must forbid Assumed notes");
+    assert.ok(SYSTEM_PROMPT.includes("NO placeholder names or generic bios"), "Must forbid generic placeholder names");
+    assert.ok(SYSTEM_PROMPT.includes("Jordan Lee"), "Must specifically cite Jordan Lee as anti-pattern");
+    assert.ok(SYSTEM_PROMPT.includes("BUILD ONLY WHAT IS ON THE MAP"), "Must include core build-only-what's-on-the-map rule");
+  });
+
+  test("SYSTEM_PROMPT enforces working navigation, tabs, and buttons without dead hrefs", () => {
+    assert.ok(SYSTEM_PROMPT.includes("EVERY button, tab, link, and control MUST be functional"), "Must enforce functional controls");
+    assert.ok(SYSTEM_PROMPT.includes('Never use dead href="#"'), "Must forbid dead href=# anchors");
+    assert.ok(SYSTEM_PROMPT.includes("In-page navigation, tabs, or anchor links MUST actually switch views"), "Must require tab/nav switching in vanilla JS");
   });
 });
