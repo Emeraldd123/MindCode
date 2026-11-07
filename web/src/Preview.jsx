@@ -114,6 +114,17 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   }, [sessionId, shown?.id]);
 
   // Page -> map: hover messages from the iframe; right-click -> change request popover.
+  const [inspect, setInspect] = useState(false);
+  const [pinned, setPinned] = useState(null); // { nodes, text } while an element is pinned
+  const pinnedRef = useRef([]);
+  const sendInspect = (on) => iframeRef.current?.contentWindow?.postMessage({ type: 'mc-inspect', on }, '*');
+  useEffect(() => {
+    sendInspect(inspect);
+    if (!inspect) {
+      pinnedRef.current = [];
+      setPinned(null);
+    }
+  }, [inspect]);
   const [editTarget, setEditTarget] = useState(null);
   const [editText, setEditText] = useState('');
   const [editSending, setEditSending] = useState(false);
@@ -129,16 +140,29 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
         setEditText('');
         return;
       }
+      if (e.data && e.data.type === 'mc-pin') {
+        const nodes = Array.isArray(e.data.nodes) ? e.data.nodes : [];
+        pinnedRef.current = nodes;
+        setPinned(nodes.length ? { nodes, text: e.data.text || '' } : null);
+        setHovered(nodes);
+        onHoverNodes?.(nodes);
+        return;
+      }
       if (!isHoverMessage(e.data)) return;
-      setHovered(e.data.nodes);
-      onHoverNodes?.(e.data.nodes);
+      // While something is pinned, leaving an element falls back to the pinned bubbles, not to nothing.
+      const next = e.data.nodes.length ? e.data.nodes : pinnedRef.current;
+      setHovered(next);
+      onHoverNodes?.(next);
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
   }, [onHoverNodes]);
 
   // Map -> page: outline elements informed by the selected bubbles.
-  const sendHighlight = () => iframeRef.current?.contentWindow?.postMessage({ type: 'mc-highlight', nodes: highlightNodes }, '*');
+  const sendHighlight = () => {
+    iframeRef.current?.contentWindow?.postMessage({ type: 'mc-highlight', nodes: highlightNodes }, '*');
+    sendInspect(inspect); // re-apply inspect mode after the iframe reloads
+  };
   useEffect(sendHighlight, [highlightNodes.join(' '), shown?.id]);
 
   const closeEdit = () => {
@@ -197,6 +221,17 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
         <h2>App Preview</h2>
         <div className="preview-actions">
           {shown && (
+            <button
+              type="button"
+              onClick={() => setInspect((v) => !v)}
+              aria-pressed={inspect}
+              className={`preview-download ${inspect ? '!border-ai !text-ai' : ''}`}
+              title={inspect ? 'Inspect is on: click an element to pin the bubbles behind it (normal clicks paused)' : 'Inspect: click an element to pin the bubbles behind it'}
+            >
+              {inspect ? '◉ Pin' : '◎ Pin'}
+            </button>
+          )}
+          {shown && (
             <div className="preview-mode-toggle" role="group" aria-label="View mode">
               <button
                 type="button"
@@ -228,7 +263,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               download={`mindcode-${shown.id}.html`}
               title="Download standalone app HTML"
             >
-              ↓ HTML
+              ↓
             </a>
           )}
           <button
@@ -247,7 +282,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               disabled={!canBuild}
               title="Regenerate the whole app from the map (slower)"
             >
-              Full rebuild
+              Full
             </button>
           )}
         </div>

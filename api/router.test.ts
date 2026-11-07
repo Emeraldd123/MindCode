@@ -668,3 +668,12 @@ describe("incremental rebuilds (small map changes become patches)", () => {
     expect(b4.mode).toBe("full");
   });
 });
+
+describe("trace script (inspect + right-click)", () => {
+  it("ships correctly escaped regexes and the inspect/pin protocol", async () => {
+    const { TRACE_SCRIPT } = await import("./trace");
+    expect(TRACE_SCRIPT).not.toMatch(/split\(\/s\+\//); // a lost backslash would split on the letter "s"
+    expect(TRACE_SCRIPT.split("split(/\\s+/)").length - 1).toBeGreaterThanOrEqual(4);
+    for (const t of ["mc-inspect", "mc-pin", "mc-unpin", "mc-pinned", "mc-edit"]) expect(TRACE_SCRIPT).toContain(t);
+  });
+});

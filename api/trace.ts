@@ -9,6 +9,8 @@ export const TRACE_SCRIPT = `
 <style>
   [data-mc].mc-hl { outline: 3px solid #17c894 !important; outline-offset: 2px; }
   [data-mc].mc-hover { outline: 2px dashed #d67408 !important; outline-offset: 2px; }
+  .mc-inspecting, .mc-inspecting * { cursor: crosshair !important; }
+  [data-mc].mc-pinned { outline: 3px solid #ffffff !important; outline-offset: 3px; box-shadow: 0 0 0 7px rgba(23,200,148,.35) !important; }
   .mc-edit { outline: 3px solid #d67408 !important; outline-offset: 3px; box-shadow: 0 0 0 6px rgba(214,116,8,.18) !important; }
 </style>
 <script>
@@ -51,6 +53,28 @@ export const TRACE_SCRIPT = `
     }
   }, true);
 
+  // Inspect mode (toggled from MindCode): clicking an element PINS its bubbles, so the highlight
+  // stays while you scroll the map. Click it again (or Esc) to release. Normal clicks are paused.
+  var inspect = false, pinned = null;
+  function unpin() {
+    if (pinned) pinned.classList.remove('mc-pinned');
+    pinned = null;
+    parent.postMessage({ type: 'mc-pin', nodes: [], el: null }, '*');
+  }
+  document.addEventListener('click', function (e) {
+    if (!inspect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var el = tagged(e.target);
+    if (!el || el === pinned) { unpin(); return; }
+    if (pinned) pinned.classList.remove('mc-pinned');
+    pinned = el;
+    el.classList.add('mc-pinned');
+    parent.postMessage({ type: 'mc-pin', nodes: el.getAttribute('data-mc').split(/\\s+/), el: el.getAttribute('data-mc-el'),
+                         text: (el.innerText || '').trim().slice(0, 80) }, '*');
+  }, true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pinned) unpin(); });
+
   // Right-click any element -> ask MindCode for a targeted change to it.
   var editEl = null;
   document.addEventListener('contextmenu', function (e) {
@@ -63,7 +87,7 @@ export const TRACE_SCRIPT = `
     parent.postMessage({
       type: 'mc-edit',
       el: el.getAttribute('data-mc-el'),
-      nodes: el.getAttribute('data-mc') ? el.getAttribute('data-mc').split(/\s+/) : [],
+      nodes: el.getAttribute('data-mc') ? el.getAttribute('data-mc').split(/\\s+/) : [],
       tag: el.tagName.toLowerCase(),
       text: (el.innerText || el.value || '').trim().slice(0, 160),
       snippet: el.outerHTML.slice(0, 1500),
@@ -74,6 +98,12 @@ export const TRACE_SCRIPT = `
 
   window.addEventListener('message', function (e) {
     if (e.data && e.data.type === 'mc-edit-clear' && editEl) { editEl.classList.remove('mc-edit'); editEl = null; }
+    if (e.data && e.data.type === 'mc-inspect') {
+      inspect = !!e.data.on;
+      document.documentElement.classList.toggle('mc-inspecting', inspect);
+      if (!inspect) unpin();
+    }
+    if (e.data && e.data.type === 'mc-unpin') unpin();
     if (!e.data || e.data.type !== 'mc-highlight') return;
     var want = e.data.nodes || [], first = null;
     document.querySelectorAll('[data-mc]').forEach(function (el) {
