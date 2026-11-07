@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# tools/smoke: End-to-end smoke test script for MindCode in fake mode (MINDCODE_FAKE_LLM=1)
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export MINDCODE_FAKE_LLM=1
+
+cd "$ROOT"
+node --input-type=module <<'NODE_SCRIPT'
+import { createServer } from "vite";
+
+const vite = await createServer({
+  server: { middlewareMode: true },
+  appType: "custom",
+});
+
+try {
+  const { ai } = await vite.ssrLoadModule("./api/ai.ts");
+  const { handle, runBuild } = await vite.ssrLoadModule("./api/router.ts");
+  const { memoryStorage } = await vite.ssrLoadModule("./api/storage.ts");
+
+  const storage = memoryStorage();
+  let idCounter = 0;
+  const deps = {
+    storage,
+    ai,
+    startBuild: (sid, bid) => runBuild({ storage, ai }, sid, bid),
+    newId: () => `s${++idCounter}`,
+  };
+
+  async function req(method, path, body) {
+    const r = new Request(`http://localhost:8888/api${path}`, {
+      method,
+      headers: body !== undefined ? { "content-type": "application/json" } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    const res = await handle(r, deps);
+    const ct = res.headers.get("content-type") ?? "";
+    const data = ct.includes("json") ? await res.json() : await res.text();
+    return { status: res.status, headers: res.headers, body: data };
+  }
+
+  function fail(msg) {
+    console.error(`\n[smoke] ERROR: ${msg}`);
+    process.exit(1);
+  }
+
+  // 1. Health check
+  process.stdout.write("[smoke] 1. Health check... ");
+  const health = await req("GET", "/health");
+  if (health.status !== 200 || !health.body?.ok) {
+    fail(`Health check failed (status: ${health.status})`);
+  }
+  console.log("OK");
+
+  // 2. Create session
+  process.stdout.write("[smoke] 2. Create session... ");
+  const sessionRes = await req("POST", "/sessions");
+  const sid = sessionRes.body?.id;
+  if (sessionRes.status !== 200 || !sid || !Array.isArray(sessionRes.body?.map?.nodes)) {
+    fail("Failed to create session");
+  }
+  console.log(`OK (sid: ${sid})`);
+
+  // 3. Chat turn 1 (extract map)
+  process.stdout.write("[smoke] 3. Chat turn 1 (extract map)... ");
+  const msgRes = await req("POST", `/sessions/${sid}/messages`, {
+    text: "I want a chat app for my study group",
+  });
+  const nodes = msgRes.body?.map?.nodes;
+  if (msgRes.status !== 200 || !Array.isArray(nodes) || nodes.length < 5) {
+    fail("Prompt extraction did not return at least 5 nodes");
+  }
+  const userNodes = nodes.filter((n) => n.source === "user");
+  if (userNodes.length === 0 || !userNodes.some((n) => Array.isArray(n.evidence) && n.evidence.length > 0)) {
+    fail("Missing user source node with non-empty evidence");
+  }
+  const inferredNodes = nodes.filter((n) => n.source === "inferred");
+  if (
+    inferredNodes.length === 0 ||
+    !inferredNodes.some((n) => typeof n.inventiveness === "number" && n.inventiveness >= 0 && n.inventiveness <= 1)
+  ) {
+    fail("Missing inferred source node with inventiveness between 0 and 1");
+  }
+  const unknownNode = nodes.find((n) => n.source === "unknown");
+  if (!unknownNode) {
+    fail("Missing unknown source node");
+  }
+  console.log(`OK (${nodes.length} nodes)`);
+
+  // 4. Bubble chat
+  process.stdout.write("[smoke] 4. Bubble chat... ");
+  const chatRes = await req("POST", `/sessions/${sid}/nodes/${unknownNode.id}/chat`, {
+    text: "just a nickname, no passwords",
+  });
+  const updatedNode = chatRes.body?.node;
+  if (chatRes.status !== 200 || updatedNode?.label !== "Nickname login") {
+    fail(`Bubble chat failed to rewrite label to Nickname login (got "${updatedNode?.label}")`);
+  }
+  console.log(`OK (rewritten to ${updatedNode.label})`);
+
+  // 5. Approve bubble
+  process.stdout.write("[smoke] 5. Approve bubble... ");
+  const approveRes = await req("POST", `/sessions/${sid}/nodes/${unknownNode.id}/approve`);
+  if (approveRes.status !== 200 || approveRes.body?.status !== "approved") {
+    fail("Failed to approve bubble");
+  }
+  console.log("OK");
+
+  // 6. Trigger build & poll
+  process.stdout.write("[smoke] 6. Trigger build & poll... ");
+  const buildRes = await req("POST", `/sessions/${sid}/build`);
+  let build = buildRes.body;
+  const bid = build?.id;
+  if (![200, 202].includes(buildRes.status) || !bid) {
+    fail("Failed to initiate build");
+  }
+  if (build.status === "pending") {
+    let attempts = 0;
+    while (build.status === "pending" && attempts < 10) {
+      attempts++;
+      const pollRes = await req("GET", `/sessions/${sid}/builds/${bid}`);
+      if (pollRes.status !== 200) fail("Poll request failed");
+      build = pollRes.body;
+    }
+  }
+  if (build.status !== "done") {
+    fail(`Build status is ${build.status}, expected done`);
+  }
+  console.log(`OK (bid: ${bid})`);
+
+  // 7. Inspect preview HTML & traces
+  process.stdout.write("[smoke] 7. Inspect preview HTML & traces... ");
+  const previewRes = await req("GET", `/sessions/${sid}/builds/${bid}/preview`);
+  const html = previewRes.body;
+  if (previewRes.status !== 200 || typeof html !== "string") {
+    fail("Failed to fetch preview HTML");
+  }
+  if (!/<script[\s\S]*?>[\s\S]*?mc-hover[\s\S]*?<\/script>/i.test(html)) {
+    fail("Preview HTML does not contain trace bridge script");
+  }
+  const sRes = await req("GET", `/sessions/${sid}`);
+  const mapNodes = sRes.body?.map?.nodes || [];
+  const validIds = new Set(mapNodes.map((n) => n.id));
+
+  const elMatches = [...html.matchAll(/data-mc-el=["']([^"']+)["']\s+data-mc=["']([^"']+)["']/g)];
+  const elMatchesRev = [...html.matchAll(/data-mc=["']([^"']+)["']\s+data-mc-el=["']([^"']+)["']/g)];
+  const all = [
+    ...elMatches.map((m) => ({ el: m[1], mc: m[2] })),
+    ...elMatchesRev.map((m) => ({ el: m[2], mc: m[1] })),
+  ];
+  if (all.length === 0) {
+    fail("No traced elements found in HTML");
+  }
+  for (const match of all) {
+    const ids = match.mc.split(/\s+/).filter(Boolean);
+    for (const id of ids) {
+      if (!validIds.has(id)) {
+        fail(`Found data-mc referencing unknown node id: ${id}`);
+      }
+    }
+  }
+  console.log("OK");
+
+  // 8. Checkpoint history
+  process.stdout.write("[smoke] 8. Checkpoint history... ");
+  const cpRes = await req("GET", `/sessions/${sid}/checkpoints`);
+  const checkpoints = cpRes.body;
+  if (cpRes.status !== 200 || !Array.isArray(checkpoints) || checkpoints.length === 0) {
+    fail("Failed to fetch checkpoints");
+  }
+  console.log(`OK (${checkpoints.length} checkpoints)`);
+
+  console.log("[smoke] ALL CHECKS PASSED");
+} finally {
+  await vite.close();
+}
+NODE_SCRIPT

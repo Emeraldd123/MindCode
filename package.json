@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node node_modules/vitest/vitest.mjs run",
+    "test:smoke": "vitest run api/smoke.test.ts",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "dev": "netlify dev"
   },
