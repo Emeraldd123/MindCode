@@ -37,8 +37,9 @@ export default function Attention({
   nodes = [],
   onSelect = () => {},
   selectedId = null,
+  defaultOpen = true, // the map passes false so the list never covers the bubbles
 }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const attentionItems = useMemo(() => filterAndSortAttentionNodes(nodes), [nodes]);
 

@@ -485,7 +485,7 @@ export default function MindMap({
       </header>
 
       <div className="mindmap-body">
-        <Attention nodes={nodes} onSelect={onSelect} selectedId={selectedId} />
+        <Attention nodes={nodes} onSelect={onSelect} selectedId={selectedId} defaultOpen={false} />
         <div className={stageClass} onAnimationEnd={(e) => { if (e.target === e.currentTarget) setEnterDir(null); }}>
           <ReactFlow
             key={levelKey}
