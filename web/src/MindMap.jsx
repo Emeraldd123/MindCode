@@ -91,28 +91,28 @@ export function bubbleWidth(importance) {
 }
 
 // Pure helper: inferredFill(inventiveness)
-// Opacity scales with inventiveness (0 = very pale, 1 = deep amber)
+// Opacity scales with inventiveness (0 = very pale, 1 = deep AI green #17c894)
 export function inferredFill(inventiveness) {
   const inv = typeof inventiveness === 'number' ? Math.max(0, Math.min(1, inventiveness)) : 0;
   // Pale: ~0.08 alpha, Deep: ~0.42 alpha
   const alpha = 0.08 + inv * 0.34;
-  return `rgba(245, 158, 11, ${Number(alpha.toFixed(3))})`;
+  return `rgba(23, 200, 148, ${Number(alpha.toFixed(3))})`; // AI green #17c894
 }
 
 // Pure helper: edgeStyle(relation)
-// has = slate, needs = amber, informs = blue dashed
+// has = slate, needs = light slate animated, informs = sky dashed (orange and green are reserved for user and AI)
 export function edgeStyle(relation) {
   switch (relation) {
     case 'needs':
       return {
-        stroke: '#f59e0b',
+        stroke: '#cbd5e1',
         strokeWidth: 2,
         strokeDasharray: undefined,
         animated: true,
       };
     case 'informs':
       return {
-        stroke: '#3b82f6',
+        stroke: '#38bdf8',
         strokeWidth: 2,
         strokeDasharray: '5,5',
         animated: false,
@@ -473,9 +473,9 @@ export default function MindMap({
           className="mindmap-minimap"
           nodeColor={(n) => {
             const node = n.data?.node;
-            if (node?.status === 'approved') return '#10b981';
-            if (node?.source === 'user') return '#3b82f6';
-            if (node?.source === 'inferred') return '#f59e0b';
+            if (node?.status === 'approved') return '#ffffff';
+            if (node?.source === 'user') return '#d67408';
+            if (node?.source === 'inferred') return '#17c894';
             if (node?.source === 'unknown') return '#ef4444';
             return '#64748b';
           }}

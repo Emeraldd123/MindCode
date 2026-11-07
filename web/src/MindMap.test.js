@@ -83,15 +83,15 @@ describe('MindMap logic and pure helpers', () => {
       const deep = inferredFill(1);
       const mid = inferredFill(0.5);
 
-      expect(pale).toBe('rgba(245, 158, 11, 0.08)');
-      expect(deep).toBe('rgba(245, 158, 11, 0.42)');
-      expect(mid).toBe('rgba(245, 158, 11, 0.25)');
+      expect(pale).toBe('rgba(23, 200, 148, 0.08)');
+      expect(deep).toBe('rgba(23, 200, 148, 0.42)');
+      expect(mid).toBe('rgba(23, 200, 148, 0.25)');
     });
 
     it('clamps values below 0 or above 1', () => {
-      expect(inferredFill(-0.5)).toBe('rgba(245, 158, 11, 0.08)');
-      expect(inferredFill(1.5)).toBe('rgba(245, 158, 11, 0.42)');
-      expect(inferredFill(undefined)).toBe('rgba(245, 158, 11, 0.08)');
+      expect(inferredFill(-0.5)).toBe('rgba(23, 200, 148, 0.08)');
+      expect(inferredFill(1.5)).toBe('rgba(23, 200, 148, 0.42)');
+      expect(inferredFill(undefined)).toBe('rgba(23, 200, 148, 0.08)');
     });
   });
 
@@ -105,14 +105,14 @@ describe('MindMap logic and pure helpers', () => {
 
     it('returns amber animated for needs relation', () => {
       const style = edgeStyle('needs');
-      expect(style.stroke).toBe('#f59e0b');
+      expect(style.stroke).toBe('#cbd5e1');
       expect(style.strokeDasharray).toBeUndefined();
       expect(style.animated).toBe(true);
     });
 
     it('returns blue dashed for informs relation', () => {
       const style = edgeStyle('informs');
-      expect(style.stroke).toBe('#3b82f6');
+      expect(style.stroke).toBe('#38bdf8');
       expect(style.strokeDasharray).toBe('5,5');
       expect(style.animated).toBe(false);
     });

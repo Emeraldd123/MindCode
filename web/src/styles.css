@@ -11,8 +11,8 @@
   --text-dim: #64748b;
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --accent-user: #3b82f6;       /* Blue */
-  --accent-inferred: #f59e0b;   /* Amber */
+  --accent-user: #d67408;       /* Ben: user input = orange */
+  --accent-inferred: #17c894;   /* Ben: AI = green */
   --accent-unknown: #ef4444;    /* Red */
   --accent-approved: #10b981;   /* Green */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
