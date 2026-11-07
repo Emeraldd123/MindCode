@@ -305,6 +305,7 @@ export default function MindMap({
   activeId: controlledActiveId, // bubble whose children are shown; null = top level. Omit to let MindMap own it.
   onNavigate,
   rootLabel = 'Project',
+  compact = false,
 }) {
   const nodes = map.nodes || [];
   const edges = map.edges || [];
@@ -477,15 +478,15 @@ export default function MindMap({
     <div className="mindmap-wrapper">
       <header className="mm-header">
         <Breadcrumbs crumbs={crumbs} onGo={goTo} onBack={goBack} canGoBack={crumbs.length > 1} />
-        <div className="mm-legend" aria-label="Status of everything below this level">
+        {!compact && <div className="mm-legend" aria-label="Status of everything below this level">
           {['clear', 'assumed', 'needs'].map((k) => levelCounts[k] > 0 && (
             <StatusChip key={k} status={k}>{levelCounts[k]} {k === 'needs' ? 'need info' : STATUS_LABELS[k].toLowerCase()}</StatusChip>
           ))}
-        </div>
+        </div>}
       </header>
 
       <div className="mindmap-body">
-        <Attention nodes={nodes} onSelect={onSelect} selectedId={selectedId} defaultOpen={false} />
+        {!compact && <Attention nodes={nodes} onSelect={onSelect} selectedId={selectedId} defaultOpen={false} />}
         <div className={stageClass} onAnimationEnd={(e) => { if (e.target === e.currentTarget) setEnterDir(null); }}>
           <ReactFlow
             key={levelKey}
@@ -506,11 +507,11 @@ export default function MindMap({
             <RefitOnChange count={items.length} />
             <Background color="rgba(255, 255, 255, 0.07)" gap={20} size={1} />
             <Controls showInteractive={false} className="mindmap-controls" />
-            <MiniMap
+            {!compact && <MiniMap
               className="mindmap-minimap"
               nodeColor={(n) => (n.type === 'lens' ? '#F1F0EB' : MINIMAP_COLORS[mapStatus(n.data?.node)])}
               maskColor="rgba(31, 30, 29, 0.55)"
-            />
+            />}
           </ReactFlow>
         </div>
       </div>

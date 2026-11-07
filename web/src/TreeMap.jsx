@@ -1,14 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ReactFlow, Background, Controls, Handle, Position, useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Check, Lock, Minus, Plus } from 'lucide-react';
+import { Check, Lock, Minus, Plus, X } from 'lucide-react';
+import MindMap from './MindMap';
 import { cn } from '@/lib/utils';
 import { ancestorsOf, descendantsOf, layoutTree } from './treeLayout';
 
 /**
  * Tree map view (Claude's alternative to MindMap.jsx; toggle in the map header).
  * - Left-to-right tidy tree: every child sits beside its own parent, so branches are easy to follow.
- * - Click a bubble: its whole path from the root lights up, plus its subtree; everything else dims.
+ * - Hover a node: preview its bubble level in a small overlay without moving the tree.
+ * - Click a leaf: open details; the selected path/subtree lights up and everything else dims.
  * - Collapse/expand any branch. Cross-links (informs/needs) only show for the selected bubble.
  * Props match MindMap: map, highlighted, changedIds, selectedId, onSelect.
  */
@@ -72,7 +75,7 @@ function BubbleNode({ data }) {
 
 const nodeTypes = { bubble: BubbleNode };
 
-function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedIds = [], selectedId = null, onSelect }) {
+function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedIds = [], selectedId = null, onSelect, onHoverNode }) {
   const [collapsed, setCollapsed] = useState(() => new Set());
   const [measurements, setMeasurements] = useState(() => new Map());
   // Controlled nodes must retain React Flow's measurements when hover/selection
@@ -193,6 +196,7 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
       onNodesChange={onNodesChange}
       edges={edges}
       nodeTypes={nodeTypes}
+      onNodeMouseEnter={(_, n) => onHoverNode?.(n.data.node)}
       onNodeClick={(_, n) => onSelect?.(map.nodes.find((x) => x.id === n.id) || null)}
       onPaneClick={() => onSelect?.(null)}
       nodesConnectable={false}
@@ -215,9 +219,84 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
 }
 
 export default function TreeMap(props) {
+  const [preview, setPreview] = useState(null);
+  const closeTimer = useRef(null);
+  const wrapper = useRef(null);
+  const map = props.map || { nodes: [], edges: [] };
+  const hovered = preview && map.nodes.find((node) => node.id === preview.hoveredId);
+  const cancelClose = () => clearTimeout(closeTimer.current);
+  const close = () => { cancelClose(); setPreview(null); };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setPreview(null), 500);
+  };
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(() => {
+    if (!preview) return undefined;
+    const onEscape = (event) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      clearTimeout(closeTimer.current);
+      setPreview(null);
+      if (document.activeElement?.closest('[aria-label="Bubble graph preview"]')) wrapper.current?.focus();
+    };
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, [preview]);
+
+  const showPreview = (node) => {
+    cancelClose();
+    const hasKids = map.nodes.some((child) => child.parent === node.id);
+    const parent = map.nodes.some((candidate) => candidate.id === node.parent) ? node.parent : null;
+    setPreview({ hoveredId: node.id, levelId: hasKids ? node.id : parent });
+  };
+
   return (
-    <ReactFlowProvider>
-      <TreeInner {...props} />
-    </ReactFlowProvider>
+    <div
+      ref={wrapper}
+      tabIndex={-1}
+      className="relative h-full w-full outline-none"
+      onMouseEnter={cancelClose}
+      onMouseLeave={scheduleClose}
+      onFocusCapture={(event) => {
+        const el = event.target.closest('.react-flow__node');
+        if (event.target.closest('[aria-label="Bubble graph preview"]')) return;
+        const node = map.nodes.find((candidate) => candidate.id === el?.dataset.id);
+        if (node) showPreview(node);
+      }}
+    >
+      <ReactFlowProvider>
+        <TreeInner {...props} onHoverNode={showPreview} />
+      </ReactFlowProvider>
+      {hovered && createPortal(
+        <section
+          aria-label="Bubble graph preview"
+          className="fixed left-4 top-[60px] z-40 flex h-[760px] max-h-[calc(100dvh-76px)] w-[640px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-xl border border-hairline bg-background text-foreground shadow-2xl"
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+        >
+          <header className="flex shrink-0 items-center justify-between gap-2 border-b border-hairline px-4 py-3">
+            <div className="min-w-0">
+              <h3 className="m-0 truncate text-sm font-semibold">{hovered.label}</h3>
+              <p className="m-0 mt-1 text-xs text-muted-foreground">Bubble preview · hover another Tree node to explore</p>
+            </div>
+            <button type="button" aria-label="Close bubble preview" onClick={close} className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent text-foreground hover:bg-accent">
+              <X size={14} />
+            </button>
+          </header>
+          <div className="min-h-0 flex-1">
+            <MindMap
+              compact
+              map={map}
+              activeId={preview.levelId}
+              onNavigate={(levelId) => setPreview((prev) => prev && { ...prev, levelId })}
+              highlighted={[preview.hoveredId, ...(props.highlighted || [])]}
+              changedIds={props.changedIds}
+              onSelect={props.onSelect}
+            />
+          </div>
+        </section>,
+        document.body,
+      )}
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import TreeMap from './TreeMap';
 import Preview from './Preview';
 import NodeDrawer from './NodeDrawer';
 import Checkpoints from './Checkpoints';
+import GraphRecommendations from './GraphRecommendations';
 import { Plus } from 'lucide-react';
 import { Button } from '@/ui/primitives/button';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/primitives/resizable';
@@ -251,6 +252,7 @@ export default function App() {
               <div className="relative min-h-0 flex-1">
                 {mapView === 'tree' ? (
                   <TreeMap
+                    key={`${session?.id}:${activeCheckpointId ?? 'live'}`}
                     map={viewMap}
                     highlighted={hoverNodes}
                     changedIds={activeCheckpoint ? [] : changedIds}
@@ -269,6 +271,7 @@ export default function App() {
                   />
                 )}
               </div>
+              <GraphRecommendations map={viewMap} />
               <Checkpoints
                 checkpoints={checkpoints}
                 activeId={activeCheckpointId}
