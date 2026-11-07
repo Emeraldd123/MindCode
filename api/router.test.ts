@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handle, runBuild, runTurn, type Deps } from "./router";
 import { memoryStorage } from "./storage";
 import { traceOf } from "./store";
@@ -7,9 +7,12 @@ import type { AI, MapNode } from "./types";
 
 let deps: Deps;
 let ai: AI;
+let mockNow = 1_000_000;
 
 beforeEach(() => {
   ai = { ...stubAI };
+  mockNow += 100_000; // start each test far in the future
+  vi.spyOn(Date, "now").mockImplementation(() => mockNow);
   const storage = memoryStorage();
   let i = 0;
   deps = {
@@ -25,6 +28,8 @@ async function call(method: string, path: string, body?: unknown) {
     new Request(`http://x/api${path}`, { method, body: body === undefined ? undefined : JSON.stringify(body) }),
     deps,
   );
+  // Advance mock time after a successful operation that sets rate limit timestamps
+  mockNow += 30_000;
   const type = res.headers.get("content-type") ?? "";
   return { status: res.status, body: type.includes("json") ? await res.json() : await res.text() };
 }
@@ -675,5 +680,128 @@ describe("trace script (inspect + right-click)", () => {
     expect(TRACE_SCRIPT).not.toMatch(/split\(\/s\+\//); // a lost backslash would split on the letter "s"
     expect(TRACE_SCRIPT.split("split(/\\s+/)").length - 1).toBeGreaterThanOrEqual(4);
     for (const t of ["mc-inspect", "mc-pin", "mc-unpin", "mc-pinned", "mc-edit"]) expect(TRACE_SCRIPT).toContain(t);
+  });
+});
+
+describe("abuse protection & input limits", () => {
+  it("rejects chat text exceeding 4,000 characters with 413", async () => {
+    const id = await sid();
+    const tooLong = "a".repeat(4001);
+    const r1 = await call("POST", `/sessions/${id}/messages`, { text: tooLong });
+    expect(r1.status).toBe(413);
+    expect(r1.body.detail).toContain("chat text exceeds maximum length of 4000 characters");
+
+    // Exactly 4000 characters should be accepted
+    const exactlyMax = "a".repeat(4000);
+    const r2 = await call("POST", `/sessions/${id}/messages`, { text: exactlyMax });
+    expect(r2.status).toBe(200);
+  });
+
+  it("rejects node chat text exceeding 4,000 characters with 413", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "build an app" });
+    const tooLong = "b".repeat(4001);
+    const r = await call("POST", `/sessions/${id}/nodes/n1/chat`, { text: tooLong });
+    expect(r.status).toBe(413);
+    expect(r.body.detail).toContain("chat text exceeds maximum length of 4000 characters");
+  });
+
+  it("enforces max label length (80) and detail length (500) on POST /nodes", async () => {
+    const id = await sid();
+    // Label too long
+    const r1 = await call("POST", `/sessions/${id}/nodes`, { label: "l".repeat(81) });
+    expect(r1.status).toBe(413);
+    expect(r1.body.detail).toContain("label exceeds maximum length of 80 characters");
+
+    // Detail too long
+    const r2 = await call("POST", `/sessions/${id}/nodes`, { label: "valid", detail: "d".repeat(501) });
+    expect(r2.status).toBe(413);
+    expect(r2.body.detail).toContain("detail exceeds maximum length of 500 characters");
+
+    // Exactly at limits: accepted
+    const r3 = await call("POST", `/sessions/${id}/nodes`, { label: "l".repeat(80), detail: "d".repeat(500) });
+    expect(r3.status).toBe(201);
+    expect(r3.body.label).toBe("l".repeat(80));
+    expect(r3.body.detail).toBe("d".repeat(500));
+  });
+
+  it("enforces max label length (80) and detail length (500) on PATCH /nodes/:nid", async () => {
+    const id = await sid();
+    const created = (await call("POST", `/sessions/${id}/nodes`, { label: "Initial" })).body;
+
+    const r1 = await call("PATCH", `/sessions/${id}/nodes/${created.id}`, { label: "x".repeat(81) });
+    expect(r1.status).toBe(413);
+    expect(r1.body.detail).toContain("label exceeds maximum length of 80 characters");
+
+    const r2 = await call("PATCH", `/sessions/${id}/nodes/${created.id}`, { detail: "y".repeat(501) });
+    expect(r2.status).toBe(413);
+    expect(r2.body.detail).toContain("detail exceeds maximum length of 500 characters");
+
+    const r3 = await call("PATCH", `/sessions/${id}/nodes/${created.id}`, { label: "x".repeat(80), detail: "y".repeat(500) });
+    expect(r3.status).toBe(200);
+    expect(r3.body.label).toBe("x".repeat(80));
+    expect(r3.body.detail).toBe("y".repeat(500));
+  });
+
+  it("enforces max 60 nodes per session map with 409", async () => {
+    const id = await sid();
+    // Create 60 nodes
+    for (let i = 1; i <= 60; i++) {
+      const res = await call("POST", `/sessions/${id}/nodes`, { label: `Node ${i}` });
+      expect(res.status).toBe(201);
+    }
+    const session = (await call("GET", `/sessions/${id}`)).body;
+    expect(session.map.nodes).toHaveLength(60);
+
+    // 61st node should be rejected with 409
+    const overflow = await call("POST", `/sessions/${id}/nodes`, { label: "Node 61" });
+    expect(overflow.status).toBe(409);
+    expect(overflow.body.detail).toContain("maximum map node limit of 60 reached");
+  });
+
+  it("enforces chat cooldown of 5 s with 429 {detail, retry_after_s}", async () => {
+    const id = await sid();
+    const r1 = await call("POST", `/sessions/${id}/messages`, { text: "first message" });
+    expect(r1.status).toBe(200);
+
+    // Second message immediately (mockNow set back to 1 second after first)
+    mockNow -= 29_000; // call() advanced mockNow by 30_000, so this sets it to +1_000 ms from first message
+    const r2 = await call("POST", `/sessions/${id}/messages`, { text: "second message too fast" });
+    expect(r2.status).toBe(429);
+    expect(r2.body.detail).toContain("chat cooldown in effect");
+    expect(r2.body.retry_after_s).toBe(4);
+
+    // After 5 s (advancing mockNow by 5_000 ms)
+    mockNow += 5_000;
+    const r3 = await call("POST", `/sessions/${id}/messages`, { text: "third message after cooldown" });
+    expect(r3.status).toBe(200);
+  });
+
+  it("enforces build cooldown of 20 s with 429 {detail, retry_after_s}", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "setup app" });
+
+    const b1Time = mockNow;
+    const b1 = await call("POST", `/sessions/${id}/build`);
+    expect(b1.status).toBe(200);
+
+    // Attempt second build after only 5 seconds from b1
+    mockNow = b1Time + 5_000;
+    const b2 = await call("POST", `/sessions/${id}/build`);
+    expect(b2.status).toBe(429);
+    expect(b2.body.detail).toContain("build cooldown in effect");
+    expect(b2.body.retry_after_s).toBe(15);
+
+    // Attempt edit build after only 10 seconds from b1
+    mockNow = b1Time + 10_000;
+    const edit = await call("POST", `/sessions/${id}/builds/b1/edit`, { instruction: "make header bold" });
+    expect(edit.status).toBe(429);
+    expect(edit.body.detail).toContain("build cooldown in effect");
+    expect(edit.body.retry_after_s).toBe(10);
+
+    // After full 20 s has elapsed
+    mockNow = b1Time + 21_000;
+    const b3 = await call("POST", `/sessions/${id}/build`);
+    expect(b3.status).toBe(200);
   });
 });

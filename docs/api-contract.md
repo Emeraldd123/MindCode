@@ -90,7 +90,18 @@ interface Session {
 | GET | `/api/sessions/{sid}/checkpoints` | - | `Checkpoint[]` | built |
 | POST | `/api/sessions/{sid}/checkpoints/{cid}/restore` | - | Session: restores session map to checkpoint map state and records a restore checkpoint | built |
 
-Errors: `404 {"detail": "..."}` for unknown session/node, `502` when the LLM call fails or returns invalid JSON after one retry.
+## Abuse protection & input limits
+
+To prevent runaway Opus usage and abuse on the public API, the following limits are enforced:
+
+- **Chat text length:** Max 4,000 characters for prompt extraction (`POST /api/sessions/{sid}/messages`) and bubble chat (`POST /api/sessions/{sid}/nodes/{nid}/chat`). Exceeding returns `413 {"detail": "chat text exceeds maximum length of 4000 characters"}`.
+- **Node text length:** Max 80 characters for labels and 500 characters for details on `POST /api/sessions/{sid}/nodes` and `PATCH /api/sessions/{sid}/nodes/{nid}`. Exceeding returns `413 {"detail": "..."}`.
+- **Node limit:** Max 60 nodes per session map. Adding more via `POST /api/sessions/{sid}/nodes` returns `409 {"detail": "maximum map node limit of 60 reached"}`.
+- **Session cooldowns:**
+  - Chat turns: Max 1 chat turn per 5 seconds per session. Calls within cooldown return `429 {"detail": "chat cooldown in effect; please wait before sending another message", "retry_after_s": number}`.
+  - Builds: Max 1 build start per 20 seconds per session (`POST /api/sessions/{sid}/build` or `POST /api/sessions/{sid}/builds/{bid}/edit`). Calls within cooldown return `429 {"detail": "build cooldown in effect; please wait before starting another build", "retry_after_s": number}`.
+
+Errors: `404 {"detail": "..."}` for unknown session/node, `413` when input text exceeds allowed limits, `409` for node cap or pending operations, `429 {"detail": "...", "retry_after_s": number}` when cooldown is in effect, and `502` when the LLM call fails or returns invalid JSON after one retry.
 
 ## AI module interface (`ai/`, wired in `api/ai.ts`)
 
