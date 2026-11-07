@@ -207,6 +207,82 @@ try {
   }
   console.log("OK");
 
+  // 11. Mind map export (Mermaid & JSON)
+  process.stdout.write("[smoke] 11. Mind map export (Mermaid & JSON)... ");
+  // 11a. Mermaid export
+  const mermaidRes = await req("GET", `/sessions/${sid}/map/export?format=mermaid`);
+  if (mermaidRes.status !== 200) {
+    fail(`Mermaid export status ${mermaidRes.status}, expected 200`);
+  }
+  const mermaidCt = mermaidRes.headers.get("content-type") ?? "";
+  if (!mermaidCt.includes("text/vnd.mermaid")) {
+    fail(`Mermaid export unexpected content-type: ${mermaidCt}`);
+  }
+  const mermaidBody = mermaidRes.body;
+  if (typeof mermaidBody !== "string" || !mermaidBody.includes("flowchart TD")) {
+    fail("Mermaid export missing flowchart TD");
+  }
+  if (!/:::(user|inferred|unknown|approved)/.test(mermaidBody)) {
+    fail("Mermaid export missing node class styling");
+  }
+  if (!/-->\|(has|needs)\|/.test(mermaidBody)) {
+    fail("Mermaid export missing edge relation");
+  }
+  if (
+    !mermaidBody.includes("classDef user") ||
+    !mermaidBody.includes("classDef inferred") ||
+    !mermaidBody.includes("classDef unknown") ||
+    !mermaidBody.includes("classDef approved")
+  ) {
+    fail("Mermaid export missing classDef styling definitions");
+  }
+
+  // 11b. JSON export
+  const jsonRes = await req("GET", `/sessions/${sid}/map/export?format=json`);
+  if (jsonRes.status !== 200) {
+    fail(`JSON export status ${jsonRes.status}, expected 200`);
+  }
+  const jsonCt = jsonRes.headers.get("content-type") ?? "";
+  if (!jsonCt.includes("application/json")) {
+    fail(`JSON export unexpected content-type: ${jsonCt}`);
+  }
+  const jsonDisp = jsonRes.headers.get("content-disposition") ?? "";
+  if (!jsonDisp.includes(`attachment; filename="mindcode-map-${sid}.json"`)) {
+    fail(`JSON export invalid content-disposition: ${jsonDisp}`);
+  }
+  const jsonExport = jsonRes.body;
+  if (jsonExport?.id !== sid) {
+    fail(`JSON export id mismatch: got ${jsonExport?.id}, expected ${sid}`);
+  }
+  if (!jsonExport?.exportedAt || isNaN(Date.parse(jsonExport.exportedAt))) {
+    fail("JSON export missing or invalid exportedAt timestamp");
+  }
+  const latestSessionRes = await req("GET", `/sessions/${sid}`);
+  const expectedMap = latestSessionRes.body?.map;
+  if (
+    JSON.stringify(jsonExport?.nodes) !== JSON.stringify(expectedMap?.nodes) ||
+    JSON.stringify(jsonExport?.edges) !== JSON.stringify(expectedMap?.edges)
+  ) {
+    fail("JSON export nodes/edges do not match session map");
+  }
+
+  // Default export (no format query)
+  const defaultExportRes = await req("GET", `/sessions/${sid}/map/export`);
+  if (defaultExportRes.status !== 200) {
+    fail(`Default map export status ${defaultExportRes.status}, expected 200`);
+  }
+  const defaultDisp = defaultExportRes.headers.get("content-disposition") ?? "";
+  if (!defaultDisp.includes(`attachment; filename="mindcode-map-${sid}.json"`)) {
+    fail(`Default map export invalid content-disposition: ${defaultDisp}`);
+  }
+
+  // 11c. Invalid format validation
+  const invalidRes = await req("GET", `/sessions/${sid}/map/export?format=invalid`);
+  if (invalidRes.status !== 422) {
+    fail(`Invalid format export returned status ${invalidRes.status}, expected 422`);
+  }
+  console.log("OK");
+
   console.log("[smoke] ALL CHECKS PASSED");
 } finally {
   await vite.close();

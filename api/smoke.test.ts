@@ -181,5 +181,49 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(postRestoreCheckpointsRes.status).toBe(200);
     const postRestoreCheckpoints = postRestoreCheckpointsRes.body as Checkpoint[];
     expect(postRestoreCheckpoints.some((cp) => cp.label.startsWith("Restored to "))).toBe(true);
+
+    // 11. Mind map export (Mermaid & JSON)
+    // 11a. Mermaid export: GET /api/sessions/:sid/map/export?format=mermaid
+    const mermaidRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=mermaid`);
+    expect(mermaidRes.status).toBe(200);
+    expect(mermaidRes.headers.get("content-type")).toBe("text/vnd.mermaid; charset=utf-8");
+    const mermaidBody = mermaidRes.body as string;
+    expect(mermaidBody).toContain("flowchart TD");
+    expect(mermaidBody).toMatch(/:::(user|inferred|unknown|approved)/);
+    expect(mermaidBody).toMatch(/-->\|(has|needs)\|/);
+    expect(mermaidBody).toContain("classDef user");
+    expect(mermaidBody).toContain("classDef inferred");
+    expect(mermaidBody).toContain("classDef unknown");
+    expect(mermaidBody).toContain("classDef approved");
+
+    // 11b. JSON export: GET /api/sessions/:sid/map/export?format=json (and default without format query)
+    const jsonRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=json`);
+    expect(jsonRes.status).toBe(200);
+    expect(jsonRes.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(jsonRes.headers.get("content-disposition")).toBe(`attachment; filename="mindcode-map-${sid}.json"`);
+    const jsonBody = jsonRes.body as { id: string; exportedAt: string; nodes: MapNode[]; edges: unknown[] };
+    expect(jsonBody.id).toBe(sid);
+    expect(typeof jsonBody.exportedAt).toBe("string");
+    expect(isNaN(Date.parse(jsonBody.exportedAt))).toBe(false);
+
+    // Verify nodes and edges match the session's map
+    const curSessionRes = await request(deps, "GET", `/sessions/${sid}`);
+    const curMap = (curSessionRes.body as Session).map;
+    expect(jsonBody.nodes).toEqual(curMap.nodes);
+    expect(jsonBody.edges).toEqual(curMap.edges);
+
+    // Default format check (no format query param)
+    const defaultExportRes = await request(deps, "GET", `/sessions/${sid}/map/export`);
+    expect(defaultExportRes.status).toBe(200);
+    expect(defaultExportRes.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(defaultExportRes.headers.get("content-disposition")).toBe(`attachment; filename="mindcode-map-${sid}.json"`);
+    const defaultBody = defaultExportRes.body as { id: string; exportedAt: string; nodes: MapNode[]; edges: unknown[] };
+    expect(defaultBody.id).toBe(sid);
+    expect(defaultBody.nodes).toEqual(curMap.nodes);
+    expect(defaultBody.edges).toEqual(curMap.edges);
+
+    // 11c. Invalid format validation: GET /api/sessions/:sid/map/export?format=invalid
+    const invalidRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=invalid`);
+    expect(invalidRes.status).toBe(422);
   });
 });
