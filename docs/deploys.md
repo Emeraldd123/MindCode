@@ -23,6 +23,8 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 5 | 2026-11-07 16:25 | main (#82, #76, #87, #88, #95) | Tree map view + Tree/Graph toggle + breadcrumb; right-click edits ~7 s and small rebuilds ~20 s (patches); robust JSON parsing; no reused bubble ids | **Live.** New bundle has the Tree/Graph toggle. |
 
-| 6 | 2026-11-07 16:45 | main (#102 + Jules merges) | Pin mode in the preview; right-click bubble-id fix; compact header | (verify) |
+| 6 | 2026-11-07 16:45 | main (#102 + Jules merges) | Pin mode in the preview; right-click bubble-id fix; compact header | **Live.** Bundle has Pin (mc-inspect). |
 
-Deploys used: **6 / 15**
+| 7 | 2026-11-07 17:00 | main (#104) | Ben raised the OpenRouter key limit; readable AI errors (402/401/429), no retry on credit errors | (verify) |
+
+Deploys used: **7 / 15**
