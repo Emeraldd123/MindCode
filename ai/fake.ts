@@ -1,4 +1,486 @@
 import type { MindMap, Message, UpdateMapResult, Node, Edge } from "./types.ts";
+import { CROSS_LINKS } from "./taxonomy.ts";
+
+/**
+ * Builds the canonical full plan for the demo prompt ("I want a chat app for my study group").
+ * Total bubbles: ~31, covering all 18 topics across 4 facets, expanded children,
+ * 2-3 unknown bubbles, facets on every node, and cross-link edges.
+ */
+function buildDemoNodes(): { nodes: Node[]; topicNodeMap: Record<string, string>; loginNodeId: string } {
+  const nodes: Node[] = [
+    // 1. Root goal
+    {
+      id: "n1",
+      label: "Chat app for study group",
+      detail: "A real-time messaging application for student study groups and course collaboration.",
+      kind: "goal",
+      source: "user",
+      inventiveness: 0,
+      importance: 5,
+      status: "proposed",
+      parent: null,
+      evidence: ["chat app", "study group"],
+      facet: "goal",
+      turn: 1,
+    },
+
+    // 2. Four Facets (children of root)
+    {
+      id: "n2",
+      label: "Design",
+      detail: "Visual style, screen layouts, typography, and UX guidelines.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0,
+      importance: 3,
+      status: "proposed",
+      parent: "n1",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n3",
+      label: "Audience",
+      detail: "Target users, market scope, and learner collaboration needs.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0,
+      importance: 3,
+      status: "proposed",
+      parent: "n1",
+      evidence: [],
+      facet: "audience",
+      turn: 1,
+    },
+    {
+      id: "n4",
+      label: "Functionality",
+      detail: "Core chat features, user actions, storage, and backend infrastructure.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0,
+      importance: 3,
+      status: "proposed",
+      parent: "n1",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n5",
+      label: "Cost",
+      detail: "Third-party APIs, AI usage, and marketing budget considerations.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0,
+      importance: 3,
+      status: "proposed",
+      parent: "n1",
+      evidence: [],
+      facet: "cost",
+      turn: 1,
+    },
+
+    // 3. Topics under Design (parent: "n2")
+    {
+      id: "n6",
+      label: "Brand: focused & academic",
+      detail: "Clean, distraction-free atmosphere tailored for productive studying.",
+      kind: "style",
+      source: "inferred",
+      inventiveness: 0.3,
+      importance: 3,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n7",
+      label: "Color: warm slate & indigo",
+      detail: "Dark mode palette with indigo accents to reduce eye strain during late sessions.",
+      kind: "style",
+      source: "inferred",
+      inventiveness: 0.4,
+      importance: 3,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n8",
+      label: "Font: Inter & JetBrains Mono",
+      detail: "Legible sans-serif for chat dialogue and monospace font for code snippets.",
+      kind: "style",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 2,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n9",
+      label: "Size: responsive compact desktop",
+      detail: "Multi-column layout optimized for laptop split-screen study.",
+      kind: "style",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 3,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n10",
+      label: "Pages: core application screens",
+      detail: "All primary views required for group study interactions.",
+      kind: "page",
+      source: "inferred",
+      inventiveness: 0.1,
+      importance: 4,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    // Concrete children of Pages (parent: "n10")
+    {
+      id: "n11",
+      label: "Sign-in/join",
+      detail: "Fast access landing page to join a study room.",
+      kind: "page",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 4,
+      status: "proposed",
+      parent: "n10",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n12",
+      label: "Group chat room",
+      detail: "Main room with real-time stream, pinned topics, and participant list.",
+      kind: "page",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 5,
+      status: "proposed",
+      parent: "n10",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n13",
+      label: "Direct messages",
+      detail: "Private 1-on-1 threads between study partners.",
+      kind: "page",
+      source: "inferred",
+      inventiveness: 0.5,
+      importance: 3,
+      status: "proposed",
+      parent: "n10",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n14",
+      label: "Members & settings",
+      detail: "Roster of study group members, room invite codes, and notification prefs.",
+      kind: "page",
+      source: "inferred",
+      inventiveness: 0.3,
+      importance: 3,
+      status: "proposed",
+      parent: "n10",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+    {
+      id: "n15",
+      label: "Usability: keyboard shortcuts & search",
+      detail: "Quick message navigation, fast message jumping, and markdown formatting.",
+      kind: "feature",
+      source: "inferred",
+      inventiveness: 0.3,
+      importance: 3,
+      status: "proposed",
+      parent: "n2",
+      evidence: [],
+      facet: "design",
+      turn: 1,
+    },
+
+    // 4. Topics under Audience (parent: "n3")
+    {
+      id: "n16",
+      label: "Users: university study groups",
+      detail: "Students, TAs, and peer study circles collaborating on coursework.",
+      kind: "constraint",
+      source: "user",
+      inventiveness: 0,
+      importance: 5,
+      status: "proposed",
+      parent: "n3",
+      evidence: ["study group"],
+      facet: "audience",
+      turn: 1,
+    },
+    {
+      id: "n17",
+      label: "Market: higher education collaboration",
+      detail: "Collegiate study sessions and remote peer tutoring groups.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0.4,
+      importance: 2,
+      status: "proposed",
+      parent: "n3",
+      evidence: [],
+      facet: "audience",
+      turn: 1,
+    },
+    {
+      id: "n18",
+      label: "Research: shared homework & exam prep",
+      detail: "Students need fast problem discussion and screenshot sharing before deadlines.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0.5,
+      importance: 3,
+      status: "proposed",
+      parent: "n3",
+      evidence: [],
+      facet: "audience",
+      turn: 1,
+    },
+
+    // 5. Topics under Functionality (parent: "n4")
+    {
+      id: "n19",
+      label: "Features: group messaging suite",
+      detail: "Key functional capabilities for real-time collaboration.",
+      kind: "feature",
+      source: "user",
+      inventiveness: 0,
+      importance: 5,
+      status: "proposed",
+      parent: "n4",
+      evidence: ["chat app"],
+      facet: "functionality",
+      turn: 1,
+    },
+    // Concrete children of Features (parent: "n19")
+    {
+      id: "n20",
+      label: "Message sending & replies",
+      detail: "Post messages, reply in threads, and tag study members.",
+      kind: "feature",
+      source: "inferred",
+      inventiveness: 0.1,
+      importance: 5,
+      status: "proposed",
+      parent: "n19",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n21",
+      label: "Real-time sync",
+      detail: "Instant message delivery via live websocket connection.",
+      kind: "feature",
+      source: "inferred",
+      inventiveness: 0.75, // high inventiveness
+      importance: 4,
+      status: "proposed",
+      parent: "n19",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n22",
+      label: "Login: how do members sign in?",
+      detail: "Authentication method is currently undecided. Nicknames, email links, or student SSO?",
+      kind: "constraint",
+      source: "unknown",
+      inventiveness: 0,
+      importance: 5,
+      status: "proposed",
+      parent: "n19",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n23",
+      label: "Buttons: reactions & copy code",
+      detail: "Emoji reactions for quick consensus and one-click code copy.",
+      kind: "component",
+      source: "inferred",
+      inventiveness: 0.3,
+      importance: 3,
+      status: "proposed",
+      parent: "n4",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n24",
+      label: "AI integration: optional study assistant",
+      detail: "Summarize chat highlights or explain tricky concepts on demand.",
+      kind: "feature",
+      source: "inferred",
+      inventiveness: 0.7, // creative leap
+      importance: 2,
+      status: "proposed",
+      parent: "n4",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n25",
+      label: "Storage: where are files & notes stored?",
+      detail: "Decide whether to use cloud object store (S3) or lightweight local file storage.",
+      kind: "data",
+      source: "unknown",
+      inventiveness: 0,
+      importance: 4,
+      status: "proposed",
+      parent: "n4",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n26",
+      label: "Hosting: serverless + Netlify Blobs",
+      detail: "Static frontend on CDN with serverless edge functions for APIs.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 3,
+      status: "proposed",
+      parent: "n4",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+    {
+      id: "n27",
+      label: "Scale: expected group size?",
+      detail: "Determine whether rooms hold 5-10 close peers or 200+ course sections.",
+      kind: "constraint",
+      source: "unknown",
+      inventiveness: 0,
+      importance: 4,
+      status: "proposed",
+      parent: "n4",
+      evidence: [],
+      facet: "functionality",
+      turn: 1,
+    },
+
+    // 6. Topics under Cost (parent: "n5")
+    {
+      id: "n28",
+      label: "APIs: external services",
+      detail: "Third-party APIs and services utilized by the app.",
+      kind: "api",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 3,
+      status: "proposed",
+      parent: "n5",
+      evidence: [],
+      facet: "cost",
+      turn: 1,
+    },
+    // Concrete children of APIs (parent: "n28")
+    {
+      id: "n29",
+      label: "WebSocket gateway API",
+      detail: "Real-time pub/sub broker for instant chat broadcast.",
+      kind: "api",
+      source: "inferred",
+      inventiveness: 0.2,
+      importance: 4,
+      status: "proposed",
+      parent: "n28",
+      evidence: [],
+      facet: "cost",
+      turn: 1,
+    },
+    {
+      id: "n30",
+      label: "AI usage: model token spend",
+      detail: "Budget cap for AI tutor questions and chat summaries.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0.3,
+      importance: 2,
+      status: "proposed",
+      parent: "n5",
+      evidence: [],
+      facet: "cost",
+      turn: 1,
+    },
+    {
+      id: "n31",
+      label: "Advertising: campus grassroots",
+      detail: "Zero-cost word of mouth, campus Discord servers, and student societies.",
+      kind: "constraint",
+      source: "inferred",
+      inventiveness: 0.1,
+      importance: 1,
+      status: "proposed",
+      parent: "n5",
+      evidence: [],
+      facet: "cost",
+      turn: 1,
+    },
+  ];
+
+  const topicNodeMap: Record<string, string> = {
+    Brand: "n6",
+    Color: "n7",
+    Font: "n8",
+    Size: "n9",
+    Pages: "n10",
+    Usability: "n15",
+    Users: "n16",
+    Market: "n17",
+    Research: "n18",
+    Features: "n19",
+    Buttons: "n23",
+    "AI integration": "n24",
+    Storage: "n25",
+    Hosting: "n26",
+    Scale: "n27",
+    APIs: "n28",
+    "AI usage": "n30",
+    Advertising: "n31",
+  };
+
+  return { nodes, topicNodeMap, loginNodeId: "n22" };
+}
 
 export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [], edges: [] }): UpdateMapResult {
   const turn = Math.floor(messages.length / 2) + 1;
@@ -6,83 +488,27 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
 
   // If map is empty or this is the first turn, provide the canonical demo map
   if (!current.nodes || current.nodes.length === 0) {
-    const nodes: Node[] = [
-      {
-        id: "n1",
-        label: "Chat app",
-        detail: "A real-time messaging application for group collaboration.",
-        kind: "goal",
-        source: "user",
-        inventiveness: 0,
-        importance: 5,
-        status: "proposed",
-        parent: null,
-        evidence: ["chat app"],
-        turn: 1
-      },
-      {
-        id: "n2",
-        label: "Study group",
-        detail: "Tailored specifically for students collaborating on course materials and study sessions.",
-        kind: "feature",
-        source: "user",
-        inventiveness: 0,
-        importance: 4,
-        status: "proposed",
-        parent: "n1",
-        evidence: ["study group"],
-        turn: 1
-      },
-      {
-        id: "n3",
-        label: "Message API",
-        detail: "Standard backend endpoints to post and retrieve messages.",
-        kind: "api",
-        source: "inferred",
-        inventiveness: 0.2, // low inventiveness (obvious)
-        importance: 3,
-        status: "proposed",
-        parent: "n1",
-        evidence: [],
-        turn: 1
-      },
-      {
-        id: "n4",
-        label: "Real-time updates",
-        detail: "Live bidirectional push updates for instant message delivery without manual refresh.",
-        kind: "feature",
-        source: "inferred",
-        inventiveness: 0.85, // high inventiveness (creative leap)
-        importance: 4,
-        status: "proposed",
-        parent: "n1",
-        evidence: [],
-        turn: 1
-      },
-      {
-        id: "n5",
-        label: "How do users log in?",
-        detail: "Authentication method is currently undefined. We need to decide how users identify themselves.",
-        kind: "constraint",
-        source: "unknown",
-        inventiveness: 0,
-        importance: 5,
-        status: "proposed",
-        parent: "n1",
-        evidence: [],
-        turn: 1
-      }
-    ];
+    const { nodes, topicNodeMap } = buildDemoNodes();
 
-    const edges: Edge[] = [
-      { from: "n1", to: "n2", relation: "has" },
-      { from: "n1", to: "n3", relation: "needs" },
-      { from: "n1", to: "n4", relation: "has" },
-      { from: "n1", to: "n5", relation: "needs" }
-    ];
+    // 1. Hierarchical edges
+    const edges: Edge[] = [];
+    for (const node of nodes) {
+      if (node.parent) {
+        edges.push({ from: node.parent, to: node.id, relation: "has" });
+      }
+    }
+
+    // 2. Cross-links from Ben's taxonomy
+    for (const [fromTopic, relation, toTopic] of CROSS_LINKS) {
+      const fromId = topicNodeMap[fromTopic];
+      const toId = topicNodeMap[toTopic];
+      if (fromId && toId) {
+        edges.push({ from: fromId, to: toId, relation });
+      }
+    }
 
     return {
-      reply: "I've structured your app idea into a mind map! I extracted 'Chat app' and 'Study group' directly from your prompt, assumed standard 'Message API' and 'Real-time updates' capabilities, and flagged 'How do users log in?' as a key unknown decision.",
+      reply: "I've structured your study group chat app into a comprehensive mind map covering Design, Audience, Functionality, and Cost. I highlighted key pages and features, noted open questions like sign-in and scale, and connected cross-cutting dependencies.",
       map: { nodes, edges },
       changed: nodes.map(n => n.id)
     };
@@ -105,10 +531,11 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
 
   // Check if user is answering the login unknown
   if (/nickname/i.test(lastUserMsg)) {
-    const loginNodeIndex = existingNodes.findIndex(n => n.id === "n5" || /log in/i.test(n.label));
+    const loginNodeIndex = existingNodes.findIndex(
+      n => n.id === "n22" || n.id === "n5" || /log in|sign in/i.test(n.label)
+    );
     if (loginNodeIndex !== -1 && existingNodes[loginNodeIndex].status !== "locked") {
       const target = existingNodes[loginNodeIndex];
-      // If not locked, we can update or clarify
       existingNodes[loginNodeIndex] = {
         ...target,
         label: "Nickname login",
@@ -134,6 +561,7 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
       status: "proposed",
       parent: existingNodes[0]?.id || null,
       evidence: [lastUserMsg.slice(0, 40)],
+      facet: "functionality",
       turn
     };
     existingNodes.push(newNode);
@@ -165,7 +593,7 @@ export function fakeNodeChat(
   }
 
   const lower = text.toLowerCase();
-  const isNickname = lower.includes("nickname") || lower.includes("password") || node.id === "n5" || /log in/i.test(node.label);
+  const isNickname = lower.includes("nickname") || lower.includes("password") || node.id === "n22" || node.id === "n5" || /log in|sign in/i.test(node.label);
 
   if (isNickname) {
     return {
@@ -246,17 +674,25 @@ export function fakeBuildApp(
   const rootNode = map.nodes?.find(n => n.parent === null) || map.nodes?.[0];
   const appTitle = rootNode ? rootNode.label : "Study Group Chat";
 
+  // Login node id can be n22 (in the new full map) or n5 (in the old 5-bubble map or custom tests)
+  const loginNode = map.nodes?.find(n => /log in|sign in|nickname/i.test(n.label)) || map.nodes?.find(n => n.id === "n22" || n.id === "n5");
+  const loginNodeId = loginNode ? loginNode.id : (validNodeIds?.has("n22") ? "n22" : "n5");
+
+  // Real-time node id can be n21 or n4
+  const realtimeNode = map.nodes?.find(n => /real-time/i.test(n.label)) || map.nodes?.find(n => n.id === "n21" || n.id === "n4");
+  const realtimeNodeId = realtimeNode ? realtimeNode.id : (validNodeIds?.has("n21") ? "n21" : "n4");
+
   const headerHtml = getElementOrPreserved(
     "n1",
     `<div class="header">
-    <h1 data-mc-el="e-title" data-mc="${sanitizeDataMc("n1 n2")}">${appTitle}</h1>
-    <span data-mc-el="e-realtime" data-mc="${sanitizeDataMc("n4")}" class="live-badge">● Real-time sync active</span>
+    <h1 data-mc-el="e-title" data-mc="${sanitizeDataMc(`n1 ${validNodeIds?.has("n16") ? "n16" : "n2"}`)}">${appTitle}</h1>
+    <span data-mc-el="e-realtime" data-mc="${sanitizeDataMc(realtimeNodeId)}" class="live-badge">● Real-time sync active</span>
   </div>`
   );
 
   const loginCardHtml = getElementOrPreserved(
-    "n5",
-    `<div data-mc-el="e-login" data-mc="${sanitizeDataMc("n5")}" class="card login-card">
+    loginNodeId,
+    `<div data-mc-el="e-login" data-mc="${sanitizeDataMc(loginNodeId)}" class="card login-card">
       <h3>Join Study Group</h3>
       <p style="font-size: 0.8rem; color: #94a3b8; margin: 4px 0 12px;">Quick access with nickname only</p>
       <div class="input-group">
@@ -266,9 +702,10 @@ export function fakeBuildApp(
     </div>`
   );
 
+  const messagesNodeId = validNodeIds?.has("n20") ? "n20" : (validNodeIds?.has("n3") ? "n3" : "n1");
   const chatWindowHtml = getElementOrPreserved(
-    "n4",
-    `<div data-mc-el="e-messages" data-mc="${sanitizeDataMc("n1 n3 n4")}" class="card chat-window">
+    realtimeNodeId,
+    `<div data-mc-el="e-messages" data-mc="${sanitizeDataMc(`n1 ${messagesNodeId} ${realtimeNodeId}`)}" class="card chat-window">
       <h3>Group Messages</h3>
       <div class="messages">
         <div class="msg">
@@ -288,7 +725,8 @@ export function fakeBuildApp(
   );
 
   // Extra features list for any other nodes present in the map
-  const otherNodes = (map.nodes || []).filter(n => !["n1", "n2", "n3", "n4", "n5"].includes(n.id));
+  const coreIds = new Set(["n1", loginNodeId, realtimeNodeId, messagesNodeId, "n16", "n2"]);
+  const otherNodes = (map.nodes || []).filter(n => !coreIds.has(n.id));
   const extraNodesHtml = otherNodes.length > 0
     ? `<div class="card" style="margin-top: 20px;">
         <h3>Additional Planned Features</h3>
