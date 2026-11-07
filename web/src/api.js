@@ -99,6 +99,10 @@ export function getBuildPreviewUrl(sessionId, buildId) {
   return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/preview`;
 }
 
+export function getBuildDownloadUrl(sessionId, buildId) {
+  return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/download`;
+}
+
 export async function getCheckpoints(sessionId) {
   return request(`/sessions/${encodeURIComponent(sessionId)}/checkpoints`);
 }

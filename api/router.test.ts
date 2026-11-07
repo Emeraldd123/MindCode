@@ -126,6 +126,28 @@ describe("api", () => {
     expect([r.status, r.body.status]).toEqual([202, "pending"]);
     expect((await call("POST", `/sessions/${id}/build`)).status).toBe(409);
     expect((await call("GET", `/sessions/${id}/builds/b1/preview`)).status).toBe(409);
+    expect((await call("GET", `/sessions/${id}/builds/b1/download`)).status).toBe(409);
+  });
+
+  it("download returns raw html with attachment headers, 404 for missing build/session", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    await call("POST", `/sessions/${id}/build`);
+
+    const res = await handle(
+      new Request(`http://x/api/sessions/${id}/builds/b1/download`, { method: "GET" }),
+      deps,
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    expect(res.headers.get("content-disposition")).toBe('attachment; filename="mindcode-b1.html"');
+    const text = await res.text();
+    expect(text).toContain('<title>Your app</title>');
+    // Verify it is the raw HTML, without the injected preview script
+    expect(text.includes("mc-hover")).toBe(false);
+
+    expect((await call("GET", `/sessions/${id}/builds/missing/download`)).status).toBe(404);
+    expect((await call("GET", `/sessions/nonexistent/builds/b1/download`)).status).toBe(404);
   });
 
   it("failed build is recorded as error", async () => {

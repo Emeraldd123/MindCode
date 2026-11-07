@@ -174,6 +174,15 @@ async function route(req: Request, deps: Deps): Promise<Response> {
       if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
       return new Response(inject(b.html), { headers: { "content-type": "text/html; charset=utf-8" } });
     }
+    if (m === "GET" && rest[2] === "download") {
+      if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
+      return new Response(b.html, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "content-disposition": `attachment; filename="mindcode-${b.id}.html"`,
+        },
+      });
+    }
   }
 
   if (m === "GET" && rest.length === 1 && rest[0] === "checkpoints") return json(s.checkpoints);
