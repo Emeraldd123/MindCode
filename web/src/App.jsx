@@ -242,6 +242,13 @@ export default function App() {
                   onNodeChange={handleNodeChange}
                   onClose={() => setSelectedNodeId(null)}
                   onError={setError}
+                  map={map}
+                  onMapChange={async (selectId) => {
+                    // Bubbles were added / connected / deleted: reload the map from the server.
+                    const fresh = await api.getSession(session.id);
+                    setMap(fresh.map || { nodes: [], edges: [] });
+                    if (selectId !== undefined) setSelectedNodeId(selectId);
+                  }}
                 />
               )}
             </section>
