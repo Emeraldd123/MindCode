@@ -19,4 +19,6 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 3 | 2026-11-07 15:10 | main @ 5446b06 (#59, #60, #69) | Ben asked to see the changes: new shell + Claude-style chat, Obsidian side panel, full app-specific build plan + async turns, right-click edits, clean Open-app tab, preview link fix | **Live.** New bundle served; POST /api/sessions/demo 200; /builds/b1/app 200 with no overlay; preview has the right-click hook; real background chat turn: 202 → done in 45 s with 38 bubbles. |
 
-Deploys used: **3 / 15**
+| 4 | 2026-11-07 15:55 | main (#72, #77, #79, #83, #84) | Fixes Ben's 'cut off before </html>' build failure; ship-ready builds (no Assumed boxes); add/connect/edit/delete bubbles; re-recorded demo | (verify) |
+
+Deploys used: **4 / 15**
