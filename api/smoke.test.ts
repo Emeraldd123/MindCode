@@ -4,6 +4,12 @@ import { describe, expect, it } from "vitest";
 import { ai } from "./ai";
 import { handle, runBuild, type Deps } from "./router";
 import { memoryStorage } from "./storage";
+/** The smoke flow runs builds back to back; clear the per-session cooldown between them. */
+async function clearBuildCooldown(deps: { storage: { get(id: string): Promise<any>; put(s: any): Promise<void> } }, sid: string) {
+  const s = await deps.storage.get(sid);
+  if (s) { s.last_build_at = 0; await deps.storage.put(s); }
+}
+
 import type { Build, Checkpoint, Edge, MapNode, MindMap, Session } from "./types";
 
 function createTestDeps(): Deps {
@@ -344,6 +350,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     const addedNode = addNodeRes.body as MapNode;
     expect(addedNode.label).toBe("Dark mode");
 
+    await clearBuildCooldown(deps, demoSid);
     const incrementalBuildRes = await request(deps, "POST", `/sessions/${demoSid}/build`);
     expect([200, 202]).toContain(incrementalBuildRes.status);
     let b3 = incrementalBuildRes.body as Build;
@@ -359,6 +366,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(b3.mode).toBe("incremental");
     expect(b3.status).toBe("done");
 
+    await clearBuildCooldown(deps, demoSid);
     const fullBuildRes = await request(deps, "POST", `/sessions/${demoSid}/build`, {
       full: true,
     });

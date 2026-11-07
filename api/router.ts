@@ -22,7 +22,7 @@ export const MAX_CHAT_TEXT_LEN = 4000;
 export const MAX_LABEL_LEN = 80;
 export const MAX_DETAIL_LEN = 500;
 export const MAX_MAP_NODES = 60;
-export const BUILD_COOLDOWN_MS = 20_000; // 20 s
+export const BUILD_COOLDOWN_MS = 8_000; // 8 s: stops build spam on the public key without blocking Update then Full
 export const CHAT_COOLDOWN_MS = 5_000;   // 5 s
 
 class HttpError extends Error {

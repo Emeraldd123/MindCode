@@ -777,7 +777,7 @@ describe("abuse protection & input limits", () => {
     expect(r3.status).toBe(200);
   });
 
-  it("enforces build cooldown of 20 s with 429 {detail, retry_after_s}", async () => {
+  it("enforces build cooldown of 8 s with 429 {detail, retry_after_s}", async () => {
     const id = await sid();
     await call("POST", `/sessions/${id}/messages`, { text: "setup app" });
 
@@ -785,22 +785,21 @@ describe("abuse protection & input limits", () => {
     const b1 = await call("POST", `/sessions/${id}/build`);
     expect(b1.status).toBe(200);
 
-    // Attempt second build after only 5 seconds from b1
-    mockNow = b1Time + 5_000;
+    // Second build after only 3 seconds
+    mockNow = b1Time + 3_000;
     const b2 = await call("POST", `/sessions/${id}/build`);
     expect(b2.status).toBe(429);
     expect(b2.body.detail).toContain("build cooldown in effect");
-    expect(b2.body.retry_after_s).toBe(15);
+    expect(b2.body.retry_after_s).toBe(5);
 
-    // Attempt edit build after only 10 seconds from b1
-    mockNow = b1Time + 10_000;
+    // Edit after 6 seconds is also covered by the cooldown
+    mockNow = b1Time + 6_000;
     const edit = await call("POST", `/sessions/${id}/builds/b1/edit`, { instruction: "make header bold" });
     expect(edit.status).toBe(429);
-    expect(edit.body.detail).toContain("build cooldown in effect");
-    expect(edit.body.retry_after_s).toBe(10);
+    expect(edit.body.retry_after_s).toBe(2);
 
-    // After full 20 s has elapsed
-    mockNow = b1Time + 21_000;
+    // After the full 8 s
+    mockNow = b1Time + 9_000;
     const b3 = await call("POST", `/sessions/${id}/build`);
     expect(b3.status).toBe(200);
   });

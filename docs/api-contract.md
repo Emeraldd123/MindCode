@@ -99,7 +99,7 @@ To prevent runaway Opus usage and abuse on the public API, the following limits 
 - **Node limit:** Max 60 nodes per session map. Adding more via `POST /api/sessions/{sid}/nodes` returns `409 {"detail": "maximum map node limit of 60 reached"}`.
 - **Session cooldowns:**
   - Chat turns: Max 1 chat turn per 5 seconds per session. Calls within cooldown return `429 {"detail": "chat cooldown in effect; please wait before sending another message", "retry_after_s": number}`.
-  - Builds: Max 1 build start per 20 seconds per session (`POST /api/sessions/{sid}/build` or `POST /api/sessions/{sid}/builds/{bid}/edit`). Calls within cooldown return `429 {"detail": "build cooldown in effect; please wait before starting another build", "retry_after_s": number}`.
+  - Builds: Max 1 build start per 8 seconds per session (`POST /api/sessions/{sid}/build` or `POST /api/sessions/{sid}/builds/{bid}/edit`). Calls within cooldown return `429 {"detail": "build cooldown in effect; please wait before starting another build", "retry_after_s": number}`.
 
 Errors: `404 {"detail": "..."}` for unknown session/node, `413` when input text exceeds allowed limits, `409` for node cap or pending operations, `429 {"detail": "...", "retry_after_s": number}` when cooldown is in effect, and `502` when the LLM call fails or returns invalid JSON after one retry.
 
