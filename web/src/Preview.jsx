@@ -6,11 +6,14 @@ import {
   buildStage,
   emptyStep,
   formatElapsed,
+  formatQualityPill,
   isHoverMessage,
   latestDoneBuild,
   nodeLabels,
   pendingBuild,
   pollBuild,
+  qualityIssues,
+  qualityTone,
   titleFromHtml,
   traceCount,
   upsertBuild,
@@ -35,6 +38,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   const [viewMode, setViewMode] = useState('desktop'); // 'desktop' | 'mobile'
   const [elapsedMs, setElapsedMs] = useState(0);
   const [toast, setToast] = useState(null); // { message: string, id: number }
+  const [qualityOpen, setQualityOpen] = useState(false);
+  const qualityRef = useRef(null);
   const toastTimeoutRef = useRef(null);
   const buildStartTimeRef = useRef(null);
   const prevPendingRef = useRef(null);
@@ -205,6 +210,25 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
     }
   }
 
+  // Close quality popover when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!qualityOpen) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setQualityOpen(false);
+    }
+    function handleClickOutside(e) {
+      if (qualityRef.current && !qualityRef.current.contains(e.target)) {
+        setQualityOpen(false);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [qualityOpen]);
+
   const chips = nodeLabels(map, hovered);
   const canBuild = !!sessionId && !pending && (map?.nodes?.length ?? 0) > 0;
 
@@ -307,6 +331,55 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               </div>
               <div className="browser-chrome-actions">
                 <span className="browser-build-tag">{shown.id}</span>
+                {shown.quality && typeof shown.quality.score === 'number' && (
+                  <div className="browser-quality-wrapper" ref={qualityRef}>
+                    <button
+                      type="button"
+                      className={`browser-quality-pill quality-${qualityTone(shown.quality.score)}`}
+                      onClick={() => setQualityOpen((v) => !v)}
+                      aria-expanded={qualityOpen}
+                      aria-haspopup="true"
+                      title="Inspect build quality report"
+                    >
+                      {formatQualityPill(shown.quality)}
+                    </button>
+                    {qualityOpen && (
+                      <div className="quality-popover" role="dialog" aria-label="Build Quality Report">
+                        <div className="quality-popover-header">
+                          <div className="quality-popover-title">
+                            <span className="quality-popover-badge">{shown.quality.score}/100</span>
+                            <span className="quality-popover-heading">Build Quality</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="quality-popover-close"
+                            onClick={() => setQualityOpen(false)}
+                            aria-label="Close quality report"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        <div className="quality-popover-body">
+                          {qualityIssues(shown.quality).length === 1 && qualityIssues(shown.quality)[0] === 'Ship-ready, no issues' ? (
+                            <div className="quality-empty-issues">
+                              <span className="quality-empty-icon">✓</span>
+                              <span>Ship-ready, no issues</span>
+                            </div>
+                          ) : (
+                            <ul className="quality-issue-list">
+                              {qualityIssues(shown.quality).map((issue, idx) => (
+                                <li key={idx} className="quality-issue-item">
+                                  <span className="quality-issue-bullet">•</span>
+                                  <span className="quality-issue-text">{issue}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
