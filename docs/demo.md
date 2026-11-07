@@ -2,9 +2,6 @@
 
 The exact clicks, narration, and flow for judges. Verified end-to-end with `MINDCODE_FAKE_LLM=1`.
 
-## Fastest path for judges: instant demo (recommended)
-Open **http://localhost:8888/?demo=1** (or `<netlify-site>/?demo=1`). It loads a session recorded with real Claude Opus: the study-group chat, 8 bubbles (3 approved), and a finished, working, traced build. There's no 80 s wait and no live model call. Hover the preview to light up bubbles, click the checkpoint dots, and open bubbles in the drawer. To show a live build afterwards, approve one more bubble and press **Rebuild** (about 80 s with Opus, so talk over it). Refresh keeps the session; use **+ New Session** to start clean.
-
 ## Setup (5 s)
 1. Run `MINDCODE_FAKE_LLM=1 npx netlify dev` (or `$env:MINDCODE_FAKE_LLM="1"; npx netlify dev` on Windows PowerShell).
 2. Open **http://localhost:8888** in your browser.

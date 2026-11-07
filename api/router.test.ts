@@ -167,25 +167,3 @@ describe("answered questions", () => {
     expect(r.changed).toContain("n5");
   });
 });
-
-describe("demo session", () => {
-  it("POST /sessions/demo returns an independent copy with a finished, traced build", async () => {
-    const a = (await call("POST", "/sessions/demo")).body;
-    const b = (await call("POST", "/sessions/demo")).body;
-    expect(a.id).not.toBe(b.id);
-    expect(a.map.nodes.length).toBeGreaterThanOrEqual(5);
-    expect(new Set(a.map.nodes.map((n: MapNode) => n.source))).toEqual(new Set(["user", "inferred", "unknown"]));
-    expect(a.map.nodes.some((n: MapNode) => n.status === "approved")).toBe(true);
-    expect(a.builds[0].status).toBe("done");
-    expect(Object.keys(a.builds[0].trace).length).toBeGreaterThan(0);
-    expect(a.checkpoints.some((c: { build_id?: string }) => c.build_id === a.builds[0].id)).toBe(true);
-    // independent: approving in one copy doesn't touch the other
-    const nid = a.map.nodes.find((n: MapNode) => n.status === "proposed").id;
-    await call("POST", `/sessions/${a.id}/nodes/${nid}/approve`);
-    const b2 = (await call("GET", `/sessions/${b.id}`)).body;
-    expect(byId(b2.map.nodes)[nid].status).toBe("proposed");
-    // the copy keeps working: preview renders with the trace script
-    const html = (await call("GET", `/sessions/${a.id}/builds/${a.builds[0].id}/preview`)).body as string;
-    expect(html).toContain("mc-hover");
-  });
-});

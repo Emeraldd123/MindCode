@@ -43,11 +43,6 @@ export async function getHealth() {
   return request('/health');
 }
 
-/** Fresh copy of the recorded real-Opus demo session (map, approvals, finished build). */
-export async function createDemoSession() {
-  return request('/sessions/demo', { method: 'POST' });
-}
-
 export async function createSession() {
   return request('/sessions', {
     method: 'POST',

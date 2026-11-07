@@ -58,7 +58,6 @@ interface Session {
 |---|---|---|---|---|
 | GET | `/api/health` | - | `{ "ok": true }` | built |
 | POST | `/api/sessions` | - | `Session` (empty map) | built |
-| POST | `/api/sessions/demo` | - | `Session`: a fresh, independent copy of the recorded real-Opus demo session (`api/demo/study-group.json`: 8 bubbles, 3 approved, finished traced build b1, 2 checkpoints). The web app calls it for `/?demo=1`. | built |
 | GET | `/api/sessions/{sid}` | - | `Session` | built |
 | POST | `/api/sessions/{sid}/messages` | `{ "text": string }` | `{ "reply": string, "map": MindMap, "changed": string[] }`; `changed` = new or updated node ids | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`; Claude may rewrite `label`/`detail` (not if locked) | built |
