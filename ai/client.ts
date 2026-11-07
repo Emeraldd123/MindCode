@@ -78,8 +78,29 @@ export async function callOpenRouter<T = any>(
       // Try parsing JSON
       try {
         let cleanText = rawText.trim();
-        if (cleanText.startsWith("```")) {
-          cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+        const match = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        if (match) {
+            cleanText = match[1];
+        } else {
+            const firstBrace = cleanText.indexOf('{');
+            const firstBracket = cleanText.indexOf('[');
+            let startIndex = -1;
+            if (firstBrace !== -1 && firstBracket !== -1) startIndex = Math.min(firstBrace, firstBracket);
+            else if (firstBrace !== -1) startIndex = firstBrace;
+            else if (firstBracket !== -1) startIndex = firstBracket;
+
+            if (startIndex !== -1) {
+                const lastBrace = cleanText.lastIndexOf('}');
+                const lastBracket = cleanText.lastIndexOf(']');
+                let endIndex = -1;
+                if (lastBrace !== -1 && lastBracket !== -1) endIndex = Math.max(lastBrace, lastBracket);
+                else if (lastBrace !== -1) endIndex = lastBrace;
+                else if (lastBracket !== -1) endIndex = lastBracket;
+
+                if (endIndex !== -1 && endIndex > startIndex) {
+                    cleanText = cleanText.substring(startIndex, endIndex + 1);
+                }
+            }
         }
         const data = JSON.parse(cleanText) as T;
         return { data, rawText };
