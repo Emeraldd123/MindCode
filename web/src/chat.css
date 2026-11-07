@@ -171,14 +171,14 @@
 .mc-key-dot.orange,
 .mc-key-dot.user,
 .mc-key-dot.blue {
-  background: var(--accent-user, #d67408);
+  background: #d67408;
   box-shadow: 0 0 4px rgba(214, 116, 8, 0.4);
 }
 
 .mc-key-dot.green,
 .mc-key-dot.inferred,
 .mc-key-dot.amber {
-  background: var(--accent-inferred, #17c894);
+  background: #17c894;
   box-shadow: 0 0 4px rgba(23, 200, 148, 0.4);
 }
 
@@ -248,10 +248,10 @@
 }
 
 .mc-message-user .mc-bubble-content {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #d67408 0%, #b45309 100%);
   color: #fff;
   border-bottom-right-radius: 3px;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 2px 6px rgba(214, 116, 8, 0.25);
 }
 
 .mc-message-assistant .mc-bubble-content {
