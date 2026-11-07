@@ -39,6 +39,16 @@ export interface Build {
   trace: Record<string, string[]>;
   checkpoint_id: string;
   audit?: BuildAudit;
+  /** Set when this build is a targeted edit of another build (right-click in the preview). */
+  request?: ChangeRequest;
+}
+
+export interface ChangeRequest {
+  base: string;          // build id being edited
+  instruction: string;   // what the user wants changed
+  el?: string | null;    // data-mc-el of the right-clicked element
+  nodes?: string[];      // bubbles that element traces to
+  snippet?: string;      // the element's HTML (truncated)
 }
 
 export interface Checkpoint { id: string; label: string; turn: number; map: MindMap; build_id?: string }
@@ -70,4 +80,6 @@ export interface AI {
   updateMap(messages: Message[], current: MindMap): Promise<{ reply: string; map: ProposedMap }>;
   nodeChat(node: MapNode, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string }>;
   buildApp(map: MindMap, previousHtml: string | null): Promise<string>;
+  /** Apply one targeted change to an existing build's HTML (right-click edit). */
+  editApp(html: string, map: MindMap, request: ChangeRequest): Promise<string>;
 }

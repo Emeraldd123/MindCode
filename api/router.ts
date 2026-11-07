@@ -2,7 +2,7 @@
 import { addCheckpoint, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, traceOf, userTurn } from "./store";
 import type { Storage } from "./storage";
 import { auditTrace, inject } from "./trace";
-import type { AI, Session } from "./types";
+import type { AI, ChangeRequest, Session } from "./types";
 import demoSession from "./demo/study-group.json";
 
 export interface Deps {
@@ -72,9 +72,12 @@ export async function runBuild(deps: Pick<Deps, "storage" | "ai">, sid: string, 
   if (!s || !b) return;
   const cp = s.checkpoints.find((c) => c.id === b.checkpoint_id)!;
   const prev = [...s.builds].reverse().find((x) => x.status === "done" && x.id !== bid)?.html ?? null;
+  const base = b.request ? s.builds.find((x) => x.id === b.request!.base) : undefined;
   let patch: Partial<typeof b>;
   try {
-    const html = await deps.ai.buildApp(cp.map, prev);
+    const html = b.request && base
+      ? await deps.ai.editApp(base.html, cp.map, b.request)
+      : await deps.ai.buildApp(cp.map, prev);
     patch = {
       status: "done",
       html,
@@ -256,6 +259,36 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     if (m === "GET" && rest[2] === "preview") {
       if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
       return new Response(inject(b.html), { headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+    // The app on its own: no trace overlay or dev hooks, real URL so links, storage and new tabs all work.
+    if (m === "GET" && rest[2] === "app") {
+      if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
+      return new Response(b.html, { headers: { "content-type": "text/html; charset=utf-8" } });
+    }
+    // Right-click edit: a new build that applies one targeted change to this one.
+    if (m === "POST" && rest[2] === "edit") {
+      if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
+      if (s.builds.some((x) => x.status === "pending")) throw new HttpError(409, "a build is already running");
+      const body = (await req.json().catch(() => ({}))) as Partial<ChangeRequest>;
+      const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
+      if (!instruction) throw new HttpError(422, "instruction is empty");
+      const nid = `b${s.builds.length + 1}`;
+      const cp = addCheckpoint(s, `Edit ${nid}: ${instruction.slice(0, 40)}`, nid);
+      const nb = {
+        id: nid, status: "pending" as const, html: "", trace: {}, checkpoint_id: cp.id,
+        request: {
+          base: b.id,
+          instruction: instruction.slice(0, 1000),
+          el: typeof body.el === "string" ? body.el : null,
+          nodes: Array.isArray(body.nodes) ? body.nodes.map(String).slice(0, 20) : [],
+          snippet: typeof body.snippet === "string" ? body.snippet.slice(0, 2000) : "",
+        },
+      };
+      s.builds.push(nb);
+      await save();
+      await deps.startBuild(s.id, nid);
+      const after = (await storage.get(s.id))?.builds.find((x) => x.id === nid) ?? nb;
+      return json(after, after.status === "pending" ? 202 : 200);
     }
     if (m === "GET" && rest[2] === "download") {
       if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);

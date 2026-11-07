@@ -683,3 +683,4 @@
 @container (max-width: 470px) {
   .preview-container .pane-header h2 { display: none; }
 }
+.preview-open { white-space: nowrap; }
