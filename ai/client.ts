@@ -65,7 +65,11 @@ export async function callOpenRouter<T = any>(
 
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(`OpenRouter API error ${res.status}: ${errorText}`);
+        const err = new Error(friendlyOpenRouterError(res.status, errorText));
+        (err as Error & { status?: number }).status = res.status;
+        // Credit/auth problems won't fix themselves on retry.
+        if (res.status === 401 || res.status === 402 || res.status === 403) throw Object.assign(err, { fatal: true });
+        throw err;
       }
 
       const resJson = await res.json() as any;
@@ -123,10 +127,30 @@ export async function callOpenRouter<T = any>(
         }
       }
     } catch (err) {
+      if ((err as { fatal?: boolean })?.fatal) throw err;
       lastError = err as Error;
       break;
     }
   }
 
   throw lastError || new Error("Failed to call OpenRouter");
+}
+
+
+/** Short, human message for OpenRouter errors. The raw body can be huge and includes key/account ids. */
+export function friendlyOpenRouterError(status: number, body: string): string {
+  let msg = "";
+  try {
+    msg = JSON.parse(body)?.error?.message ?? "";
+  } catch {
+    msg = body;
+  }
+  if (status === 402) {
+    const afford = msg.match(/can only afford (\d+)/i)?.[1];
+    return `Out of AI credit: the OpenRouter key has reached its spending limit${afford ? ` (it can only afford ~${afford} more tokens)` : ""}. Raise the key's limit or add credit at openrouter.ai/settings/keys, then try again.`;
+  }
+  if (status === 401 || status === 403) return "The OpenRouter API key was rejected. Check OPENROUTER_API_KEY in the Netlify environment variables.";
+  if (status === 429) return "Claude is rate-limited right now. Wait a few seconds and try again.";
+  if (status >= 500) return `OpenRouter is having trouble (HTTP ${status}). Try again in a moment.`;
+  return `OpenRouter error ${status}: ${String(msg).slice(0, 200)}`;
 }
