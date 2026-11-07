@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, Check, Lock, Unlock, X } from 'lucide-react';
+import { ArrowUp, Check, Link2, Lock, Pencil, Plus, Trash2, Unlock, X } from 'lucide-react';
 import * as api from './api';
 import { canApprove, nextLockStatus, canChat, normalizeInventiveness } from './nodeDrawerLogic';
 import { cn } from '@/lib/utils';
@@ -35,8 +35,18 @@ export default function NodeDrawer({
   onNodeChange = () => {},
   onClose = () => {},
   onError = () => {},
+  map = { nodes: [], edges: [] },
+  onMapChange = async () => {},
 }) {
   const [messages, setMessages] = useState([]);
+  // Inline editing of the bubble's own text
+  const [editing, setEditing] = useState(null); // 'label' | 'detail' | null
+  const [draft, setDraft] = useState('');
+  // Add child / connect
+  const [panel, setPanel] = useState(null); // 'child' | 'connect' | null
+  const [childLabel, setChildLabel] = useState('');
+  const [connectTo, setConnectTo] = useState('');
+  const [relation, setRelation] = useState('informs');
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -49,6 +59,10 @@ export default function NodeDrawer({
     setChatInput('');
     setChatLoading(false);
     setActionLoading(false);
+    setEditing(null);
+    setPanel(null);
+    setChildLabel('');
+    setConnectTo('');
   }, [currentNodeId]);
 
   // Escape closes the drawer
@@ -120,6 +134,88 @@ export default function NodeDrawer({
     }
   };
 
+  const startEdit = (field) => {
+    if (isLocked) return;
+    setEditing(field);
+    setDraft(field === 'label' ? node.label : node.detail || '');
+  };
+
+  const saveEdit = async () => {
+    const field = editing;
+    const value = draft.trim();
+    setEditing(null);
+    const current = field === 'label' ? node.label : node.detail || '';
+    if (!field || (field === 'label' && !value) || value === current) return;
+    try {
+      onNodeChange(await api.patchNode(sessionId, node.id, { [field]: value }));
+    } catch (err) {
+      onError(err?.message || 'Failed to save the bubble');
+    }
+  };
+
+  const editKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      setEditing(null);
+    }
+    if (e.key === 'Enter' && (editing === 'label' || e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      saveEdit();
+    }
+  };
+
+  const handleAddChild = async (e) => {
+    e?.preventDefault();
+    const label = childLabel.trim();
+    if (!label || actionLoading) return;
+    setActionLoading(true);
+    try {
+      const created = await api.createNode(sessionId, { label, parent: node.id, kind: 'feature' });
+      setChildLabel('');
+      setPanel(null);
+      await onMapChange(created?.id);
+    } catch (err) {
+      onError(err?.message || 'Failed to add the bubble');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConnect = async (e) => {
+    e?.preventDefault();
+    if (!connectTo || actionLoading) return;
+    setActionLoading(true);
+    try {
+      await api.createEdge(sessionId, { from: node.id, to: connectTo, relation });
+      setConnectTo('');
+      setPanel(null);
+      await onMapChange();
+    } catch (err) {
+      onError(err?.message || 'Failed to connect the bubbles');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (actionLoading) return;
+    if (!window.confirm(`Delete "${node.label}"? Its children move up to its parent.`)) return;
+    setActionLoading(true);
+    try {
+      await api.deleteNode(sessionId, node.id);
+      await onMapChange(null);
+      onClose();
+    } catch (err) {
+      onError(err?.message || 'Failed to delete the bubble');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const otherNodes = (map.nodes || []).filter((n) => n.id !== node.id);
+  const linked = (map.edges || []).filter((e) => e.from === node.id || e.to === node.id);
+  const labelOf = (id) => (map.nodes || []).find((n) => n.id === id)?.label || '?';
+
   const handleChatKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -161,8 +257,48 @@ export default function NodeDrawer({
           </Button>
         </div>
 
-        <h2 className="text-[19px] font-semibold leading-snug tracking-tight">{node.label}</h2>
-        {node.detail && <p className="font-serif text-[14.5px] leading-relaxed text-muted-foreground">{node.detail}</p>}
+        {editing === 'label' ? (
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={saveEdit}
+            onKeyDown={editKeyDown}
+            maxLength={80}
+            aria-label="Bubble label"
+            className="w-full rounded-md border border-ai/50 bg-raised px-2 py-1 font-sans text-[19px] font-semibold tracking-tight text-foreground outline-none"
+          />
+        ) : (
+          <h2
+            className={cn('group/title flex items-start gap-2 text-[19px] font-semibold leading-snug tracking-tight', !isLocked && 'cursor-text')}
+            onClick={() => startEdit('label')}
+            title={isLocked ? 'Unlock to edit' : 'Click to edit'}
+          >
+            <span>{node.label}</span>
+            {!isLocked && <Pencil className="mt-1.5 size-3.5 shrink-0 text-dim opacity-0 transition-opacity group-hover/title:opacity-100" />}
+          </h2>
+        )}
+        {editing === 'detail' ? (
+          <textarea
+            autoFocus
+            rows={3}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={saveEdit}
+            onKeyDown={editKeyDown}
+            aria-label="Bubble detail"
+            placeholder="Describe this bubble (Ctrl+Enter to save)"
+            className="w-full resize-none rounded-md border border-ai/50 bg-raised px-2 py-1.5 font-serif text-[14.5px] leading-relaxed text-foreground outline-none"
+          />
+        ) : (
+          <p
+            className={cn('font-serif text-[14.5px] leading-relaxed text-muted-foreground', !isLocked && 'cursor-text hover:text-foreground')}
+            onClick={() => startEdit('detail')}
+            title={isLocked ? 'Unlock to edit' : 'Click to edit'}
+          >
+            {node.detail || (isLocked ? '' : 'Add a description…')}
+          </p>
+        )}
 
         <div className="flex gap-2 pt-1">
           <Button
@@ -183,6 +319,79 @@ export default function NodeDrawer({
             {isLocked ? <Unlock /> : <Lock />} {isLocked ? 'Unlock' : 'Lock'}
           </Button>
         </div>
+
+        {/* Shape the map yourself: add, connect, delete */}
+        <div className="flex gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'child' ? null : 'child')} title="Add a bubble under this one">
+            <Plus /> Add child
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'connect' ? null : 'connect')} disabled={!otherNodes.length} title="Link this bubble to another">
+            <Link2 /> Connect
+          </Button>
+          <Button variant="ghost" size="sm" className="ml-auto hover:text-unknown" onClick={handleDelete} disabled={actionLoading} title="Delete this bubble" aria-label="Delete bubble">
+            <Trash2 />
+          </Button>
+        </div>
+        {panel === 'child' && (
+          <form onSubmit={handleAddChild} className="flex gap-1.5">
+            <input
+              autoFocus
+              value={childLabel}
+              onChange={(e) => setChildLabel(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setPanel(null)}
+              maxLength={80}
+              placeholder="New bubble, e.g. Dark mode"
+              aria-label="New child bubble label"
+              className="min-w-0 flex-1 rounded-md border border-input bg-raised px-2.5 py-1.5 font-sans text-[13px] text-foreground outline-none placeholder:text-dim focus:border-user/60"
+            />
+            <Button type="submit" size="sm" variant="secondary" disabled={!childLabel.trim() || actionLoading}>
+              Add
+            </Button>
+          </form>
+        )}
+        {panel === 'connect' && (
+          <form onSubmit={handleConnect} className="flex flex-wrap gap-1.5">
+            <select
+              value={relation}
+              onChange={(e) => setRelation(e.target.value)}
+              aria-label="Relation"
+              className="rounded-md border border-input bg-raised px-2 py-1.5 font-sans text-[13px] text-foreground outline-none"
+            >
+              <option value="informs">informs</option>
+              <option value="needs">needs</option>
+              <option value="has">has</option>
+            </select>
+            <select
+              autoFocus
+              value={connectTo}
+              onChange={(e) => setConnectTo(e.target.value)}
+              aria-label="Connect to"
+              className="min-w-0 flex-1 rounded-md border border-input bg-raised px-2 py-1.5 font-sans text-[13px] text-foreground outline-none"
+            >
+              <option value="">Choose a bubble…</option>
+              {otherNodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.label}
+                </option>
+              ))}
+            </select>
+            <Button type="submit" size="sm" variant="secondary" disabled={!connectTo || actionLoading}>
+              Link
+            </Button>
+          </form>
+        )}
+        {linked.length > 0 && (
+          <p className="text-[11.5px] text-dim">
+            Linked:{' '}
+            {linked.slice(0, 6).map((e, i) => (
+              <span key={i}>
+                {i > 0 && ' · '}
+                {e.from === node.id ? `${e.relation} → ${labelOf(e.to)}` : `${labelOf(e.from)} ${e.relation} →`}
+              </span>
+            ))}
+            {linked.length > 6 && ` · +${linked.length - 6}`}
+          </p>
+        )}
       </div>
 
       <Separator className="bg-hairline" />
