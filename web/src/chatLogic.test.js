@@ -1,6 +1,6 @@
 // web/src/chatLogic.test.js
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, renderMarkdownSafe, summarizeChange } from './chatLogic';
+import { escapeHtml, renderMarkdownSafe, summarizeChange, formatCooldown, formatApiError } from './chatLogic';
 
 describe('chatLogic', () => {
   describe('escapeHtml', () => {
@@ -100,6 +100,68 @@ Line 3`;
       expect(summarizeChange(null, mockMap)).toBeNull();
       expect(summarizeChange(['n1'], null)).toBeNull();
       expect(summarizeChange(['n1'], { nodes: null })).toBeNull();
+    });
+  });
+
+  describe('formatCooldown', () => {
+    it('formats seconds into "Please wait N s"', () => {
+      expect(formatCooldown(5)).toBe('Please wait 5 s');
+      expect(formatCooldown(1)).toBe('Please wait 1 s');
+      expect(formatCooldown(8)).toBe('Please wait 8 s');
+    });
+
+    it('handles fractional, 0, or negative numbers cleanly', () => {
+      expect(formatCooldown(4.2)).toBe('Please wait 5 s');
+      expect(formatCooldown(0)).toBe('Please wait 0 s');
+      expect(formatCooldown(-2)).toBe('Please wait 0 s');
+      expect(formatCooldown(null)).toBe('Please wait 0 s');
+    });
+  });
+
+  describe('formatApiError', () => {
+    it('formats 429 errors with retry_after_s', () => {
+      const err = { status: 429, retry_after_s: 5, detail: 'chat cooldown in effect; please wait before sending another message' };
+      expect(formatApiError(err)).toBe('Please wait 5 s');
+    });
+
+    it('formats 429 without retry_after_s', () => {
+      const err = { status: 429, detail: 'cooldown in effect' };
+      expect(formatApiError(err)).toBe('Please wait a moment before trying again');
+    });
+
+    it('formats 413 chat text limit', () => {
+      const err = { status: 413, detail: 'chat text exceeds maximum length of 4000 characters' };
+      expect(formatApiError(err)).toBe('Message is too long. Maximum length is 4,000 characters.');
+    });
+
+    it('formats 413 label limit', () => {
+      const err = { status: 413, detail: 'label exceeds maximum length of 80 characters' };
+      expect(formatApiError(err)).toBe('Bubble title is too long. Maximum length is 80 characters.');
+    });
+
+    it('formats 413 detail limit', () => {
+      const err = { status: 413, detail: 'detail exceeds maximum length of 500 characters' };
+      expect(formatApiError(err)).toBe('Bubble description is too long. Maximum length is 500 characters.');
+    });
+
+    it('formats 409 max nodes limit', () => {
+      const err = { status: 409, detail: 'maximum map node limit of 60 reached' };
+      expect(formatApiError(err)).toBe('Map limit reached: you cannot add more than 60 bubbles.');
+    });
+
+    it('formats 409 pending operations', () => {
+      expect(formatApiError({ status: 409, detail: 'Claude is still working on the previous message' })).toBe(
+        'Claude is still working on the previous message. Please wait.'
+      );
+      expect(formatApiError({ status: 409, detail: 'a build is already running' })).toBe(
+        'A build is already running. Please wait for it to finish.'
+      );
+    });
+
+    it('falls back cleanly for other errors or missing error object', () => {
+      expect(formatApiError(null)).toBe('An unexpected error occurred');
+      expect(formatApiError({ message: 'Network failed' })).toBe('Network failed');
+      expect(formatApiError(new Error('Something broke'))).toBe('Something broke');
     });
   });
 });

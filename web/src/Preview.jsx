@@ -18,6 +18,7 @@ import {
   traceCount,
   upsertBuild,
 } from './previewLogic';
+import { formatApiError, formatCooldown } from './chatLogic';
 import './preview.css';
 
 /**
@@ -43,6 +44,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   const toastTimeoutRef = useRef(null);
   const buildStartTimeRef = useRef(null);
   const prevPendingRef = useRef(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownTimerRef = useRef(null);
 
   const pending = pendingBuild(builds);
   const shown = (buildId && builds.find((b) => b.id === buildId && b.status === 'done')) || latestDoneBuild(builds);
@@ -92,8 +95,27 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
     };
   }, []);
+
+  const startCooldown = (seconds) => {
+    let remaining = seconds || 8;
+    setCooldownSeconds(remaining);
+    onError?.(formatCooldown(remaining));
+    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    cooldownTimerRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+        setCooldownSeconds(0);
+      } else {
+        setCooldownSeconds(remaining);
+        onError?.(formatCooldown(remaining));
+      }
+    }, 1000);
+  };
 
   // Poll any pending build (also resumes after a page reload).
   useEffect(() => {
@@ -182,7 +204,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   async function sendEdit(e) {
     e?.preventDefault();
     const instruction = editText.trim();
-    if (!instruction || !shown || editSending) return;
+    if (!instruction || !shown || editSending || cooldownSeconds > 0) return;
     setEditSending(true);
     try {
       const b = await api.editBuild(sessionId, shown.id, {
@@ -194,19 +216,27 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
       setBuilds((prev) => upsertBuild(prev, b));
       closeEdit();
     } catch (err) {
-      onError?.(`Change request failed: ${err.message}`);
+      if (err.status === 429) {
+        startCooldown(err.retry_after_s || 8);
+      } else {
+        onError?.(formatApiError(err));
+      }
     } finally {
       setEditSending(false);
     }
   }
 
   async function handleBuild(full = false) {
-    if (!sessionId || pending) return;
+    if (!sessionId || pending || cooldownSeconds > 0) return;
     try {
       const b = await api.build(sessionId, { full });
       setBuilds((prev) => upsertBuild(prev, b));
     } catch (e) {
-      onError?.(`Build failed: ${e.message}`);
+      if (e.status === 429) {
+        startCooldown(e.retry_after_s || 8);
+      } else {
+        onError?.(formatApiError(e));
+      }
     }
   }
 
@@ -230,7 +260,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   }, [qualityOpen]);
 
   const chips = nodeLabels(map, hovered);
-  const canBuild = !!sessionId && !pending && (map?.nodes?.length ?? 0) > 0;
+  const isCoolingDown = cooldownSeconds > 0;
+  const canBuild = !!sessionId && !pending && !isCoolingDown && (map?.nodes?.length ?? 0) > 0;
 
   // Approved bubbles being built
   const approvedNodes = (map?.nodes ?? []).filter((n) => n.status === 'approved' || n.status === 'locked');
@@ -297,18 +328,18 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
           <button
             className="build-btn"
             onClick={() => handleBuild(false)}
-            disabled={!canBuild}
-            title={!canBuild ? 'Describe your app first' : shown ? 'Apply your map changes (small changes are patched in seconds)' : 'Generate the app from the map'}
+            disabled={!canBuild || isCoolingDown}
+            title={isCoolingDown ? formatCooldown(cooldownSeconds) : !canBuild ? 'Describe your app first' : shown ? 'Apply your map changes (small changes are patched in seconds)' : 'Generate the app from the map'}
           >
-            {pending ? 'Building…' : shown ? '⚡ Update' : '⚡ Build App'}
+            {isCoolingDown ? formatCooldown(cooldownSeconds) : pending ? 'Building…' : shown ? '⚡ Update' : '⚡ Build App'}
           </button>
           {shown && !pending && (
             <button
               type="button"
               className="preview-download"
               onClick={() => handleBuild(true)}
-              disabled={!canBuild}
-              title="Regenerate the whole app from the map (slower)"
+              disabled={!canBuild || isCoolingDown}
+              title={isCoolingDown ? formatCooldown(cooldownSeconds) : "Regenerate the whole app from the map (slower)"}
             >
               Full
             </button>
@@ -564,10 +595,10 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               <span className="text-[11px] text-dim">Claude rebuilds just this part</span>
               <button
                 type="submit"
-                disabled={!editText.trim() || editSending}
+                disabled={!editText.trim() || editSending || isCoolingDown}
                 className="cursor-pointer rounded-md border-0 bg-ai px-3 py-1.5 text-xs font-semibold text-[#0b1a14] disabled:cursor-default disabled:opacity-40"
               >
-                {editSending ? 'Sending…' : 'Request change'}
+                {isCoolingDown ? formatCooldown(cooldownSeconds) : editSending ? 'Sending…' : 'Request change'}
               </button>
             </div>
           </form>
