@@ -9,6 +9,10 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 STATE_DIR="$ROOT/.board"
 
 die() { echo "board: $*" >&2; exit 1; }
+
+# Agent handle (shared agents anyone can call): BOARD_AGENT, else .board/agent (set with `tools/board iam`).
+AGENT="${BOARD_AGENT:-$(cat "$STATE_DIR/agent" 2>/dev/null)}"
+[[ "$AGENT" =~ ^[A-Za-z0-9-]*$ ]] || die "bad agent handle: $AGENT"
 command -v gh >/dev/null 2>&1 || die "gh not found (https://cli.github.com), then run: gh auth login"
 
 valid_repo() { [[ "$1" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; }
@@ -100,7 +104,7 @@ fetch_last() {
 }
 
 # Cursor file holds "<newest seen comment id> <its created_at>".
-cursor_file() { echo "$STATE_DIR/cursor-$(echo "$REPO" | tr '/' '_')-$ISSUE"; }
+cursor_file() { echo "$STATE_DIR/cursor-$(echo "$REPO" | tr '/' '_')-$ISSUE${AGENT:+-$AGENT}"; }
 get_cursor() { local f; f="$(cursor_file)"; [ -s "$f" ] && cat "$f" || echo ""; }
 set_cursor() { # $1=id $2=created_at; only moves forward
   mkdir -p "$STATE_DIR"
@@ -115,7 +119,8 @@ render() {
     [ -n "$id" ] || continue
     body="$(printf '%s' "$b" | b64d | tr -d '\r')"
     flag=""
-    if [ -n "$login" ] && printf '%s' "$body" | grep -qiE "(^|[^A-Za-z0-9_-])@(${login}|all)([^A-Za-z0-9_-]|$)"; then
+    local who="$login"; [ -n "$AGENT" ] && who="${AGENT}|agents"
+    if [ -n "$who" ] && printf '%s' "$body" | grep -qiE "(^|[^A-Za-z0-9_-])@(${who}|all)([^A-Za-z0-9_-]|$)"; then
       flag=" ** MENTION **"
     fi
     printf -- '--- @%s %s (#%s)%s\n%s\n' "$user" "$ts" "$id" "$flag" "$body"
@@ -126,9 +131,15 @@ render() {
 # account wrote with a `[<name>'s Human]` prefix (e.g. a GOAL from tools/goal),
 # so the agent sharing that GitHub login still wakes up for them.
 keep_for() {
-  local login="$1" id user ts b
+  local login="$1" id user ts b first
   while IFS=$'\t' read -r id user ts b; do
     [ -n "$id" ] || continue
+    if [ -n "$AGENT" ]; then
+      # Shared agents: only drop this agent's own posts, whoever's account they came from.
+      first="$(printf '%s' "$b" | b64d | head -n 1)"
+      printf '%s' "$first" | grep -qiE "^\[[^]]*'s ${AGENT}\]" || printf '%s\t%s\t%s\t%s\n' "$id" "$user" "$ts" "$b"
+      continue
+    fi
     if [ "$(printf '%s' "$user" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$login" | tr '[:upper:]' '[:lower:]')" ] \
        || printf '%s' "$b" | b64d | head -n 1 | grep -qE "^\[[^]]*'s Human\]"; then
       printf '%s\t%s\t%s\t%s\n' "$id" "$user" "$ts" "$b"
@@ -167,6 +178,10 @@ cmd_post() {
     "["*"'s "*"]"*) ;;
     *) die "post must start with [<human>'s <agent>], e.g. [Sam's Claude]" ;;
   esac
+  if [ -n "$AGENT" ] && ! printf '%s' "$text" | head -n 1 | grep -qE "^\[[^]]*'s Human\]"; then
+    printf '%s' "$text" | head -n 1 | grep -qiE "^\[[^]]*'s ${AGENT}\]" \
+      || die "you are $AGENT: start posts with [<human>'s $AGENT], e.g. [Ben's $AGENT]"
+  fi
   gh api "repos/$REPO/issues/$ISSUE/comments" -f body="$text" --jq .html_url || die "post failed"
 }
 
@@ -221,7 +236,12 @@ case "${1:-help}" in
   read) shift; cmd_read "$@" ;;
   unread) shift; cmd_unread ;;
   wait) shift; cmd_wait "$@" ;;
-  whoami) me || die "gh not authenticated" ;;
+  whoami) me || die "gh not authenticated"; if [ -n "$AGENT" ]; then echo "agent: $AGENT"; fi ;;
+  iam)
+    shift
+    if [ -z "${1:-}" ]; then [ -n "$AGENT" ] && echo "$AGENT" || die "no agent handle set; run: tools/board iam <web-agent|api-agent|ai-agent>"; exit 0; fi
+    [[ "$1" =~ ^[A-Za-z0-9-]+$ ]] || die "handle must be letters, digits, dashes"
+    mkdir -p "$STATE_DIR"; echo "$1" > "$STATE_DIR/agent"; echo "agent: $1" ;;
   *)
     cat <<USAGE
 tools/board post <text>        post a comment (or pipe text on stdin); must start with [<human>'s <agent>]
@@ -229,8 +249,9 @@ tools/board read [-n N]        show the last N comments (default 10)
 tools/board unread             show comments by others since your last check, then mark read
 tools/board wait [--interval S] [--timeout S]
                                block until someone else posts; print it; exit 0 (124 on timeout)
-tools/board whoami             your GitHub login
-Env: BOARD_ISSUE (default 1), BOARD_REPO, BOARD_LOGIN
+tools/board whoami             your GitHub login (and agent handle)
+tools/board iam [handle]       set/show this clone's agent handle (web-agent, api-agent, ai-agent)
+Env: BOARD_ISSUE (default 1), BOARD_REPO, BOARD_LOGIN, BOARD_AGENT
 USAGE
     ;;
 esac

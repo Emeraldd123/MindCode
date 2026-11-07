@@ -1,6 +1,6 @@
 # Team rules for every agent (MindCode @ NOVA)
 
-Four humans (Ben, Oliver, Lorien, 内山天満) and three AI agents (Google Antigravity by default; Claude Code or any shell-capable agent follows the same rules). Ben, Oliver and Lorien each drive one agent that owns a lane. 内山天満 is the human-only teammate: product, design, testing and demo.
+Four humans (Ben, Oliver, Lorien, 内山天満) share three AI agents: `web-agent`, `api-agent` and `ai-agent` (Google Antigravity by default; any shell-capable agent follows the same rules). Agents are not owned by a person. Anyone can run one on their laptop and **any human can give any agent a task** by tagging its handle. Ben is the lead and settles conflicting instructions.
 
 > **Status: pre-idea.** Do NOT write app code until a human posts a `GOAL:` on the board (via `tools/goal`). A GOAL unlocks coding and starts the build loop in section 6.
 
@@ -8,11 +8,12 @@ Four humans (Ben, Oliver, Lorien, 内山天満) and three AI agents (Google Anti
 
 Every agent reads and posts on the pinned "Message Board" issue via `tools/board` (needs only `bash` + `gh`, logged in). Set `BOARD_ISSUE` if it is not issue #1.
 
-- Start every post with `[<human>'s <agent>]`, e.g. `[Ben's Antigravity]`. Keep it short: what changed, which files or contracts, what you need, from whom.
-- Mention by GitHub login. Team: `@BEN_LOGIN` (Ben), `@OLIVER_LOGIN` (Oliver), `@LORIEN_LOGIN` (Lorien), `@TENMA_LOGIN` (内山天満), `@all` (everyone). Humans post with `[<name>'s Human]`, e.g. `[内山天満's Human]`.
+- Start every post with `[<human>'s <agent>]`. Agents use their handle: `[Oliver's web-agent]` (the human is whoever is running it right now). Humans use `[<name>'s Human]`, e.g. `[内山天満's Human]`. Keep it short: what changed, which files or contracts, what you need, from whom.
+- **Tag agents by handle:** `@web-agent`, `@api-agent`, `@ai-agent`, `@agents` (all three). **Tag humans by GitHub login:** `@Emeraldd123` (Ben), `@litoli0226` (Oliver), `@lorienzhu` (Lorien), `@TenmaUchiyama` (内山天満). `@all` is everyone, humans and agents.
+- **Who am I?** Each agent's clone remembers its handle: `tools/board iam` prints it. If it's empty, ask your human which handle you are and run `tools/board iam <handle>`. One clone (or `git worktree`) per agent.
 - **Mentions you or `@all`:** act on it and reply promptly.
 - **Not addressed to you:** still read it. Reassess your own work only if it is affected (a contract, a file you own, something already done). Do not redo finished work, and do not reply just to acknowledge.
-- Before editing another teammate's files, ask for a handoff on the board and wait for the owner or the team lead.
+- Before editing another agent's folders, ask that agent for a handoff on the board and wait for it or Ben.
 
 Commands: `tools/board unread` (new posts, marks read; flags MENTION), `tools/board read -n 20`, `tools/board post "[Name's Agent] text"`, `tools/board wait` (blocks until someone else posts), `tools/board whoami`.
 
@@ -46,19 +47,21 @@ Humans over agents. Only the team lead reassigns work between teammates. If anyo
 
 ## 5. Who owns what
 
-Replace the `@*_LOGIN` placeholders with real GitHub logins at kickoff.
+Folders belong to **agents**, not people, so any human can drive any lane.
 
-| Lane | Human | Agent | Folders |
-|---|---|---|---|
-| Lead + AI (OpenRouter calls, prompts, MCP tools) | @BEN_LOGIN | Ben's Antigravity | `ai/`, `docs/mcp.md` |
-| Frontend (React + Vite) | @OLIVER_LOGIN | Oliver's Antigravity | `web/` |
-| Backend (FastAPI routes, data, glue) | @LORIEN_LOGIN | Lorien's Antigravity | `api/`, `docs/api-contract.md` |
-| Product, design, QA, demo | @TENMA_LOGIN | none | `docs/product.md`, `design/`, `docs/demo.md` |
-| Shared (lead decides) | @BEN_LOGIN | — | `AGENTS.md`, `.agents/`, `.claude/`, `tools/`, `README.md`, `.env.example` |
+| Agent | Lane | Folders |
+|---|---|---|
+| `@ai-agent` (planner) | OpenRouter calls, prompts, MCP tools, integration | `ai/`, `docs/mcp.md` |
+| `@web-agent` | React + Vite frontend | `web/` |
+| `@api-agent` | FastAPI routes, data, glue | `api/`, `docs/api-contract.md` |
+| humans | product, design, QA, demo | `docs/product.md`, `docs/demo.md`, `design/` |
+| Ben (`@Emeraldd123`) decides | shared setup | `AGENTS.md`, `.agents/`, `.claude/`, `tools/`, `README.md`, `.env.example` |
 
-`api/` imports from `ai/` (e.g. `from ai.chat import ...`); only the AI lane edits `ai/`. If a teammate is missing, the lead reassigns their lane on the board.
+`api/` imports from `ai/` (e.g. `from ai.chat import ...`); only `@ai-agent` edits `ai/`.
 
-**Planner:** Ben's agent (the lead). Only the planner posts a PLAN. **内山天満** writes acceptance criteria and the demo script in `docs/product.md` / `docs/demo.md`, tests each `DONE:` and replies `BUG: @login ...` or `OK`, and has the final say on what "SHIPPED" means for the demo.
+**Planner:** `@ai-agent`. Only the planner posts a PLAN. If only one or two agents are running, the planner assigns the missing lanes to whoever is up.
+
+**Humans:** anyone can post a `GOAL:`, give a task to any agent (`[Lorien's Human] @web-agent make the button blue`), test a `DONE:` and reply `BUG: @<agent> ...` or `OK`. Conflicting instructions: Ben decides. By default 内山天満 keeps the acceptance criteria and demo script up to date.
 
 ## 6. The build loop (GOAL → PLAN → DONE → SHIPPED)
 
@@ -66,26 +69,26 @@ A human starts it with `tools/goal "what to build"`. Agents run the loop in `.ag
 
 | Keyword | Who | Means |
 |---|---|---|
-| `GOAL:` | any human (`[Ben's Human]`, `[内山天満's Human]`, ...) | What to build. A newer GOAL replaces an older one; the lead settles conflicts. |
+| `GOAL:` | any human (`[Ben's Human]`, `[内山天満's Human]`, ...) | What to build. A newer GOAL replaces an older one; Ben settles conflicts. |
 | `PLAN:` | planner agent | The split. Posted within 5 min of a GOAL. |
 | `DONE:` | any agent | A task is pushed to `main`, plus how to try it. |
-| `NEED: @login` | any agent | A blocker someone else owns. Keep building on a mock meanwhile. |
-| `BUG: @login` | anyone (usually 内山天満) | Something broken; the owner fixes it next and replies `DONE:`. |
+| `NEED: @<agent>` | any agent | A blocker someone else owns. Keep building on a mock meanwhile. |
+| `BUG: @<agent>` | any human | Something broken; the owner fixes it next and replies `DONE:`. |
 | `SHIPPED:` | planner agent | Runs end to end. How to run it. Tags the human. |
 | `STOP` | human | Agents finish the current commit and stop the loop. |
 
 PLAN format (keep it under ~25 lines):
 
 ```
-[Name's Antigravity] @all PLAN: <one-line summary>
+[Ben's ai-agent] @all PLAN: <one-line summary>
 Contract: <routes, also committed to docs/api-contract.md>
-@BEN_LOGIN (ai/): 1) ... 2) ...
-@OLIVER_LOGIN (web/): 1) ... 2) ... 3) ...
-@LORIEN_LOGIN (api/): 1) ... 2) ... 3) ...
-@TENMA_LOGIN (human): acceptance criteria + demo script, then test each DONE
+@ai-agent (ai/): 1) ... 2) ...
+@web-agent (web/): 1) ... 2) ... 3) ...
+@api-agent (api/): 1) ... 2) ... 3) ...
+Humans: acceptance criteria + demo script in docs/, then test each DONE
 Model: <OpenRouter model slug>   Demo: <the one flow that must work>
 ```
 
 Speed rules: build in parallel against the contract (mock the other side until it lands), push straight to `main` in small commits during the loop (skip branches and PRs), `git pull --rebase` before every push, no features beyond the GOAL. Humans can redirect at any time with a new `GOAL:` or `STOP`.
 
-Your own human's posts can come from your GitHub account. `tools/board` still shows them to you as long as they start with `[<name>'s Human]`, which `tools/goal` does for you.
+Agents and humans often share a GitHub account. That's fine: with a handle set, `tools/board` hides only your own agent's posts, so you still see your human's GOALs and the other agents' posts from the same account.

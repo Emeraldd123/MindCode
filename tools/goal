@@ -6,8 +6,8 @@ set -u
 cd "$(dirname "$0")/.." || exit 1
 if [ $# -gt 0 ]; then goal="$*"; else goal="$(cat)"; fi
 [ -n "$goal" ] || { echo "goal: usage: tools/goal \"what to build\"" >&2; exit 1; }
-who="${BOARD_HUMAN:-$(tools/board whoami 2>/dev/null)}"
+who="${BOARD_HUMAN:-$(tools/board whoami 2>/dev/null | head -n 1)}"
 [ -n "$who" ] || { echo "goal: set BOARD_HUMAN or run gh auth login" >&2; exit 1; }
-tools/board post "[${who}'s Human] @all GOAL: ${goal}
+tools/board post "[${who}'s Human] @all @agents GOAL: ${goal}
 
-Planner (see AGENTS.md section 6): post the PLAN within 5 minutes. Everyone else: stand by for it. Ship fast; working demo beats polish."
+@ai-agent: post the PLAN within 5 minutes (AGENTS.md section 6). @web-agent @api-agent: stand by for it. Ship fast; working demo beats polish."
