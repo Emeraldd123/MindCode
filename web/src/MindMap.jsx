@@ -1,14 +1,132 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
+  MiniMap,
   Handle,
   Position,
+  MarkerType,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './mindmap.css';
 import Attention from './Attention';
+
+// Pure helper: kinds to icons
+export const KIND_ICONS = {
+  goal: '🎯',
+  feature: '✨',
+  page: '📄',
+  component: '🧩',
+  data: '🗄️',
+  api: '🔌',
+  style: '🎨',
+  constraint: '⚖️',
+};
+
+export function getKindIcon(kind) {
+  return KIND_ICONS[kind] || '✨';
+}
+
+// Pure helper: bubbleClass(node, options)
+export function bubbleClass(node, { isSelected = false, isHighlighted = false, isChanged = false } = {}) {
+  const classes = ['mindmap-node'];
+  const source = node?.source || 'user';
+  const status = node?.status || 'proposed';
+  const inventiveness = Number(node?.inventiveness ?? 0);
+
+  // Source styling
+  if (source === 'user') {
+    classes.push('source-user');
+  } else if (source === 'inferred') {
+    classes.push('source-inferred');
+    if (inventiveness >= 0.5) {
+      classes.push('source-inferred-high');
+    } else {
+      classes.push('source-inferred-low');
+    }
+    if (inventiveness >= 0.6) {
+      classes.push('has-creative-leap');
+    }
+  } else if (source === 'unknown') {
+    classes.push('source-unknown');
+  }
+
+  // Importance class
+  const rawImportance = Number(node?.importance);
+  const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5
+    ? rawImportance
+    : 3;
+  classes.push(`importance-${importance}`);
+
+  // Status styling
+  if (status === 'approved') {
+    classes.push('status-approved');
+  }
+  if (status === 'locked') {
+    classes.push('status-locked');
+  }
+
+  // Interaction states
+  if (isSelected) {
+    classes.push('node-selected');
+  }
+  if (isHighlighted) {
+    classes.push('node-highlighted');
+  }
+  if (isChanged) {
+    classes.push('node-changed');
+  }
+
+  return classes.join(' ');
+}
+
+// Pure helper: bubbleWidth(importance)
+// Scales linearly from 160px (importance 1) to 240px (importance 5)
+export function bubbleWidth(importance) {
+  const raw = Number(importance);
+  const imp = Number.isInteger(raw) && raw >= 1 && raw <= 5 ? raw : 3;
+  return 160 + (imp - 1) * 20; // 1: 160, 2: 180, 3: 200, 4: 220, 5: 240
+}
+
+// Pure helper: inferredFill(inventiveness)
+// Opacity scales with inventiveness (0 = very pale, 1 = deep amber)
+export function inferredFill(inventiveness) {
+  const inv = typeof inventiveness === 'number' ? Math.max(0, Math.min(1, inventiveness)) : 0;
+  // Pale: ~0.08 alpha, Deep: ~0.42 alpha
+  const alpha = 0.08 + inv * 0.34;
+  return `rgba(245, 158, 11, ${Number(alpha.toFixed(3))})`;
+}
+
+// Pure helper: edgeStyle(relation)
+// has = slate, needs = amber, informs = blue dashed
+export function edgeStyle(relation) {
+  switch (relation) {
+    case 'needs':
+      return {
+        stroke: '#f59e0b',
+        strokeWidth: 2,
+        strokeDasharray: undefined,
+        animated: true,
+      };
+    case 'informs':
+      return {
+        stroke: '#3b82f6',
+        strokeWidth: 2,
+        strokeDasharray: '5,5',
+        animated: false,
+      };
+    case 'has':
+    default:
+      return {
+        stroke: '#64748b',
+        strokeWidth: 2,
+        strokeDasharray: undefined,
+        animated: false,
+      };
+  }
+}
 
 // Custom Node Component
 function MindMapNode({ data }) {
@@ -16,53 +134,104 @@ function MindMapNode({ data }) {
     node,
     isHighlighted,
     isSelected,
-    isPulsing,
+    isChanged,
   } = data;
 
-  const source = node.source || 'user';
-  const status = node.status || 'proposed';
-  const inventiveness = Number(node.inventiveness ?? 0);
-
-  let sourceClass = 'source-user';
-  if (source === 'inferred') {
-    sourceClass = inventiveness >= 0.5 ? 'source-inferred-high' : 'source-inferred-low';
-  } else if (source === 'unknown') {
-    sourceClass = 'source-unknown';
-  }
+  const source = node?.source || 'user';
+  const status = node?.status || 'proposed';
+  const inventiveness = Number(node?.inventiveness ?? 0);
+  const kind = node?.kind || 'feature';
+  const kindIcon = getKindIcon(kind);
+  const width = bubbleWidth(node?.importance);
 
   const isApproved = status === 'approved';
   const isLocked = status === 'locked';
 
-  const rawImportance = Number(node.importance);
-  const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5
-    ? rawImportance
-    : 3;
+  const nodeClassName = bubbleClass(node, {
+    isSelected,
+    isHighlighted,
+    isChanged,
+  });
+
+  const nodeStyle = {
+    width: `${width}px`,
+  };
+
+  if (source === 'inferred') {
+    nodeStyle.backgroundColor = inferredFill(inventiveness);
+  }
+
+  const evidenceQuotes = Array.isArray(node?.evidence) ? node.evidence.filter(Boolean) : [];
+  const hasTooltip = Boolean(node?.detail || evidenceQuotes.length > 0);
 
   return (
     <div
-      className={`mindmap-node ${sourceClass} importance-${importance} ${isApproved ? 'status-approved' : ''} ${
-        isSelected ? 'node-selected' : ''
-      } ${isHighlighted ? 'node-highlighted' : ''} ${isPulsing ? 'node-pulsing' : ''}`}
+      className={nodeClassName}
+      style={nodeStyle}
     >
       <Handle type="target" position={Position.Top} className="mindmap-handle" />
 
-      <div className="mindmap-node-label">{node.label}</div>
+      {isApproved && (
+        <div className="approved-corner-badge" title="Approved">
+          ✓
+        </div>
+      )}
+
+      <div className="mindmap-node-header">
+        <span className="mindmap-kind-icon" title={kind}>
+          {kindIcon}
+        </span>
+        <div className="mindmap-node-label" title={node?.label}>
+          {node?.label}
+        </div>
+        {source === 'inferred' && inventiveness >= 0.6 && (
+          <span className="creative-leap-badge" title={`Creative leap (${Math.round(inventiveness * 100)}%)`}>
+            ✦
+          </span>
+        )}
+      </div>
+
+      {node?.detail && (
+        <div className="mindmap-node-detail-preview">
+          {node.detail}
+        </div>
+      )}
 
       <div className="mindmap-node-meta">
-        <span className="mindmap-kind-tag">{node.kind || 'feature'}</span>
+        <span className="mindmap-kind-tag">
+          {kind}
+        </span>
 
         <div className="mindmap-node-badges">
           {source === 'unknown' && !isApproved && (
             <span className="unknown-badge" title="Needs a decision">?</span>
           )}
           {isApproved && (
-            <span className="approved-badge" title="User approved">✓ Approved</span>
+            <span className="approved-badge" title="User approved">✓</span>
           )}
           {isLocked && (
             <span className="locked-badge" title="Locked by user">🔒</span>
           )}
         </div>
       </div>
+
+      {hasTooltip && (
+        <div className="mindmap-tooltip">
+          {node.detail && (
+            <div className="tooltip-detail">{node.detail}</div>
+          )}
+          {evidenceQuotes.length > 0 && (
+            <div className="tooltip-evidence">
+              <div className="tooltip-evidence-title">Evidence:</div>
+              {evidenceQuotes.map((quote, idx) => (
+                <div key={idx} className="tooltip-quote">
+                  &ldquo;{quote}&rdquo;
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <Handle type="source" position={Position.Bottom} className="mindmap-handle" />
     </div>
@@ -148,26 +317,49 @@ function calculateLayout(rawNodes = [], rawEdges = []) {
     }
   });
 
-  // Calculate coordinates
-  const NODE_WIDTH = 180;
-  const H_GAP = 40;
-  const V_GAP = 110;
+  // Calculate coordinates with variable bubbleWidth
+  const H_GAP = 36;
+  const V_GAP = 125;
   const positions = new Map();
 
-  const maxLevelWidth = Math.max(...levels.map((lvl) => lvl.length * (NODE_WIDTH + H_GAP)));
+  // Width of each level is sum of node widths + gaps
+  const levelWidths = levels.map((lvlNodes) => {
+    return lvlNodes.reduce((sum, nid, idx) => {
+      const n = nodeMap.get(nid);
+      const w = bubbleWidth(n?.importance);
+      return sum + w + (idx > 0 ? H_GAP : 0);
+    }, 0);
+  });
+
+  const maxLevelWidth = Math.max(...levelWidths, 0);
 
   levels.forEach((lvlNodes, depth) => {
-    const totalLevelWidth = lvlNodes.length * (NODE_WIDTH + H_GAP) - H_GAP;
-    const startX = (maxLevelWidth - totalLevelWidth) / 2 + 50;
+    const totalLevelWidth = levelWidths[depth];
+    let curX = (maxLevelWidth - totalLevelWidth) / 2 + 50;
     const y = depth * V_GAP + 50;
 
-    lvlNodes.forEach((nid, idx) => {
-      const x = startX + idx * (NODE_WIDTH + H_GAP);
-      positions.set(nid, { x, y });
+    lvlNodes.forEach((nid) => {
+      const n = nodeMap.get(nid);
+      const w = bubbleWidth(n?.importance);
+      positions.set(nid, { x: curX, y });
+      curX += w + H_GAP;
     });
   });
 
   return { positions };
+}
+
+// Inner helper component to handle fitView on load & node count changes
+function ViewportHandler({ nodeCount }) {
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    if (nodeCount > 0) {
+      fitView({ padding: 0.2, duration: 400 });
+    }
+  }, [nodeCount, fitView]);
+
+  return null;
 }
 
 export default function MindMap({
@@ -201,21 +393,34 @@ export default function MindMap({
           node,
           isSelected: node.id === selectedId,
           isHighlighted: highlightedSet.has(node.id),
-          isPulsing: changedSet.has(node.id),
+          isChanged: changedSet.has(node.id),
         },
       };
     });
   }, [nodes, positions, selectedId, highlightedSet, changedSet]);
 
   const flowEdges = useMemo(() => {
-    return edges.map((e, index) => ({
-      id: `edge-${e.from}-${e.to}-${index}`,
-      source: e.from,
-      target: e.to,
-      type: 'smoothstep',
-      animated: e.relation === 'needs',
-      style: { stroke: '#475569', strokeWidth: 2 },
-    }));
+    return edges.map((e, index) => {
+      const styleConfig = edgeStyle(e.relation);
+      return {
+        id: `edge-${e.from}-${e.to}-${index}`,
+        source: e.from,
+        target: e.to,
+        type: 'smoothstep',
+        animated: styleConfig.animated,
+        style: {
+          stroke: styleConfig.stroke,
+          strokeWidth: styleConfig.strokeWidth,
+          strokeDasharray: styleConfig.strokeDasharray,
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: styleConfig.stroke,
+          width: 14,
+          height: 14,
+        },
+      };
+    });
   }, [edges]);
 
   const handleNodeClick = useCallback(
@@ -261,8 +466,21 @@ export default function MindMap({
         nodesDraggable={true}
         nodesConnectable={false}
       >
-        <Background color="#334155" gap={20} size={1} />
-        <Controls showInteractive={false} />
+        <ViewportHandler nodeCount={nodes.length} />
+        <Background color="#1e293b" gap={20} size={1} />
+        <Controls showInteractive={false} className="mindmap-controls" />
+        <MiniMap
+          className="mindmap-minimap"
+          nodeColor={(n) => {
+            const node = n.data?.node;
+            if (node?.status === 'approved') return '#10b981';
+            if (node?.source === 'user') return '#3b82f6';
+            if (node?.source === 'inferred') return '#f59e0b';
+            if (node?.source === 'unknown') return '#ef4444';
+            return '#64748b';
+          }}
+          maskColor="rgba(11, 17, 32, 0.75)"
+        />
       </ReactFlow>
 
       {/* Legend */}
@@ -278,7 +496,7 @@ export default function MindMap({
         </div>
         <div className="legend-item">
           <span className="legend-bullet inferred-high" />
-          <span>Claude assumed (leap)</span>
+          <span>Claude assumed (leap ✦)</span>
         </div>
         <div className="legend-item">
           <span className="legend-bullet unknown" />
