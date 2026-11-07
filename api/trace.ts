@@ -9,6 +9,7 @@ export const TRACE_SCRIPT = `
 <style>
   [data-mc].mc-hl { outline: 3px solid #17c894 !important; outline-offset: 2px; }
   [data-mc].mc-hover { outline: 2px dashed #d67408 !important; outline-offset: 2px; }
+  .mc-edit { outline: 3px solid #d67408 !important; outline-offset: 3px; box-shadow: 0 0 0 6px rgba(214,116,8,.18) !important; }
 </style>
 <script>
 (function () {
@@ -31,7 +32,48 @@ export const TRACE_SCRIPT = `
     current = null;
     send(null);
   });
+  // In-page links: inside a srcdoc iframe, href="#work" resolves against the PARENT page's URL and
+  // navigates the frame away, so generated sites' nav links and "View my work" buttons looked dead.
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (href.charAt(0) === '#') {
+      e.preventDefault();
+      var id = href.slice(1);
+      var t = id ? (document.getElementById(id) || document.querySelector('[name="' + id + '"]')) : null;
+      try { if (location.hash !== href) history.replaceState(null, '', href); window.dispatchEvent(new HashChangeEvent('hashchange')); } catch (err) {}
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else if (!id) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (/^(https?:|mailto:|tel:)/i.test(href)) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    }
+  }, true);
+
+  // Right-click any element -> ask MindCode for a targeted change to it.
+  var editEl = null;
+  document.addEventListener('contextmenu', function (e) {
+    var el = tagged(e.target) || e.target;
+    if (!el || el === document.documentElement || el === document.body) return;
+    e.preventDefault();
+    if (editEl) editEl.classList.remove('mc-edit');
+    editEl = el;
+    el.classList.add('mc-edit');
+    parent.postMessage({
+      type: 'mc-edit',
+      el: el.getAttribute('data-mc-el'),
+      nodes: el.getAttribute('data-mc') ? el.getAttribute('data-mc').split(/\s+/) : [],
+      tag: el.tagName.toLowerCase(),
+      text: (el.innerText || el.value || '').trim().slice(0, 160),
+      snippet: el.outerHTML.slice(0, 1500),
+      x: e.clientX,
+      y: e.clientY
+    }, '*');
+  });
+
   window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'mc-edit-clear' && editEl) { editEl.classList.remove('mc-edit'); editEl = null; }
     if (!e.data || e.data.type !== 'mc-highlight') return;
     var want = e.data.nodes || [], first = null;
     document.querySelectorAll('[data-mc]').forEach(function (el) {

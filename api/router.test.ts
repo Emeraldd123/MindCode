@@ -405,3 +405,22 @@ describe("bubble chat vs. locking mid-reply", () => {
     expect(r.history).toHaveLength(2);
   });
 });
+
+describe("right-click edits and the clean app route", () => {
+  it("edit creates a new build from the base build's HTML; /app serves it without the trace overlay", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    await call("POST", `/sessions/${id}/build`);
+    const e = await call("POST", `/sessions/${id}/builds/b1/edit`, { instruction: "make the title bigger", el: "e1", nodes: ["n1"], snippet: "<h1>" });
+    expect([e.status, e.body.id, e.body.status, e.body.request.base]).toEqual([200, "b2", "done", "b1"]);
+    expect(e.body.html).toContain("edit: make the title bigger");
+    const app = (await call("GET", `/sessions/${id}/builds/b2/app`)).body as string;
+    expect(app).not.toContain("mc-hover");
+    expect(app).toContain("edit: make the title bigger");
+    const preview = (await call("GET", `/sessions/${id}/builds/b2/preview`)).body as string;
+    expect(preview).toContain("mc-edit");
+    const cps = (await call("GET", `/sessions/${id}/checkpoints`)).body;
+    expect(cps.at(-1).build_id).toBe("b2");
+    expect((await call("POST", `/sessions/${id}/builds/b1/edit`, { instruction: " " })).status).toBe(422);
+  });
+});

@@ -38,6 +38,12 @@ export const stubAI: AI = {
     return { reply: `Got it: ${text}`, label: node.label, detail: text || node.detail };
   },
 
+  async editApp(html, _map, request) {
+    // Deterministic stand-in: mark the edited element so tests can see the change landed.
+    const marker = `<!-- edit: ${request.instruction.replace(/--/g, "")} -->`;
+    return html.replace(/<\/body>/i, `${marker}</body>`);
+  },
+
   async buildApp(map: MindMap) {
     const root = map.nodes.find((n) => n.parent === null);
     const items = map.nodes.map((n, i) => `<li data-mc-el="e${i + 2}" data-mc="${n.id}">${n.label}</li>`).join("");

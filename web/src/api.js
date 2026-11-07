@@ -99,6 +99,19 @@ export function getBuildPreviewUrl(sessionId, buildId) {
   return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/preview`;
 }
 
+/** The generated app on its own (no trace overlay): open in a new tab, fully working. */
+export function getBuildAppUrl(sessionId, buildId) {
+  return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/app`;
+}
+
+/** Right-click edit: ask Claude for one targeted change to a build. Returns the new (pending) Build. */
+export async function editBuild(sessionId, buildId, change) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/edit`, {
+    method: 'POST',
+    body: JSON.stringify(change),
+  });
+}
+
 export function getBuildDownloadUrl(sessionId, buildId) {
   return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/download`;
 }

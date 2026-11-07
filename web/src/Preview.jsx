@@ -111,10 +111,23 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
     return () => { cancelled = true; };
   }, [sessionId, shown?.id]);
 
-  // Page -> map: hover messages from the iframe.
+  // Page -> map: hover messages from the iframe; right-click -> change request popover.
+  const [editTarget, setEditTarget] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [editSending, setEditSending] = useState(false);
   useEffect(() => {
     function onMessage(e) {
-      if (e.source !== iframeRef.current?.contentWindow || !isHoverMessage(e.data)) return;
+      if (e.source !== iframeRef.current?.contentWindow) return;
+      if (e.data && e.data.type === 'mc-edit') {
+        const frame = iframeRef.current?.getBoundingClientRect();
+        const body = iframeRef.current?.closest('.preview-body')?.getBoundingClientRect();
+        const left = frame && body ? frame.left - body.left + e.data.x : 16;
+        const top = frame && body ? frame.top - body.top + e.data.y : 16;
+        setEditTarget({ ...e.data, left, top });
+        setEditText('');
+        return;
+      }
+      if (!isHoverMessage(e.data)) return;
       setHovered(e.data.nodes);
       onHoverNodes?.(e.data.nodes);
     }
@@ -125,6 +138,32 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   // Map -> page: outline elements informed by the selected bubbles.
   const sendHighlight = () => iframeRef.current?.contentWindow?.postMessage({ type: 'mc-highlight', nodes: highlightNodes }, '*');
   useEffect(sendHighlight, [highlightNodes.join(' '), shown?.id]);
+
+  const closeEdit = () => {
+    setEditTarget(null);
+    iframeRef.current?.contentWindow?.postMessage({ type: 'mc-edit-clear' }, '*');
+  };
+
+  async function sendEdit(e) {
+    e?.preventDefault();
+    const instruction = editText.trim();
+    if (!instruction || !shown || editSending) return;
+    setEditSending(true);
+    try {
+      const b = await api.editBuild(sessionId, shown.id, {
+        instruction,
+        el: editTarget?.el ?? null,
+        nodes: editTarget?.nodes ?? [],
+        snippet: editTarget?.snippet ?? '',
+      });
+      setBuilds((prev) => upsertBuild(prev, b));
+      closeEdit();
+    } catch (err) {
+      onError?.(`Change request failed: ${err.message}`);
+    } finally {
+      setEditSending(false);
+    }
+  }
 
   async function handleBuild() {
     if (!sessionId || pending) return;
@@ -176,8 +215,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
             </div>
           )}
           {shown && (
-            <a className="preview-open" href={api.getBuildPreviewUrl(sessionId, shown.id)} target="_blank" rel="noreferrer" title="Open in a new tab">
-              {shown.id} ↗
+            <a className="preview-open" href={api.getBuildAppUrl(sessionId, shown.id)} target="_blank" rel="noreferrer" title="Open the app in a new tab (no dev overlay, fully working)">
+              Open app ↗
             </a>
           )}
           {shown && (
@@ -222,7 +261,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                   className="preview-frame"
                   title={appTitle}
                   srcDoc={html.id === shown.id ? html.text : ''}
-                  sandbox="allow-scripts allow-forms allow-modals"
+                  sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"
                   onLoad={sendHighlight}
                 />
               </div>
@@ -354,7 +393,47 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                 +{chips.length - 4} more
               </span>
             )}
-          </div>
+                    </div>
+        )}
+
+        {editTarget && (
+          <form
+            onSubmit={sendEdit}
+            className="absolute z-30 w-[min(320px,90%)] rounded-xl border border-hairline bg-raised p-3 font-sans text-foreground shadow-2xl"
+            style={{
+              left: `clamp(8px, ${Math.round(editTarget.left)}px, calc(100% - 330px))`,
+              top: `clamp(8px, ${Math.round(editTarget.top + 8)}px, calc(100% - 170px))`,
+            }}
+            onKeyDown={(e) => e.key === 'Escape' && closeEdit()}
+          >
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="truncate text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                Change this {editTarget.tag}
+                {editTarget.text ? `: "${editTarget.text.slice(0, 40)}${editTarget.text.length > 40 ? '…' : ''}"` : ''}
+              </span>
+              <button type="button" onClick={closeEdit} className="cursor-pointer border-0 bg-transparent text-dim hover:text-foreground" aria-label="Cancel">×</button>
+            </div>
+            <textarea
+              autoFocus
+              rows={2}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) sendEdit(e); }}
+              placeholder="e.g. make this button scroll to the projects"
+              className="w-full resize-none rounded-lg border border-hairline bg-background px-2.5 py-2 font-sans text-[13px] text-foreground outline-none placeholder:text-dim focus:border-ai/50"
+              disabled={editSending}
+            />
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[11px] text-dim">Claude rebuilds just this part</span>
+              <button
+                type="submit"
+                disabled={!editText.trim() || editSending}
+                className="cursor-pointer rounded-md border-0 bg-ai px-3 py-1.5 text-xs font-semibold text-[#0b1a14] disabled:cursor-default disabled:opacity-40"
+              >
+                {editSending ? 'Sending…' : 'Request change'}
+              </button>
+            </div>
+          </form>
         )}
       </div>
     </div>
