@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as api from './api';
 import Chat from './Chat';
 import MindMap from './MindMap';
+import TreeMap from './TreeMap';
 import Preview from './Preview';
 import NodeDrawer from './NodeDrawer';
 import Checkpoints from './Checkpoints';
@@ -24,6 +25,14 @@ export default function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeCheckpointId, setActiveCheckpointId] = useState(null); // null = live
+  // Two map views to compare: 'graph' (Oliver & Tenma's MindMap) and 'tree' (Claude's TreeMap).
+  const [mapView, setMapView] = useState(() => {
+    try { return localStorage.getItem('mindcode_map_view') || 'tree'; } catch { return 'tree'; }
+  });
+  const chooseView = (v) => {
+    setMapView(v);
+    try { localStorage.setItem('mindcode_map_view', v); } catch {}
+  };
 
   // Checkpoint view: show that checkpoint's map (read-only) and its build, if any.
   const activeCheckpoint = activeCheckpointId ? checkpoints.find((c) => c.id === activeCheckpointId) : null;
@@ -216,18 +225,45 @@ export default function App() {
             <section className="relative flex h-full min-w-0 flex-col bg-background" aria-label="Mind map pane">
               <div className="flex h-10 shrink-0 items-center justify-between border-b border-hairline px-4">
                 <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Mind map</h2>
-                <span className="rounded-full border border-hairline px-2 py-0.5 text-[11px] text-muted-foreground">
-                  {map.nodes?.length || 0} bubble{map.nodes?.length === 1 ? '' : 's'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex rounded-md border border-hairline p-0.5" role="tablist" aria-label="Map view">
+                    {[['tree', 'Tree'], ['graph', 'Graph']].map(([v, label]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        role="tab"
+                        aria-selected={mapView === v}
+                        onClick={() => chooseView(v)}
+                        className={`cursor-pointer rounded border-0 px-2 py-0.5 text-[11px] ${mapView === v ? 'bg-raised text-foreground' : 'bg-transparent text-muted-foreground hover:text-foreground'}`}
+                        title={v === 'tree' ? "Claude's tree view: branches stay beside their parents" : "Oliver & Tenma's graph view"}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="rounded-full border border-hairline px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {map.nodes?.length || 0} bubble{map.nodes?.length === 1 ? '' : 's'}
+                  </span>
+                </div>
               </div>
               <div className="relative min-h-0 flex-1">
-                <MindMap
-                  map={viewMap}
-                  highlighted={hoverNodes}
-                  changedIds={activeCheckpoint ? [] : changedIds}
-                  selectedId={selectedNodeId}
-                  onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
-                />
+                {mapView === 'tree' ? (
+                  <TreeMap
+                    map={viewMap}
+                    highlighted={hoverNodes}
+                    changedIds={activeCheckpoint ? [] : changedIds}
+                    selectedId={selectedNodeId}
+                    onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
+                  />
+                ) : (
+                  <MindMap
+                    map={viewMap}
+                    highlighted={hoverNodes}
+                    changedIds={activeCheckpoint ? [] : changedIds}
+                    selectedId={selectedNodeId}
+                    onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
+                  />
+                )}
               </div>
               <Checkpoints
                 checkpoints={checkpoints}
