@@ -5,6 +5,10 @@
   command = "npm ci --prefix web && npm run build --prefix web"
   publish = "web/dist"
   functions = "netlify/functions"
+  # DEPLOY GATE (Ben pays per deploy; max 15 total, see docs/deploys.md).
+  # Netlify skips the build unless the latest commit message contains "[deploy]".
+  # Exit 0 = skip, exit 1 = build. Only Claude adds "[deploy]", after a major change.
+  ignore = "git log -1 --pretty=%B | grep -qF '[deploy]' && exit 1 || exit 0"
 
 [functions]
   node_bundler = "esbuild"

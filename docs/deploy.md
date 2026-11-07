@@ -15,6 +15,9 @@ MindCode runs as a single unified deployment on [Netlify](https://www.netlify.co
 
 ---
 
+## Deploy budget (read first)
+Ben pays per deploy: **15 deploys max**, only after major changes. `netlify.toml` skips every build unless the commit message contains `[deploy]`. Only Claude adds that tag. See **[docs/deploys.md](deploys.md)** for the rules and the log. After connecting the site, turn **off** Deploy Previews and Branch deploys in the Netlify UI.
+
 ## 2. One-Click / Git Connect Setup
 
 1. Log in to [Netlify](https://app.netlify.com/) and click **Add new site** → **Import an existing project**.
@@ -24,7 +27,7 @@ MindCode runs as a single unified deployment on [Netlify](https://www.netlify.co
    - **Build command**: `npm ci --prefix web && npm run build --prefix web`
    - **Publish directory**: `web/dist`
    - **Functions directory**: `netlify/functions`
-4. Click **Deploy MindCode**.
+4. Click **Deploy MindCode**. This first build will be **skipped** by the deploy gate, which is expected. Claude's next `[deploy]` merge does the first real deploy.
 
 ---
 
