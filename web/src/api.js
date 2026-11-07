@@ -116,9 +116,11 @@ export async function deleteEdge(sessionId, { from, to }) {
   });
 }
 
-export async function build(sessionId) {
+/** Build the app. With an earlier build, small map changes are applied as fast patches unless full=true. */
+export async function build(sessionId, { full = false } = {}) {
   return request(`/sessions/${encodeURIComponent(sessionId)}/build`, {
     method: 'POST',
+    body: JSON.stringify(full ? { full: true } : {}),
   });
 }
 

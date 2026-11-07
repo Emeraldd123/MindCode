@@ -646,3 +646,25 @@ describe("never reuse deleted bubble ids", () => {
     expect(n.id).toBe("n4");
   });
 });
+
+describe("incremental rebuilds (small map changes become patches)", () => {
+  it("small change → incremental edit of the last build; full flag and big changes → full build", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    const b1 = (await call("POST", `/sessions/${id}/build`)).body;
+    expect(b1.mode).toBe("full");
+
+    await call("POST", `/sessions/${id}/nodes`, { label: "Dark mode", parent: "n1" });
+    const b2 = (await call("POST", `/sessions/${id}/build`)).body;
+    expect(b2.mode).toBe("incremental");
+    expect(b2.html).toContain("ADD to the app");
+    expect(b2.html).toContain("Dark mode");
+
+    const b3 = (await call("POST", `/sessions/${id}/build`, { full: true })).body;
+    expect(b3.mode).toBe("full");
+
+    for (let i = 0; i < 9; i++) await call("POST", `/sessions/${id}/nodes`, { label: `Extra ${i}`, parent: "n1" });
+    const b4 = (await call("POST", `/sessions/${id}/build`)).body;
+    expect(b4.mode).toBe("full");
+  });
+});

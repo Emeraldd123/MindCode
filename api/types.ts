@@ -39,6 +39,8 @@ export interface Build {
   trace: Record<string, string[]>;
   checkpoint_id: string;
   audit?: BuildAudit;
+  /** "full" = generated from scratch; "incremental" = small map changes applied as patches to the previous build. */
+  mode?: "full" | "incremental" | "edit";
   /** Set when this build is a targeted edit of another build (right-click in the preview). */
   request?: ChangeRequest;
 }
