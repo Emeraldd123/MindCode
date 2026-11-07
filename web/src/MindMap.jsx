@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './mindmap.css';
+import Attention from './Attention';
 
 // Custom Node Component
 function MindMapNode({ data }) {
@@ -32,9 +33,14 @@ function MindMapNode({ data }) {
   const isApproved = status === 'approved';
   const isLocked = status === 'locked';
 
+  const rawImportance = Number(node.importance);
+  const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5
+    ? rawImportance
+    : 3;
+
   return (
     <div
-      className={`mindmap-node ${sourceClass} ${isApproved ? 'status-approved' : ''} ${
+      className={`mindmap-node ${sourceClass} importance-${importance} ${isApproved ? 'status-approved' : ''} ${
         isSelected ? 'node-selected' : ''
       } ${isHighlighted ? 'node-highlighted' : ''} ${isPulsing ? 'node-pulsing' : ''}`}
     >
@@ -229,12 +235,22 @@ export default function MindMap({
           <h3>Your Mind Map is Empty</h3>
           <p>Send a message in the chat to start mapping ideas.</p>
         </div>
+        <Attention
+          nodes={nodes}
+          onSelect={onSelect}
+          selectedId={selectedId}
+        />
       </div>
     );
   }
 
   return (
     <div className="mindmap-wrapper">
+      <Attention
+        nodes={nodes}
+        onSelect={onSelect}
+        selectedId={selectedId}
+      />
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
