@@ -684,3 +684,8 @@
   .preview-container .pane-header h2 { display: none; }
 }
 .preview-open { white-space: nowrap; }
+
+/* Narrow preview pane: drop the device toggle first so Update never clips. */
+@container (max-width: 520px) {
+  .preview-container .preview-mode-toggle { display: none; }
+}

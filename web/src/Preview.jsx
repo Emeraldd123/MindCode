@@ -228,7 +228,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               className={`preview-download ${inspect ? '!border-ai !text-ai' : ''}`}
               title={inspect ? 'Inspect is on: click an element to pin the bubbles behind it (normal clicks paused)' : 'Inspect: click an element to pin the bubbles behind it'}
             >
-              {inspect ? '◉ Inspecting' : '◎ Inspect'}
+              {inspect ? '◉ Pin' : '◎ Pin'}
             </button>
           )}
           {shown && (
@@ -263,7 +263,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               download={`mindcode-${shown.id}.html`}
               title="Download standalone app HTML"
             >
-              ↓ HTML
+              ↓
             </a>
           )}
           <button
@@ -282,7 +282,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               disabled={!canBuild}
               title="Regenerate the whole app from the map (slower)"
             >
-              Full rebuild
+              Full
             </button>
           )}
         </div>
