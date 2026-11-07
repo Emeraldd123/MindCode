@@ -87,3 +87,8 @@
   .mc-scroll::-webkit-scrollbar-track { background: transparent; }
   :focus-visible { outline: 2px solid var(--mc-focus); outline-offset: 2px; }
 }
+
+/* Drawer slide-in (Obsidian-style rail). */
+@keyframes mc-slide-in { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.animate-in { animation: mc-slide-in 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) { .animate-in { animation: none; } }

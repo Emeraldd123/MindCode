@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ArrowUp, Check, Lock, Unlock, X } from 'lucide-react';
 import * as api from './api';
-import {
-  sourceBadge,
-  canApprove,
-  nextLockStatus,
-  canChat,
-  normalizeInventiveness,
-} from './nodeDrawerLogic';
-import './drawer.css';
+import { canApprove, nextLockStatus, canChat, normalizeInventiveness } from './nodeDrawerLogic';
+import { cn } from '@/lib/utils';
+import { Button } from '@/ui/primitives/button';
+import { Badge } from '@/ui/primitives/badge';
+import { Separator } from '@/ui/primitives/separator';
 
 /**
- * NodeDrawer component
+ * NodeDrawer: an Obsidian-style right rail over the map for one bubble. You can discuss the
+ * bubble with Claude, then Approve or Lock it.
  *
  * Props:
  * - sessionId: string
@@ -19,6 +18,17 @@ import './drawer.css';
  * - onClose: () => void
  * - onError: (msg: string) => void
  */
+
+const SOURCE_STYLE = {
+  user: { label: 'You said it', dot: 'bg-user', chip: 'border-user/50 text-user' },
+  inferred: { label: 'Claude assumed', dot: 'bg-ai', chip: 'border-ai/50 text-ai' },
+  unknown: { label: 'Open question', dot: 'bg-unknown', chip: 'border-unknown/50 text-red-300' },
+};
+
+function SectionLabel({ children }) {
+  return <p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-dim">{children}</p>;
+}
+
 export default function NodeDrawer({
   sessionId,
   node,
@@ -32,7 +42,7 @@ export default function NodeDrawer({
   const [actionLoading, setActionLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  // Reset mini-chat when opening or switching to a different node
+  // Reset the mini chat when opening or switching to a different node
   const currentNodeId = node?.id;
   useEffect(() => {
     setMessages([]);
@@ -41,39 +51,35 @@ export default function NodeDrawer({
     setActionLoading(false);
   }, [currentNodeId]);
 
-  // Handle Escape key to close drawer
+  // Escape closes the drawer
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && node) {
-        onClose();
-      }
+      if (e.key === 'Escape' && node) onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [node, onClose]);
 
-  // Scroll mini chat to bottom on new messages or typing indicator
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, chatLoading]);
 
-  if (!node) {
-    return null;
-  }
+  if (!node) return null;
 
-  const badge = sourceBadge(node);
   const isApproved = node.status === 'approved';
   const isLocked = node.status === 'locked';
   const chatAllowed = canChat(node);
   const approveAllowed = canApprove(node);
   const inventivenessVal = normalizeInventiveness(node.inventiveness);
+  const source = SOURCE_STYLE[node.source] || SOURCE_STYLE.unknown;
+  const importance = Math.max(1, Math.min(5, parseInt(node.importance, 10) || 1));
+  const evidence = Array.isArray(node.evidence) ? node.evidence : [];
 
   const handleApprove = async () => {
     if (!approveAllowed || actionLoading) return;
     setActionLoading(true);
     try {
-      const updatedNode = await api.approveNode(sessionId, node.id);
-      onNodeChange(updatedNode);
+      onNodeChange(await api.approveNode(sessionId, node.id));
     } catch (err) {
       onError(err?.message || 'Failed to approve node');
     } finally {
@@ -84,12 +90,8 @@ export default function NodeDrawer({
   const handleToggleLock = async () => {
     if (actionLoading) return;
     setActionLoading(true);
-    const targetStatus = nextLockStatus(node);
     try {
-      const updatedNode = await api.patchNode(sessionId, node.id, {
-        status: targetStatus,
-      });
-      onNodeChange(updatedNode);
+      onNodeChange(await api.patchNode(sessionId, node.id, { status: nextLockStatus(node) }));
     } catch (err) {
       onError(err?.message || 'Failed to update lock status');
     } finally {
@@ -101,25 +103,15 @@ export default function NodeDrawer({
     if (e) e.preventDefault();
     const text = chatInput.trim();
     if (!text || chatLoading || !chatAllowed) return;
-
-    // Optimistically show user message
-    const optimisticUserMsg = { role: 'user', text };
-    setMessages((prev) => [...prev, optimisticUserMsg]);
+    setMessages((prev) => [...prev, { role: 'user', text }]);
     setChatInput('');
     setChatLoading(true);
-
     try {
       const res = await api.chatNode(sessionId, node.id, text);
       if (res) {
-        if (Array.isArray(res.history) && res.history.length > 0) {
-          setMessages(res.history);
-        } else if (res.reply) {
-          setMessages((prev) => [...prev, { role: 'assistant', text: res.reply }]);
-        }
-
-        if (res.node) {
-          onNodeChange(res.node);
-        }
+        if (Array.isArray(res.history) && res.history.length > 0) setMessages(res.history);
+        else if (res.reply) setMessages((prev) => [...prev, { role: 'assistant', text: res.reply }]);
+        if (res.node) onNodeChange(res.node);
       }
     } catch (err) {
       onError(err?.message || 'Failed to send message to Claude');
@@ -135,170 +127,162 @@ export default function NodeDrawer({
     }
   };
 
-  // Importance 1-5 dots
-  const importance = Math.max(1, Math.min(5, parseInt(node.importance, 10) || 1));
-
   return (
-    <aside className="node-drawer open" aria-label="Node detail drawer">
+    <aside
+      className="node-drawer absolute inset-y-0 right-0 z-20 flex w-[min(380px,92%)] flex-col border-l border-hairline bg-surface font-sans text-foreground shadow-[-24px_0_48px_-24px_rgba(0,0,0,0.6)] animate-in"
+      aria-label="Bubble details"
+    >
       {/* Header */}
-      <div className="drawer-header">
-        <div className="drawer-header-top">
-          <h2 className="drawer-title">{node.label}</h2>
-          <button
-            type="button"
-            className="drawer-close-btn"
-            onClick={onClose}
-            aria-label="Close drawer"
-            title="Close (Escape)"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="drawer-meta-row">
-          {node.kind && <span className="badge-kind">{node.kind}</span>}
-          <span className={`badge-source ${badge.className}`}>{badge.label}</span>
-        </div>
-
-        {/* Inferred inventiveness bar */}
-        {node.source === 'inferred' && (
-          <div className="inventiveness-section">
-            <div className="inventiveness-label-row">
-              <span>obvious</span>
-              <span>inventiveness: {Math.round(inventivenessVal * 100)}%</span>
-              <span>creative leap</span>
-            </div>
-            <div className="inventiveness-bar-bg">
-              <div
-                className="inventiveness-bar-fill"
-                style={{ width: `${inventivenessVal * 100}%` }}
-              />
-            </div>
+      <div className="flex flex-col gap-3 px-5 pt-4 pb-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <Badge variant="outline" className={cn('gap-1.5 bg-transparent', source.chip)}>
+              <span className={cn('size-1.5 rounded-full', source.dot)} />
+              {source.label}
+            </Badge>
+            {node.kind && (
+              <Badge variant="outline" className="border-hairline bg-transparent text-[10.5px] uppercase tracking-wide text-muted-foreground">
+                {node.kind}
+              </Badge>
+            )}
+            {isApproved && (
+              <Badge variant="outline" className="border-approved/60 bg-approved/10 text-approved">
+                <Check /> Approved
+              </Badge>
+            )}
+            {isLocked && (
+              <Badge variant="outline" className="border-hairline text-muted-foreground">
+                <Lock /> Locked
+              </Badge>
+            )}
           </div>
-        )}
+          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close" title="Close (Esc)">
+            <X />
+          </Button>
+        </div>
+
+        <h2 className="text-[19px] font-semibold leading-snug tracking-tight">{node.label}</h2>
+        {node.detail && <p className="font-serif text-[14.5px] leading-relaxed text-muted-foreground">{node.detail}</p>}
+
+        <div className="flex gap-2 pt-1">
+          <Button
+            variant="approve"
+            className="flex-1"
+            onClick={handleApprove}
+            disabled={!approveAllowed || actionLoading}
+            title={isApproved ? 'Already approved' : isLocked ? 'Unlock to approve' : 'Approve this bubble'}
+          >
+            <Check /> {isApproved ? 'Approved' : 'Approve'}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleToggleLock}
+            disabled={actionLoading}
+            title={isLocked ? 'Unlock bubble' : 'Lock: rebuilds keep this bubble’s code unchanged'}
+          >
+            {isLocked ? <Unlock /> : <Lock />} {isLocked ? 'Unlock' : 'Lock'}
+          </Button>
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="drawer-actions">
-        <button
-          type="button"
-          className="btn-approve"
-          onClick={handleApprove}
-          disabled={!approveAllowed || actionLoading}
-          title={
-            isApproved
-              ? 'Already approved'
-              : isLocked
-              ? 'Unlock to approve'
-              : 'Approve this bubble'
-          }
-        >
-          ✓ {isApproved ? 'Approved' : 'Approve'}
-        </button>
+      <Separator className="bg-hairline" />
 
-        <button
-          type="button"
-          className="btn-lock"
-          onClick={handleToggleLock}
-          disabled={actionLoading}
-          title={isLocked ? 'Unlock bubble' : 'Lock bubble'}
-        >
-          {isLocked ? '🔓 Unlock' : '🔒 Lock'}
-        </button>
-      </div>
-
-      {/* Body: Detail, Evidence, Importance */}
-      <div className="drawer-body">
-        {node.detail && <p className="drawer-detail">{node.detail}</p>}
-
-        {Array.isArray(node.evidence) && node.evidence.length > 0 && (
-          <div className="drawer-evidence">
-            <div className="drawer-evidence-title">Evidence</div>
-            <ul className="drawer-evidence-quotes">
-              {node.evidence.map((quote, idx) => (
-                <li key={idx}>&ldquo;{quote}&rdquo;</li>
+      {/* Why it's here: evidence (Obsidian "linked mentions" style) or how bold the assumption is */}
+      <div className="flex flex-col gap-4 px-5 py-4">
+        <div className="flex flex-col gap-2">
+          <SectionLabel>Why it&apos;s here</SectionLabel>
+          {evidence.length > 0 ? (
+            <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+              {evidence.map((quote, idx) => (
+                <li key={idx} className="rounded-md border-l-2 border-user bg-user/10 px-3 py-1.5 font-serif text-[13.5px] text-foreground">
+                  &ldquo;{quote}&rdquo;
+                </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : node.source === 'inferred' ? (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[13px] text-muted-foreground">You never said this. Claude assumed it.</p>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-raised">
+                <div className="h-full rounded-full bg-ai" style={{ width: `${Math.max(6, inventivenessVal * 100)}%` }} />
+              </div>
+              <div className="flex justify-between text-[10.5px] text-dim">
+                <span>obvious</span>
+                <span>{Math.round(inventivenessVal * 100)}% inventive</span>
+                <span>creative leap</span>
+              </div>
+            </div>
+          ) : isApproved || isLocked ? (
+            <p className="text-[13px] text-muted-foreground">You decided this with Claude.</p>
+          ) : (
+            <p className="text-[13px] text-muted-foreground">Nobody decided this yet. Tell Claude below.</p>
+          )}
+        </div>
 
-        <div className="drawer-importance">
-          <span>Importance:</span>
-          <div className="importance-dots" aria-label={`Importance ${importance} of 5`}>
-            {[1, 2, 3, 4, 5].map((dot) => (
-              <span
-                key={dot}
-                className={`importance-dot ${dot <= importance ? 'active' : ''}`}
-              />
+        <div className="flex items-center justify-between">
+          <SectionLabel>Importance</SectionLabel>
+          <div className="flex items-center gap-1" aria-label={`Importance ${importance} of 5`}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <span key={i} className={cn('h-1.5 w-5 rounded-full', i <= importance ? 'bg-foreground/80' : 'bg-raised')} />
             ))}
           </div>
-          <span>({importance}/5)</span>
         </div>
       </div>
 
-      {/* Mini Chat */}
-      <div className="drawer-chat">
-        <div className="drawer-chat-title">Brainstorm with Claude</div>
+      <Separator className="bg-hairline" />
 
-        <div className="drawer-chat-messages">
+      {/* Brainstorm with Claude (same language as the main chat) */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="px-5 pt-4">
+          <SectionLabel>Brainstorm with Claude</SectionLabel>
+        </div>
+        <div className="mc-scroll min-h-0 flex-1 overflow-y-auto px-5 py-3">
           {messages.length === 0 ? (
-            <div className="drawer-chat-empty">
-              Discuss this bubble with Claude to refine its scope or wording.
-            </div>
+            <p className="text-[13px] text-dim">Ask Claude to refine, rename or decide this bubble.</p>
           ) : (
-            messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`drawer-chat-bubble drawer-chat-bubble-${msg.role}`}
-              >
-                <div className="drawer-chat-role">
-                  {msg.role === 'user' ? 'You' : 'Claude'}
-                </div>
-                <div className="drawer-chat-text">{msg.text}</div>
-              </div>
-            ))
+            <div className="flex flex-col gap-3">
+              {messages.map((msg, idx) =>
+                msg.role === 'user' ? (
+                  <div key={idx} className="ml-auto max-w-[85%] rounded-2xl bg-raised px-3 py-2 text-[13px]">
+                    {msg.text}
+                  </div>
+                ) : (
+                  <p key={idx} className="m-0 font-serif text-[14px] leading-relaxed text-foreground">
+                    {msg.text}
+                  </p>
+                ),
+              )}
+            </div>
           )}
-
           {chatLoading && (
-            <div className="drawer-chat-bubble drawer-chat-bubble-assistant">
-              <div className="drawer-chat-role">Claude</div>
-              <div className="drawer-chat-text drawer-typing-indicator">
-                <span className="drawer-typing-dot" />
-                <span className="drawer-typing-dot" />
-                <span className="drawer-typing-dot" />
-              </div>
+            <div className="mt-3 flex items-center gap-1.5" aria-label="Claude is thinking">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="size-1.5 animate-bounce rounded-full bg-ai/80" style={{ animationDelay: `${i * 140}ms` }} />
+              ))}
             </div>
           )}
           <div ref={chatEndRef} />
         </div>
 
-        {/* Chat input */}
-        <form className="drawer-chat-form" onSubmit={handleSendMessage}>
-          {isLocked && (
-            <div className="drawer-locked-hint">
-              <span>🔒</span> Unlock to change this bubble
-            </div>
-          )}
-          <div className="drawer-chat-input-row">
+        <form className="px-4 pb-4" onSubmit={handleSendMessage}>
+          {isLocked && <p className="mb-1.5 px-1 text-[11px] text-dim">Unlock to change this bubble.</p>}
+          <div className="flex items-end gap-2 rounded-xl border border-input bg-raised px-2.5 py-1.5 focus-within:border-ai/50">
             <textarea
-              className="drawer-chat-textarea"
+              className="max-h-28 min-h-[22px] flex-1 resize-none border-0 bg-transparent px-1 py-1 font-sans text-[13px] leading-5 text-foreground outline-none placeholder:text-dim"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleChatKeyDown}
-              placeholder={
-                isLocked
-                  ? 'Bubble is locked'
-                  : 'Message Claude about this bubble... (Enter to send)'
-              }
-              rows={2}
+              placeholder={isLocked ? 'Bubble is locked' : 'Message Claude about this bubble…'}
+              rows={1}
               disabled={!chatAllowed || chatLoading}
+              aria-label="Message Claude about this bubble"
             />
             <button
               type="submit"
-              className="drawer-chat-send-btn"
               disabled={!chatAllowed || chatLoading || !chatInput.trim()}
+              aria-label="Send"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-ai text-[#0b1a14] disabled:cursor-default disabled:bg-accent disabled:text-dim"
             >
-              Send
+              <ArrowUp className="size-3.5" strokeWidth={2.5} />
             </button>
           </div>
         </form>
