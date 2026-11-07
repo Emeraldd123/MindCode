@@ -663,3 +663,23 @@
 .trace-unknown { border-color: var(--accent-unknown); background: rgba(239, 68, 68, 0.15); }
 .trace-approved { border-color: #ffffff; border-width: 2px; background: rgba(255, 255, 255, 0.1); }
 .trace-more { border-color: var(--border-color); background: rgba(148, 163, 184, 0.12); color: var(--text-muted); }
+
+/* Header actions: compact, one line (shell restyle) */
+.pane-header h2 { white-space: nowrap; }
+.preview-actions { flex-wrap: nowrap; gap: 0.4rem; }
+.preview-download {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.preview-download:hover { color: var(--text-main); border-color: var(--border-focus); }
+.build-btn { white-space: nowrap; }
+/* When the preview pane is narrow, drop the label so the actions never clip. */
+.preview-container { container-type: inline-size; }
+@container (max-width: 470px) {
+  .preview-container .pane-header h2 { display: none; }
+}

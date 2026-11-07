@@ -187,7 +187,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               download={`mindcode-${shown.id}.html`}
               title="Download standalone app HTML"
             >
-              ⬇️ Download HTML
+              ↓ HTML
             </a>
           )}
           <button className="build-btn" onClick={handleBuild} disabled={!canBuild} title={canBuild ? 'Generate the app from the map' : 'Describe your app first'}>
