@@ -185,7 +185,19 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     }
   }
 
-  if (m === "GET" && rest.length === 1 && rest[0] === "checkpoints") return json(s.checkpoints);
+  if (rest[0] === "checkpoints") {
+    if (m === "GET" && rest.length === 1) return json(s.checkpoints);
+
+    if (m === "POST" && rest.length === 3 && rest[2] === "restore") {
+      const cid = rest[1];
+      const cp = s.checkpoints.find((c) => c.id === cid);
+      if (!cp) throw new HttpError(404, "checkpoint not found");
+      s.map = structuredClone(cp.map);
+      addCheckpoint(s, `Restored to ${cp.label}`);
+      await save();
+      return json(publicSession(s));
+    }
+  }
 
   throw new HttpError(404, "not found");
 }

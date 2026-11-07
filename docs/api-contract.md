@@ -78,6 +78,7 @@ interface Session {
 | GET | `/api/sessions/{sid}/builds/{bid}/preview` | - | `text/html`: build HTML with the trace script injected (iframe `src`); 409 until done | built |
 | GET | `/api/sessions/{sid}/builds/{bid}/download` | - | `text/html`: standalone HTML with `Content-Disposition: attachment; filename="mindcode-${bid}.html"`; 409 until done | built |
 | GET | `/api/sessions/{sid}/checkpoints` | - | `Checkpoint[]` | built |
+| POST | `/api/sessions/{sid}/checkpoints/{cid}/restore` | - | Session: restores session map to checkpoint map state and records a restore checkpoint | built |
 
 Errors: `404 {"detail": "..."}` for unknown session/node, `502` when the LLM call fails or returns invalid JSON after one retry.
 

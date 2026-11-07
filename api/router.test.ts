@@ -167,6 +167,65 @@ describe("api", () => {
     const html = `<p data-mc="n1 zz" data-mc-el="a">x</p><p data-mc-el="b">y</p><div data-mc-el='c' data-mc='n2'></div>`;
     expect(traceOf(html, new Set(["n1", "n2"]))).toEqual({ n1: ["a"], n2: ["c"] });
   });
+
+  it("restore checkpoint rolls back map, records new checkpoint, or returns 404", async () => {
+    const id = await sid();
+    // 1. Initial message creates checkpoint c1 with initial 5 nodes
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    const s1 = (await call("GET", `/sessions/${id}`)).body;
+    expect(s1.checkpoints).toHaveLength(1);
+    const cp1 = s1.checkpoints[0];
+    const initialNodeCount = s1.map.nodes.length;
+
+    // 2. Add more nodes and change labels
+    ai.updateMap = async (_m, cur) => ({
+      reply: "ok",
+      map: {
+        nodes: [
+          ...cur.nodes.map((n) => ({ ...n, label: `${n.label} modified` })),
+          { id: "n99", label: "Brand new feature", parent: "n1" },
+          { id: "n100", label: "Another feature", parent: "n1" },
+        ],
+        edges: cur.edges,
+      },
+    });
+    await call("POST", `/sessions/${id}/messages`, { text: "add more stuff" });
+    const s2 = (await call("GET", `/sessions/${id}`)).body;
+    expect(s2.checkpoints).toHaveLength(2);
+    expect(s2.map.nodes.length).toBeGreaterThan(initialNodeCount);
+    expect(byId(s2.map.nodes).n1.label).toContain("modified");
+
+    // 3. Restore checkpoint c1
+    const res = await call("POST", `/sessions/${id}/checkpoints/${cp1.id}/restore`);
+    expect(res.status).toBe(200);
+    const restoredSession = res.body;
+
+    // Verify map is restored to checkpoint c1 map
+    expect(restoredSession.map).toEqual(cp1.map);
+    expect(restoredSession.map.nodes.length).toBe(initialNodeCount);
+    expect(byId(restoredSession.map.nodes).n1.label).not.toContain("modified");
+
+    // Verify a new "Restored to ..." checkpoint is added
+    expect(restoredSession.checkpoints).toHaveLength(3);
+    const latestCp = restoredSession.checkpoints.at(-1);
+    expect(latestCp.label).toBe(`Restored to ${cp1.label}`);
+    expect(latestCp.map).toEqual(cp1.map);
+
+    // Verify persistence via GET /sessions/:sid
+    const s3 = (await call("GET", `/sessions/${id}`)).body;
+    expect(s3.map).toEqual(cp1.map);
+    expect(s3.checkpoints).toHaveLength(3);
+
+    // 4. Test 404 for nonexistent checkpoint or session
+    expect((await call("POST", `/sessions/${id}/checkpoints/nonexistent/restore`)).status).toBe(404);
+    expect((await call("POST", `/sessions/${id}/checkpoints/nonexistent/restore`)).body).toEqual({
+      detail: "checkpoint not found",
+    });
+    expect((await call("POST", `/sessions/nonexistent/checkpoints/${cp1.id}/restore`)).status).toBe(404);
+    expect((await call("POST", `/sessions/nonexistent/checkpoints/${cp1.id}/restore`)).body).toEqual({
+      detail: "session not found",
+    });
+  });
 });
 
 describe("answered questions", () => {
