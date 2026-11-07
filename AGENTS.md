@@ -1,6 +1,6 @@
 # Team rules for every agent (MindCode @ NOVA)
 
-Two teammates, each driving a Google Antigravity agent. Claude Code or any other shell-capable agent follows the same rules.
+Four humans (Ben, Oliver, Lorien, 内山天満) and three AI agents (Google Antigravity by default; Claude Code or any shell-capable agent follows the same rules). Ben, Oliver and Lorien each drive one agent that owns a lane. 内山天満 is the human-only teammate: product, design, testing and demo.
 
 > **Status: pre-idea.** Do NOT write app code until a human posts a `GOAL:` on the board (via `tools/goal`). A GOAL unlocks coding and starts the build loop in section 6.
 
@@ -9,7 +9,7 @@ Two teammates, each driving a Google Antigravity agent. Claude Code or any other
 Every agent reads and posts on the pinned "Message Board" issue via `tools/board` (needs only `bash` + `gh`, logged in). Set `BOARD_ISSUE` if it is not issue #1.
 
 - Start every post with `[<human>'s <agent>]`, e.g. `[Ben's Antigravity]`. Keep it short: what changed, which files or contracts, what you need, from whom.
-- Mention by GitHub login. Team: `@TEAMMATE_1` (Ben), `@TEAMMATE_2` (Name), `@all` (everyone).
+- Mention by GitHub login. Team: `@BEN_LOGIN` (Ben), `@OLIVER_LOGIN` (Oliver), `@LORIEN_LOGIN` (Lorien), `@TENMA_LOGIN` (内山天満), `@all` (everyone). Humans post with `[<name>'s Human]`, e.g. `[内山天満's Human]`.
 - **Mentions you or `@all`:** act on it and reply promptly.
 - **Not addressed to you:** still read it. Reassess your own work only if it is affected (a contract, a file you own, something already done). Do not redo finished work, and do not reply just to acknowledge.
 - Before editing another teammate's files, ask for a handoff on the board and wait for the owner or the team lead.
@@ -35,6 +35,8 @@ Humans over agents. Only the team lead reassigns work between teammates. If anyo
 
 ## 4. Stack (agreed defaults)
 
+- **AI lane:** plain Python in `ai/` (OpenRouter client, prompts, MCP tool wiring), imported by the FastAPI app.
+
 - **Backend:** Python + FastAPI in `api/` (https://fastapi.tiangolo.com). Run with `fastapi dev`.
 - **Frontend:** React in `web/` (https://react.dev/reference/react), Vite.
 - **LLMs:** OpenRouter (https://openrouter.ai/docs/quickstart). OpenAI-compatible API at `https://openrouter.ai/api/v1`, key in `OPENROUTER_API_KEY`. Call it from the backend only; never ship the key to the browser.
@@ -44,15 +46,19 @@ Humans over agents. Only the team lead reassigns work between teammates. If anyo
 
 ## 5. Who owns what
 
-Fill this in once the idea is final so every agent knows whose files are whose.
+Replace the `@*_LOGIN` placeholders with real GitHub logins at kickoff.
 
-| Area | Owner (GitHub login) | Folders |
-|---|---|---|
-| Frontend (React) | @TEAMMATE_1 | `web/` |
-| Backend (FastAPI + OpenRouter) | @TEAMMATE_2 | `api/`, `docs/api-contract.md` |
-| Shared (lead decides) | team lead | `AGENTS.md`, `.agents/`, `tools/`, `README.md`, `.env.example` |
+| Lane | Human | Agent | Folders |
+|---|---|---|---|
+| Lead + AI (OpenRouter calls, prompts, MCP tools) | @BEN_LOGIN | Ben's Antigravity | `ai/`, `docs/mcp.md` |
+| Frontend (React + Vite) | @OLIVER_LOGIN | Oliver's Antigravity | `web/` |
+| Backend (FastAPI routes, data, glue) | @LORIEN_LOGIN | Lorien's Antigravity | `api/`, `docs/api-contract.md` |
+| Product, design, QA, demo | @TENMA_LOGIN | none | `docs/product.md`, `design/`, `docs/demo.md` |
+| Shared (lead decides) | @BEN_LOGIN | — | `AGENTS.md`, `.agents/`, `.claude/`, `tools/`, `README.md`, `.env.example` |
 
-**Planner:** @TEAMMATE_2 (backend owner, since they own the API contract). Only the planner posts a PLAN.
+`api/` imports from `ai/` (e.g. `from ai.chat import ...`); only the AI lane edits `ai/`. If a teammate is missing, the lead reassigns their lane on the board.
+
+**Planner:** Ben's agent (the lead). Only the planner posts a PLAN. **内山天満** writes acceptance criteria and the demo script in `docs/product.md` / `docs/demo.md`, tests each `DONE:` and replies `BUG: @login ...` or `OK`, and has the final say on what "SHIPPED" means for the demo.
 
 ## 6. The build loop (GOAL → PLAN → DONE → SHIPPED)
 
@@ -60,10 +66,11 @@ A human starts it with `tools/goal "what to build"`. Agents run the loop in `.ag
 
 | Keyword | Who | Means |
 |---|---|---|
-| `GOAL:` | human (`[Ben's Human]`) | What to build. A newer GOAL replaces an older one. |
+| `GOAL:` | any human (`[Ben's Human]`, `[内山天満's Human]`, ...) | What to build. A newer GOAL replaces an older one; the lead settles conflicts. |
 | `PLAN:` | planner agent | The split. Posted within 5 min of a GOAL. |
 | `DONE:` | any agent | A task is pushed to `main`, plus how to try it. |
 | `NEED: @login` | any agent | A blocker someone else owns. Keep building on a mock meanwhile. |
+| `BUG: @login` | anyone (usually 内山天満) | Something broken; the owner fixes it next and replies `DONE:`. |
 | `SHIPPED:` | planner agent | Runs end to end. How to run it. Tags the human. |
 | `STOP` | human | Agents finish the current commit and stop the loop. |
 
@@ -72,8 +79,10 @@ PLAN format (keep it under ~25 lines):
 ```
 [Name's Antigravity] @all PLAN: <one-line summary>
 Contract: <routes, also committed to docs/api-contract.md>
-@TEAMMATE_1 (web/): 1) ... 2) ... 3) ...
-@TEAMMATE_2 (api/): 1) ... 2) ... 3) ...
+@BEN_LOGIN (ai/): 1) ... 2) ...
+@OLIVER_LOGIN (web/): 1) ... 2) ... 3) ...
+@LORIEN_LOGIN (api/): 1) ... 2) ... 3) ...
+@TENMA_LOGIN (human): acceptance criteria + demo script, then test each DONE
 Model: <OpenRouter model slug>   Demo: <the one flow that must work>
 ```
 

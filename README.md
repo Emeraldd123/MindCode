@@ -1,6 +1,6 @@
 # MindCode
 
-Our NOVA hackathon project. **The idea is not final yet.** This repo only holds the team setup so two Antigravity agents can work side by side without stepping on each other.
+Our NOVA hackathon project. **The idea is not final yet.** This repo only holds the team setup so four teammates (Ben, Oliver, Lorien, 内山天満) and three AI agents can work side by side without stepping on each other.
 
 ## Stack (planned)
 
@@ -8,10 +8,11 @@ Our NOVA hackathon project. **The idea is not final yet.** This repo only holds 
 |---|---|---|
 | Frontend | [React](https://react.dev/reference/react) + Vite | `web/` |
 | Backend | [FastAPI](https://fastapi.tiangolo.com/#example-upgrade) | `api/` |
+| AI | OpenRouter client, prompts, MCP | `ai/` |
 | LLMs | [OpenRouter](https://openrouter.ai/docs/quickstart) (OpenAI-compatible) | called from `api/` |
 | Tools | [MCP servers](https://mcpservers.org) | listed in `docs/mcp.md` |
 
-## How the two agents coordinate
+## How the agents coordinate
 
 One pinned GitHub issue is the **message board**. Each agent reads it with `tools/board unread`, posts with `tools/board post "[Ben's Antigravity] ..."`, and tags the other teammate by GitHub login. Each person owns their own folders (see the owner table in `AGENTS.md`), so the agents never edit the same files.
 
@@ -25,7 +26,7 @@ One pinned GitHub issue is the **message board**. Each agent reads it with `tool
 
 1. Add your teammate as a collaborator on the repo.
 2. Open a new issue from the **Message board** template and pin it. If it is not #1, every teammate runs `export BOARD_ISSUE=<number>`.
-3. Replace `@TEAMMATE_1` / `@TEAMMATE_2` in `AGENTS.md` with real GitHub logins.
+3. Replace `@BEN_LOGIN`, `@OLIVER_LOGIN`, `@LORIEN_LOGIN`, `@TENMA_LOGIN` in `AGENTS.md` with real GitHub logins.
 4. Each teammate: install the [GitHub CLI](https://cli.github.com), run `gh auth login`, then `tools/board whoami`.
 5. `cp .env.example .env` and add the OpenRouter key.
 6. Once the idea is final: fill in the owner table in `AGENTS.md`, then start the build loop below.
@@ -34,12 +35,12 @@ On Windows, run `tools/board` from Git Bash or WSL.
 
 ## Build loop: one goal in, app out
 
-1. Each teammate opens the repo in Antigravity and types `/swarm`. Their agent waits on the board.
+1. Ben, Oliver and Lorien each open the repo in Antigravity and type `/swarm`. Their agents wait on the board. 内山天満 watches the board and tests.
 2. A human posts the goal:
    ```bash
    BOARD_HUMAN=Ben tools/goal "a web app that ..."
    ```
-3. The planner agent posts a `PLAN:` (split, API contract, model). Both agents build their halves in parallel, push to `main`, and post `DONE:` / `NEED:` to hand off.
+3. Ben's agent (planner) posts a `PLAN:` (split, API contract, model). All three agents build their lanes in parallel, push to `main`, and post `DONE:` / `NEED:` to hand off.
 4. The planner integrates and posts `SHIPPED:` with run steps. Post a new `GOAL:` to redirect or `STOP` to halt.
 
 Protocol details are in `AGENTS.md` section 6.
