@@ -3,6 +3,7 @@ import { ArrowUp, Check, Link2, Lock, Pencil, Plus, Trash2, Unlock, X } from 'lu
 import * as api from './api';
 import { canApprove, nextLockStatus, canChat, normalizeInventiveness } from './nodeDrawerLogic';
 import { cn } from '@/lib/utils';
+import { ancestorsOf } from './treeLayout';
 import { Button } from '@/ui/primitives/button';
 import { Badge } from '@/ui/primitives/badge';
 import { Separator } from '@/ui/primitives/separator';
@@ -257,6 +258,21 @@ export default function NodeDrawer({
           </Button>
         </div>
 
+        {(() => {
+          const path = ancestorsOf(map, node.id).slice(0, -1);
+          if (!path.length) return null;
+          const byId = new Map((map.nodes || []).map((n) => [n.id, n]));
+          return (
+            <nav aria-label="Path to this bubble" className="-mb-1 flex flex-wrap items-center gap-1 text-[11px] text-dim">
+              {path.map((id) => (
+                <span key={id} className="flex items-center gap-1">
+                  <span className="max-w-[140px] truncate">{byId.get(id)?.label}</span>
+                  <span aria-hidden>›</span>
+                </span>
+              ))}
+            </nav>
+          );
+        })()}
         {editing === 'label' ? (
           <input
             autoFocus
