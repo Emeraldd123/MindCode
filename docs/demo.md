@@ -1,69 +1,85 @@
-# Demo Script (Under 3 Minutes)
+# MindCode: 3-Minute Demo Script
 
-The exact clicks, narration, and flow for judges. Verified end-to-end with `MINDCODE_FAKE_LLM=1`.
-
-## Fastest path for judges: instant demo (recommended)
-Open **http://localhost:8888/?demo=1** (or `<netlify-site>/?demo=1`). It loads a session recorded with real Claude Opus: the study-group chat, 8 bubbles (3 approved), and a finished, working, traced build. There's no 80 s wait and no live model call. Hover the preview to light up bubbles, click the checkpoint dots, and open bubbles in the drawer. To show a live build afterwards, approve one more bubble and press **Rebuild** (about 80 s with Opus, so talk over it). Refresh keeps the session; use **+ New Session** to start clean.
-
-## Setup (5 s)
-1. Run `MINDCODE_FAKE_LLM=1 npx netlify dev` (or `$env:MINDCODE_FAKE_LLM="1"; npx netlify dev` on Windows PowerShell).
-2. Open **http://localhost:8888** in your browser.
-
-![MindCode UI with Study Group Demo](screenshots/mindcode-ui-demo.png)
+A concise, high-impact walkthrough designed for judges and teammates. Demonstrates how MindCode turns vague prompts into explicit, auditable architecture, generates a full-stack web application, and provides bidirectional traceability.
 
 ---
 
-## 1. Pitch & First Message (0:00 - 0:40)
-- **Narration (20 s):**
-  > "When you build with an LLM, it quietly makes dozens of unvetted assumptions. When something goes wrong, you're left scrolling back through thousands of tokens. MindCode shows you every single assumption as an interactive structure you can see, edit, and approve before the code is generated."
-- **Action (20 s):**
-  In the left chat pane, type:
-  ```text
-  I want a chat app for my study group
-  ```
-  and press **Enter** (or click **Send**).
+## Preparation & Setup (0:00 - 0:15)
+
+1. **Start the local environment (or navigate to production):**
+   - **Production:** Open [https://mindcode1.netlify.app/?demo=1](https://mindcode1.netlify.app/?demo=1)
+   - **Local Development:** Run `MINDCODE_FAKE_LLM=1 npx netlify dev` and open [http://localhost:8888/?demo=1](http://localhost:8888/?demo=1)
+2. **What `/?demo=1` loads:**
+   - A pre-recorded real Claude Opus session: a collaborative study-group chat, full mind map with 8 bubbles (3 approved), a finished working build (`b1`), and historical checkpoints. No waiting on initial generation.
 
 ---
 
-## 2. Live Mind Map & Source Colors (0:40 - 1:15)
-- **Visual Callouts:**
-  The center pane animates 5 connected bubbles:
-  1. **Solid Orange (`user`, #d67408):** `Chat app` (root) and `Study group`. These came directly from your words.
-  2. **Green Dashed (`inferred`, #17c894):** `Message API` and `Real-time updates`. Claude assumed these capabilities.
-  3. **Inventiveness Shading:** Point out that `Message API` is pale green (obvious necessity, low inventiveness: 0.2), while `Real-time updates` is deep green (creative design leap, high inventiveness: 0.85).
-  4. **Red Outline with '?' (`unknown`):** `How do users log in?`. Claude detected that a critical architectural decision was left unspecified.
+## 1. Facets & Assumption Color Coding (0:15 - 0:50)
+
+- **Narration:**
+  > "When you prompt Claude to build an app, it quietly makes dozens of architectural assumptions. Most tools hide these decisions in long conversational logs. MindCode exposes every single assumption as an editable visual mind map organized into four core facets: Design, Audience, Functionality, and Cost."
+- **Point out in the Mind Map:**
+  1. **Taxonomy Facets:** Show how the root decomposes into **Design**, **Audience**, **Functionality**, and **Cost**.
+  2. **Your Words vs. Claude's Assumptions vs. Open Questions:**
+     - **Orange (`user`, `#d67408`):** Sourced directly from user prompts (e.g. `Chat app`, `Study group`).
+     - **Green Dashed (`inferred`, `#17c894`):** Features Claude assumed without being asked (e.g. `Message API`, `Real-time updates`).
+     - **Inventiveness Shading:** Contrast pale green bubbles (obvious logical steps, low inventiveness) with deep green bubbles (creative leaps, high inventiveness).
+     - **Red Outline with '?' (`unknown`):** Architectural questions Claude identified that need human resolution (e.g. `How do users log in?`).
 
 ---
 
-## 3. Brainstorming & Approving a Bubble (1:15 - 1:50)
+## 2. Bubble Interaction: Path, Drawer, & Manual Editing (0:50 - 1:30)
+
 - **Action:**
-  1. Click on the red bubble **`How do users log in?`**.
-  2. In the bubble chat drawer, type:
+  1. Click on a bubble in the mind map (such as **`Message API`** or an open question).
+  2. Notice the **breadcrumb path** at the top of the side panel showing its location in the hierarchy (e.g., `Chat app > Functionality > APIs > Message API`).
+  3. Explore the **Side Panel Drawer**:
+     - View the node's importance score, inventiveness rating, and supporting evidence quotes.
+     - Demonstrate direct editing: edit the bubble's **Label** or **Detail** text directly.
+  4. Click **+ Add child** to attach a new requirement or constraint bubble under the selected node.
+
+---
+
+## 3. Incremental Rebuild: Update in ~20 Seconds (1:30 - 2:05)
+
+- **Action & Narration:**
+  > "Traditional code generation requires re-generating 30 to 50 kilobytes of code from scratch for every small adjustment, which takes minutes. With MindCode, when you make targeted edits to the map, it performs an incremental rebuild."
+  1. Click **Update** (or **Rebuild**).
+  2. Explain what happens under the hood:
+     - The backend computes a `mapDiff` between checkpoints.
+     - Because only small changes were made, MindCode runs in `incremental` mode, asking Claude for surgical `FIND/REPLACE` patches.
+     - The app updates within ~20 seconds instead of over a minute, updating only the affected DOM elements and styles while preserving everything else.
+
+---
+
+## 4. Right-Click In-Preview Editing in ~7 Seconds (2:05 - 2:35)
+
+- **Action & Narration:**
+  > "You can also refine the generated app directly from the visual output."
+  1. Move the cursor into the interactive sandboxed preview pane on the right.
+  2. **Right-click** any UI element (for example, the primary action button or a header card).
+  3. Notice the element is highlighted with an orange focus ring (`.mc-edit`) and the inline change drawer slides in with the element's tag, snippet, and linked bubbles.
+  4. Enter a targeted change instruction:
      ```text
-     just a nickname, no passwords
+     Make this button deep purple with rounded corners and bold text
      ```
-     and press **Enter**.
-  3. Claude responds confirming the change and rewrites the bubble label to **`Nickname login`**.
-  4. Click the **Approve** button in the bubble drawer.
-  5. The bubble receives a bold white checkmark badge (**✓ Approved**) with a thicker border in its source color.
+  5. Press **Submit Change**.
+  6. In ~7 seconds, Claude returns a precise `FIND/REPLACE` patch applied directly to the HTML. The preview updates instantly with the new design!
 
 ---
 
-## 4. Build with Bidirectional Traceability (1:50 - 2:30)
+## 5. Bidirectional Traceability, Standalone App & Checkpoints (2:35 - 3:00)
+
 - **Action:**
-  1. Click **⚡ Build App** in the top-right of the preview pane.
-  2. Within seconds, the generated application appears in the interactive sandboxed preview.
-- **Traceability Highlights:**
-  - **Page to Bubbles:** Hover over the page title **`Study Group Chat`** in the preview. Notice the `Chat app` and `Study group` bubbles in the center pane instantly light up!
-  - **Bubble to Page:** Click or select the **`Nickname login`** bubble in the mind map. Notice the **Join Study Group** login card in the preview is outlined!
-  - Every component in the generated HTML contains traceable metadata (`data-mc` / `data-mc-el`) linking it back to the exact requirements that shaped it.
+  1. **Hover Traceability:**
+     - Hover over an element in the preview (such as the chat message stream or header) to see the informing mind map bubbles light up.
+     - Click a bubble in the mind map to outline all corresponding DOM components in the preview.
+  2. **Open App ↗:**
+     - Click **Open app ↗** in the preview toolbar.
+     - Point out that this opens a standalone, clean version of the generated application in a new browser tab without development overlays or parent iframe constraints.
+  3. **Checkpoints:**
+     - Click the checkpoint markers along the timeline bar at the top/bottom.
+     - Show how you can inspect the exact state of the mind map at earlier points in time, or restore previous versions.
 
----
-
-## 5. Checkpoints & Close (2:30 - 2:50)
-- **Action:**
-  1. Click an earlier checkpoint in the timeline to view the original mind map before the login approval.
-- **Closing Remark (20 s):**
-  > "With MindCode, users keep their natural language workflow, while Claude is forced to expose its hidden reasoning as an auditable structure. When you approve the structure, the resulting code is fully traceable to your decisions."
-
-**Total Demo Time:** 2 minutes 50 seconds (under the 3-minute limit).
+- **Closing Remark:**
+  > "MindCode gives developers and domain experts the speed of Claude with the transparency of a visual specification—every element in production traces directly back to a human decision."
