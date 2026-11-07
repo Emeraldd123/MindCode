@@ -17,4 +17,6 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 2 | 2026-11-07 13:35 | 35237e4 (#42, `[deploy]`) | First real deploy: gate + secrets-scan fix | **Live** at https://mindcode1.netlify.app. Health ok; real Opus message 200 in 9 s; real background build done in 123 s (25 KB). `/api/sessions/demo` 404s because #36 reverted it (fixed in #43). |
 
-Deploys used: **2 / 15**
+| 3 | 2026-11-07 15:10 | main @ 5446b06 (#59, #60, #69) | Ben asked to see the changes: new shell + Claude-style chat, Obsidian side panel, full app-specific build plan + async turns, right-click edits, clean Open-app tab, preview link fix | (filled in after verification) |
+
+Deploys used: **3 / 15**
