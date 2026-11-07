@@ -25,8 +25,12 @@ async function request(path, options = {}) {
     let errorDetail = `HTTP ${response.status} ${response.statusText}`;
     try {
       const errJson = await response.json();
-      if (errJson && errJson.detail) {
-        errorDetail = errJson.detail;
+      if (errJson) {
+        if (errJson.detail) {
+          errorDetail = errJson.detail;
+        } else if (errJson.error) {
+          errorDetail = errJson.error;
+        }
       }
     } catch {
       // Non-JSON error body
@@ -82,6 +86,33 @@ export async function patchNode(sessionId, nodeId, updates) {
   return request(`/sessions/${encodeURIComponent(sessionId)}/nodes/${encodeURIComponent(nodeId)}`, {
     method: 'PATCH',
     body: JSON.stringify(updates),
+  });
+}
+
+export async function createNode(sessionId, { label, detail, kind, parent }) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/nodes`, {
+    method: 'POST',
+    body: JSON.stringify({ label, detail, kind, parent }),
+  });
+}
+
+export async function deleteNode(sessionId, nodeId) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/nodes/${encodeURIComponent(nodeId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createEdge(sessionId, { from, to, relation }) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/edges`, {
+    method: 'POST',
+    body: JSON.stringify({ from, to, relation }),
+  });
+}
+
+export async function deleteEdge(sessionId, { from, to }) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/edges`, {
+    method: 'DELETE',
+    body: JSON.stringify({ from, to }),
   });
 }
 

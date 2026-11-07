@@ -1,5 +1,5 @@
 // All /api routes from docs/api-contract.md. Pure Request -> Response so tests can call it directly.
-import { addCheckpoint, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, traceOf, userTurn } from "./store";
+import { addCheckpoint, addEdge, addNode, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, removeEdge, removeNode, traceOf, userTurn } from "./store";
 import type { Storage } from "./storage";
 import { auditTrace, inject } from "./trace";
 import type { AI, ChangeRequest, Session } from "./types";
@@ -153,6 +153,75 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     if (t?.status === "error") throw new HttpError(502, t.error || "AI call failed");
     const reply = [...after.messages].reverse().find((x) => x.role === "assistant")?.text ?? "";
     return json({ reply, map: after.map, changed: t?.changed ?? [] });
+  }
+
+  if (rest[0] === "nodes" && rest.length === 1 && m === "POST") {
+    let body: { label?: unknown; detail?: unknown; kind?: unknown; parent?: unknown };
+    try {
+      body = await req.json();
+    } catch {
+      throw new HttpError(400, "body must be JSON");
+    }
+    const label = typeof body?.label === "string" ? body.label.trim() : "";
+    if (!label) throw new HttpError(400, "label required");
+    const node = addNode(s, {
+      label,
+      detail: typeof body?.detail === "string" ? body.detail : undefined,
+      kind: typeof body?.kind === "string" ? (body.kind as any) : undefined,
+      parent: body?.parent === null || typeof body?.parent === "string" ? body.parent : undefined,
+    });
+    await save();
+    return json(node, 201);
+  }
+
+  if (rest[0] === "nodes" && rest.length === 2 && m === "DELETE") {
+    const nid = rest[1];
+    const removed = removeNode(s, nid);
+    if (!removed) throw new HttpError(404, "node not found");
+    await save();
+    return json({ ok: true, id: nid }, 200);
+  }
+
+  if (rest[0] === "edges" && rest.length === 1) {
+    if (m === "POST") {
+      let body: { from?: unknown; to?: unknown; relation?: unknown };
+      try {
+        body = await req.json();
+      } catch {
+        throw new HttpError(400, "body must be JSON");
+      }
+      const from = typeof body?.from === "string" ? body.from : "";
+      const to = typeof body?.to === "string" ? body.to : "";
+      const relation = typeof body?.relation === "string" ? (body.relation as any) : undefined;
+      if (!from || !to || from === to || !s.map.nodes.some((n) => n.id === from) || !s.map.nodes.some((n) => n.id === to)) {
+        throw new HttpError(400, "invalid nodes for edge");
+      }
+      const edge = addEdge(s, { from, to, relation });
+      await save();
+      return json(edge, 201);
+    }
+
+    if (m === "DELETE") {
+      const url = new URL(req.url);
+      let from = url.searchParams.get("from") || "";
+      let to = url.searchParams.get("to") || "";
+      if (!from || !to) {
+        let body: { from?: unknown; to?: unknown } = {};
+        try {
+          body = await req.json();
+        } catch {
+          // ignore if no body
+        }
+        if (!from && typeof body?.from === "string") from = body.from;
+        if (!to && typeof body?.to === "string") to = body.to;
+      }
+      if (!from || !to) {
+        throw new HttpError(400, "from and to required");
+      }
+      removeEdge(s, from, to);
+      await save();
+      return json({ ok: true, from, to }, 200);
+    }
   }
 
   if (rest[0] === "nodes" && rest[1]) {
