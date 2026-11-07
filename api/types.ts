@@ -62,6 +62,7 @@ export interface Session {
   node_chats: Record<string, Message[]>; // not returned to the client
   /** The latest chat turn. Turns run in a background function (a full plan can exceed the 30 s sync limit). */
   turn?: Turn | null;
+  next_node_seq?: number;
 }
 
 export interface Turn {

@@ -10,7 +10,7 @@ const RELATIONS = new Set(["has", "needs", "informs"]);
 const FACETS = new Set(["design", "audience", "functionality", "cost", "goal"]);
 
 export function newSession(id: string): Session {
-  return { id, messages: [], map: { nodes: [], edges: [] }, builds: [], checkpoints: [], node_chats: {} };
+  return { id, messages: [], map: { nodes: [], edges: [] }, builds: [], checkpoints: [], node_chats: {}, next_node_seq: 1 };
 }
 
 export function publicSession(s: Session) {
@@ -21,8 +21,40 @@ export function publicSession(s: Session) {
 export const findNode = (s: Session, nid: string) => s.map.nodes.find((n) => n.id === nid);
 export const userTurn = (s: Session) => s.messages.filter((m) => m.role === "user").length;
 
-function nextId(prefix: string, used: Set<string>): string {
-  for (let i = 1; ; i++) if (!used.has(`${prefix}${i}`)) return `${prefix}${i}`;
+export function ensureNextNodeSeq(s: Session): number {
+  if (typeof s.next_node_seq === "number" && Number.isFinite(s.next_node_seq)) {
+    return s.next_node_seq;
+  }
+  let max = 0;
+  const check = (id?: string) => {
+    const m = id?.match(/^n(\d+)$/);
+    if (m) {
+      const num = parseInt(m[1], 10);
+      if (num > max) max = num;
+    }
+  };
+  for (const n of s.map?.nodes ?? []) check(n.id);
+  for (const cp of s.checkpoints ?? []) {
+    for (const n of cp.map?.nodes ?? []) check(n.id);
+  }
+  for (const b of s.builds ?? []) {
+    if (b.trace) {
+      for (const nid of Object.keys(b.trace)) check(nid);
+    }
+  }
+  s.next_node_seq = max + 1;
+  return s.next_node_seq;
+}
+
+export function allocNodeId(s: Session, existingIds?: Set<string>): string {
+  ensureNextNodeSeq(s);
+  while (true) {
+    const seq = s.next_node_seq!++;
+    const id = `n${seq}`;
+    if (!existingIds || !existingIds.has(id)) {
+      return id;
+    }
+  }
 }
 
 const clamp = (x: unknown, lo: number, hi: number, dflt: number) => {
@@ -41,12 +73,22 @@ export function mergeMap(s: Session, proposed: ProposedMap, turn: number): strin
   const changed: string[] = [];
   const renamed = new Map<string, string>();
 
+  ensureNextNodeSeq(s);
   for (const raw of proposed.nodes ?? []) {
     let nid = typeof raw.id === "string" ? raw.id : "";
     if (!nid || (!old.has(nid) && out.has(nid))) {
-      const fresh = nextId("n", new Set(out.keys()));
+      const fresh = allocNodeId(s, new Set(out.keys()));
       if (nid) renamed.set(nid, fresh);
       nid = fresh;
+    } else if (!old.has(nid)) {
+      // New node proposed with an id. If id is of format n(\d+), advance next_node_seq so future allocations never reuse it.
+      const m = nid.match(/^n(\d+)$/);
+      if (m) {
+        const num = parseInt(m[1], 10);
+        if (num >= (s.next_node_seq ?? 1)) {
+          s.next_node_seq = num + 1;
+        }
+      }
     }
     const prev = old.get(nid);
     if (prev && PROTECTED.has(prev.status)) continue;
@@ -103,7 +145,7 @@ export function addNode(
   s: Session,
   input: { label: string; detail?: string; kind?: MapNode["kind"]; parent?: string | null }
 ): MapNode {
-  const nid = nextId("n", new Set(s.map.nodes.map((n) => n.id)));
+  const nid = allocNodeId(s, new Set(s.map.nodes.map((n) => n.id)));
   const parent = input.parent && s.map.nodes.some((n) => n.id === input.parent) ? input.parent : null;
   const node: MapNode = {
     id: nid,

@@ -60,6 +60,7 @@ interface Session {
   builds: Build[];
   checkpoints: Checkpoint[];
   turn?: Turn | null;  // latest chat turn (async on Netlify)
+  next_node_seq?: number;
 }
 ```
 
