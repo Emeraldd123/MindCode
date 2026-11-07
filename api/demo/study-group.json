@@ -6,15 +6,15 @@
   },
   {
    "role": "assistant",
-   "text": "I mapped a study group chat app with a core group chat, messaging, and member accounts, plus a few likely needs like real-time delivery and file sharing. Please check whether shared files and study-specific features fit your vision. The biggest open question is how members join: invite link, email signup, or something else?"
+   "text": "I mapped a full plan for a private, real-time study group chat with a calm focused design, group messaging, file sharing, session scheduling, and a free-tier serverless backend. Please check my assumptions: mobile-first, Supabase-style hosting, scheduling and file sharing, and no advertising. The biggest open question is whether this is just for your own group or a product other study groups could sign up for."
   }
  ],
  "map": {
   "nodes": [
    {
     "id": "n1",
-    "label": "Study Group Chat",
-    "detail": "A chat application for members of the user's study group to communicate.",
+    "label": "Study group chat app",
+    "detail": "Chat space for a study group",
     "kind": "goal",
     "source": "user",
     "inventiveness": 0,
@@ -22,102 +22,490 @@
     "status": "approved",
     "parent": null,
     "evidence": [
-     "I want a chat app for my study group"
+     "chat app for my study group"
     ],
-    "turn": 1
+    "turn": 1,
+    "facet": "goal"
    },
    {
     "id": "n2",
-    "label": "Group Chat Room",
-    "detail": "Shared conversation space where all study group members exchange messages.",
-    "kind": "feature",
-    "source": "user",
+    "label": "Design",
+    "detail": "Look, feel and screens",
+    "kind": "constraint",
+    "source": "inferred",
     "inventiveness": 0,
-    "importance": 5,
-    "status": "approved",
+    "importance": 3,
+    "status": "proposed",
     "parent": "n1",
-    "evidence": [
-     "chat app for my study group"
-    ],
-    "turn": 1
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
    },
    {
     "id": "n3",
-    "label": "Real-time Messaging",
-    "detail": "Messages appear instantly for all members via a websocket or realtime service.",
-    "kind": "api",
+    "label": "Audience",
+    "detail": "Who uses it and why",
+    "kind": "constraint",
     "source": "inferred",
-    "inventiveness": 0.1,
-    "importance": 5,
+    "inventiveness": 0,
+    "importance": 3,
     "status": "proposed",
-    "parent": "n2",
+    "parent": "n1",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "audience"
    },
    {
     "id": "n4",
-    "label": "Message Data Model",
-    "detail": "Stores messages with sender, timestamp, content, and group reference.",
-    "kind": "data",
+    "label": "Functionality",
+    "detail": "Features, data and backend",
+    "kind": "constraint",
     "source": "inferred",
-    "inventiveness": 0.05,
-    "importance": 4,
+    "inventiveness": 0,
+    "importance": 3,
     "status": "proposed",
-    "parent": "n2",
+    "parent": "n1",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "functionality"
    },
    {
     "id": "n5",
-    "label": "Nickname-Only Join",
-    "detail": "Members join via the room link by entering a nickname, with no accounts or passwords. The nickname and a random device ID are saved in localStorage so returning members are recognized automatically.",
-    "kind": "feature",
-    "source": "unknown",
+    "label": "Cost",
+    "detail": "Running and growth costs",
+    "kind": "constraint",
+    "source": "inferred",
     "inventiveness": 0,
-    "importance": 5,
-    "status": "approved",
+    "importance": 3,
+    "status": "proposed",
     "parent": "n1",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "cost"
    },
    {
     "id": "n6",
-    "label": "Chat Page",
-    "detail": "Main screen showing message history, member list, and message input box.",
+    "label": "Brand: calm, focused, friendly",
+    "detail": "Studious but casual peer vibe",
+    "kind": "style",
+    "source": "inferred",
+    "inventiveness": 0.4,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n2",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n7",
+    "label": "Color: soft blues and greens",
+    "detail": "Low-strain palette for long sessions",
+    "kind": "style",
+    "source": "inferred",
+    "inventiveness": 0.4,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n2",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n8",
+    "label": "Font: clean sans-serif",
+    "detail": "Inter for readable messages",
+    "kind": "style",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n2",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n9",
+    "label": "Size: mobile-first, responsive",
+    "detail": "Phone primary, desktop for study sessions",
+    "kind": "style",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n2",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n10",
+    "label": "Pages: core chat screens",
+    "detail": "Minimal set of screens",
     "kind": "page",
     "source": "inferred",
     "inventiveness": 0.1,
     "importance": 4,
     "status": "proposed",
-    "parent": "n1",
+    "parent": "n2",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "design"
    },
    {
-    "id": "n7",
-    "label": "File and Notes Sharing",
-    "detail": "Members can upload study notes, PDFs, and images into the chat.",
-    "kind": "feature",
+    "id": "n11",
+    "label": "Sign-in / invite page",
+    "detail": "Join group via invite link",
+    "kind": "page",
     "source": "inferred",
-    "inventiveness": 0.4,
+    "inventiveness": 0.2,
+    "importance": 4,
+    "status": "proposed",
+    "parent": "n10",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n12",
+    "label": "Group chat room",
+    "detail": "Main message feed with composer",
+    "kind": "page",
+    "source": "inferred",
+    "inventiveness": 0.1,
+    "importance": 5,
+    "status": "proposed",
+    "parent": "n10",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n13",
+    "label": "Shared files page",
+    "detail": "Browse notes and uploads",
+    "kind": "page",
+    "source": "inferred",
+    "inventiveness": 0.5,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n10",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n14",
+    "label": "Members & settings page",
+    "detail": "Member list, profile, notifications",
+    "kind": "page",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n10",
+    "evidence": [],
+    "turn": 1,
+    "facet": "design"
+   },
+   {
+    "id": "n15",
+    "label": "Usability: minimal, distraction-free",
+    "detail": "Few menus, clear message threads",
+    "kind": "style",
+    "source": "inferred",
+    "inventiveness": 0.3,
     "importance": 3,
     "status": "proposed",
     "parent": "n2",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "design"
    },
    {
-    "id": "n8",
-    "label": "One group or many?",
-    "detail": "Is this for a single study group, or should multiple groups be supported?",
+    "id": "n16",
+    "label": "Users: your study group",
+    "detail": "Students in one group",
+    "kind": "constraint",
+    "source": "user",
+    "inventiveness": 0,
+    "importance": 5,
+    "status": "proposed",
+    "parent": "n3",
+    "evidence": [
+     "my study group"
+    ],
+    "turn": 1,
+    "facet": "audience"
+   },
+   {
+    "id": "n17",
+    "label": "Market: private or public product?",
+    "detail": "Just your group, or any group?",
     "kind": "constraint",
     "source": "unknown",
     "inventiveness": 0,
     "importance": 4,
     "status": "proposed",
-    "parent": "n1",
+    "parent": "n3",
     "evidence": [],
-    "turn": 1
+    "turn": 1,
+    "facet": "audience"
+   },
+   {
+    "id": "n18",
+    "label": "Research: quick coordination needs",
+    "detail": "Students share notes, plan sessions",
+    "kind": "constraint",
+    "source": "inferred",
+    "inventiveness": 0.4,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n3",
+    "evidence": [],
+    "turn": 1,
+    "facet": "audience"
+   },
+   {
+    "id": "n19",
+    "label": "Features: study-focused chat",
+    "detail": "Messaging plus study tools",
+    "kind": "feature",
+    "source": "inferred",
+    "inventiveness": 0.1,
+    "importance": 5,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n20",
+    "label": "Real-time group messaging",
+    "detail": "Live messages for whole group",
+    "kind": "feature",
+    "source": "user",
+    "inventiveness": 0,
+    "importance": 5,
+    "status": "proposed",
+    "parent": "n19",
+    "evidence": [
+     "chat app"
+    ],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n21",
+    "label": "File and notes sharing",
+    "detail": "Upload PDFs, images, notes",
+    "kind": "feature",
+    "source": "inferred",
+    "inventiveness": 0.5,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n19",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n22",
+    "label": "Study session scheduling",
+    "detail": "Propose and RSVP meetups",
+    "kind": "feature",
+    "source": "inferred",
+    "inventiveness": 0.7,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n19",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n23",
+    "label": "Push notifications",
+    "detail": "Alert on new messages",
+    "kind": "feature",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n19",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n24",
+    "label": "Nickname + room link sign-in",
+    "detail": "Members join through a shared, regenerable room link and choose a unique nickname, with no passwords. Supabase anonymous auth keeps a persistent session on each device.",
+    "kind": "feature",
+    "source": "unknown",
+    "inventiveness": 0,
+    "importance": 4,
+    "status": "approved",
+    "parent": "n19",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n25",
+    "label": "Buttons: send, attach, invite",
+    "detail": "Plus react and schedule session",
+    "kind": "component",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n26",
+    "label": "AI integration: want any?",
+    "detail": "E.g. summarize chats, quiz generation",
+    "kind": "feature",
+    "source": "unknown",
+    "inventiveness": 0,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n27",
+    "label": "Storage: Postgres + file bucket",
+    "detail": "Users, groups, messages, files, sessions",
+    "kind": "data",
+    "source": "inferred",
+    "inventiveness": 0.1,
+    "importance": 4,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n28",
+    "label": "Hosting: serverless + realtime DB",
+    "detail": "Vercel frontend, Supabase backend",
+    "kind": "api",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 4,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n29",
+    "label": "Scale: under 50 users",
+    "detail": "One group; small realtime load",
+    "kind": "constraint",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n4",
+    "evidence": [],
+    "turn": 1,
+    "facet": "functionality"
+   },
+   {
+    "id": "n30",
+    "label": "APIs: free tiers likely",
+    "detail": "About $0/month at this scale",
+    "kind": "api",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 3,
+    "status": "proposed",
+    "parent": "n5",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
+   },
+   {
+    "id": "n31",
+    "label": "Realtime backend (Supabase)",
+    "detail": "Free tier covers small group",
+    "kind": "api",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 4,
+    "status": "proposed",
+    "parent": "n30",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
+   },
+   {
+    "id": "n32",
+    "label": "Auth service",
+    "detail": "Supabase Auth or Google OAuth",
+    "kind": "api",
+    "source": "inferred",
+    "inventiveness": 0.2,
+    "importance": 4,
+    "status": "proposed",
+    "parent": "n30",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
+   },
+   {
+    "id": "n33",
+    "label": "Push service (FCM)",
+    "detail": "Free web/mobile push delivery",
+    "kind": "api",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n30",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
+   },
+   {
+    "id": "n34",
+    "label": "AI usage: none for now",
+    "detail": "Depends on AI decision",
+    "kind": "constraint",
+    "source": "inferred",
+    "inventiveness": 0.1,
+    "importance": 2,
+    "status": "proposed",
+    "parent": "n5",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
+   },
+   {
+    "id": "n35",
+    "label": "Advertising: none, invite-only",
+    "detail": "Shared by link within group",
+    "kind": "constraint",
+    "source": "inferred",
+    "inventiveness": 0.3,
+    "importance": 1,
+    "status": "proposed",
+    "parent": "n5",
+    "evidence": [],
+    "turn": 1,
+    "facet": "cost"
    }
   ],
   "edges": [
@@ -127,22 +515,22 @@
     "relation": "has"
    },
    {
-    "from": "n2",
+    "from": "n1",
     "to": "n3",
-    "relation": "needs"
+    "relation": "has"
    },
    {
-    "from": "n2",
+    "from": "n1",
     "to": "n4",
-    "relation": "needs"
+    "relation": "has"
    },
    {
     "from": "n1",
     "to": "n5",
-    "relation": "needs"
+    "relation": "has"
    },
    {
-    "from": "n1",
+    "from": "n2",
     "to": "n6",
     "relation": "has"
    },
@@ -152,13 +540,193 @@
     "relation": "has"
    },
    {
-    "from": "n1",
+    "from": "n2",
     "to": "n8",
+    "relation": "has"
+   },
+   {
+    "from": "n2",
+    "to": "n9",
+    "relation": "has"
+   },
+   {
+    "from": "n2",
+    "to": "n10",
+    "relation": "has"
+   },
+   {
+    "from": "n10",
+    "to": "n11",
+    "relation": "has"
+   },
+   {
+    "from": "n10",
+    "to": "n12",
+    "relation": "has"
+   },
+   {
+    "from": "n10",
+    "to": "n13",
+    "relation": "has"
+   },
+   {
+    "from": "n10",
+    "to": "n14",
+    "relation": "has"
+   },
+   {
+    "from": "n2",
+    "to": "n15",
+    "relation": "has"
+   },
+   {
+    "from": "n3",
+    "to": "n16",
+    "relation": "has"
+   },
+   {
+    "from": "n3",
+    "to": "n17",
+    "relation": "has"
+   },
+   {
+    "from": "n3",
+    "to": "n18",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n19",
+    "relation": "has"
+   },
+   {
+    "from": "n19",
+    "to": "n20",
+    "relation": "has"
+   },
+   {
+    "from": "n19",
+    "to": "n21",
+    "relation": "has"
+   },
+   {
+    "from": "n19",
+    "to": "n22",
+    "relation": "has"
+   },
+   {
+    "from": "n19",
+    "to": "n23",
+    "relation": "has"
+   },
+   {
+    "from": "n19",
+    "to": "n24",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n25",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n26",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n27",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n28",
+    "relation": "has"
+   },
+   {
+    "from": "n4",
+    "to": "n29",
+    "relation": "has"
+   },
+   {
+    "from": "n5",
+    "to": "n30",
+    "relation": "has"
+   },
+   {
+    "from": "n30",
+    "to": "n31",
+    "relation": "has"
+   },
+   {
+    "from": "n30",
+    "to": "n32",
+    "relation": "has"
+   },
+   {
+    "from": "n30",
+    "to": "n33",
+    "relation": "has"
+   },
+   {
+    "from": "n5",
+    "to": "n34",
+    "relation": "has"
+   },
+   {
+    "from": "n5",
+    "to": "n35",
+    "relation": "has"
+   },
+   {
+    "from": "n16",
+    "to": "n6",
+    "relation": "informs"
+   },
+   {
+    "from": "n18",
+    "to": "n15",
+    "relation": "informs"
+   },
+   {
+    "from": "n18",
+    "to": "n35",
+    "relation": "informs"
+   },
+   {
+    "from": "n16",
+    "to": "n19",
+    "relation": "informs"
+   },
+   {
+    "from": "n10",
+    "to": "n19",
     "relation": "needs"
    },
    {
-    "from": "n8",
-    "to": "n4",
+    "from": "n19",
+    "to": "n30",
+    "relation": "informs"
+   },
+   {
+    "from": "n28",
+    "to": "n30",
+    "relation": "informs"
+   },
+   {
+    "from": "n29",
+    "to": "n28",
+    "relation": "informs"
+   },
+   {
+    "from": "n26",
+    "to": "n34",
+    "relation": "informs"
+   },
+   {
+    "from": "n17",
+    "to": "n29",
     "relation": "informs"
    }
   ]
@@ -167,67 +735,176 @@
   {
    "id": "b1",
    "status": "done",
-   "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Study Group Chat</title>\n<style>\n:root{--bg:#f4f6fb;--panel:#fff;--ink:#1d2333;--muted:#6b7385;--line:#e3e7ef;--brand:#4f5bd5;--brand2:#eef0ff;--mine:#4f5bd5;--ok:#22a06b;--danger:#d64545;--r:12px}\n*{box-sizing:border-box}\nbody{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;flex-direction:column}\nbutton,input{font:inherit}\nbutton{cursor:pointer;border:0;border-radius:8px;padding:.5rem .8rem;background:var(--brand);color:#fff}\nbutton.ghost{background:transparent;color:var(--brand);border:1px solid var(--line)}\nbutton:hover{filter:brightness(1.05)}\n:focus-visible{outline:3px solid #9aa3ff;outline-offset:2px}\ninput[type=text]{width:100%;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}\nheader{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;background:var(--panel);border-bottom:1px solid var(--line)}\nheader h1{font-size:1.1rem;margin:0;flex:1}\n.me{font-size:.9rem;color:var(--muted)}\n.layout{flex:1;display:grid;grid-template-columns:220px 1fr 200px;min-height:0}\naside{background:var(--panel);border-right:1px solid var(--line);padding:1rem;overflow:auto}\naside.members{border-right:0;border-left:1px solid var(--line)}\naside h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 .6rem}\n.glist{list-style:none;margin:0 0 1rem;padding:0;display:grid;gap:.25rem}\n.glist button{width:100%;text-align:left;background:transparent;color:var(--ink);padding:.5rem .6rem}\n.glist button.active{background:var(--brand2);color:var(--brand);font-weight:600}\n.note{font-size:.75rem;color:var(--muted);margin-top:.5rem;font-style:italic}\n.chat{display:flex;flex-direction:column;min-height:0;min-width:0}\n.chathead{display:flex;gap:.5rem;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}\n.chathead h2{margin:0;font-size:1rem;flex:1}\n.chathead input{max-width:180px}\n.msgs{flex:1;overflow:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem}\n.msg{max-width:75%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.5rem .75rem;align-self:flex-start;word-wrap:break-word}\n.msg.mine{align-self:flex-end;background:var(--mine);color:#fff;border-color:var(--mine)}\n.meta{font-size:.75rem;opacity:.75;display:flex;gap:.5rem;align-items:center;margin-bottom:.15rem}\n.meta button{background:transparent;color:inherit;padding:0 .2rem;font-size:.75rem;text-decoration:underline}\n.msg img{max-width:100%;max-height:220px;border-radius:8px;display:block;margin-top:.3rem}\n.file{display:inline-block;margin-top:.3rem;padding:.35rem .55rem;border-radius:8px;background:rgba(0,0,0,.06);color:inherit}\n.empty{color:var(--muted);text-align:center;margin:auto}\n.composer{display:flex;gap:.5rem;padding:.7rem 1rem;border-top:1px solid var(--line);background:var(--panel);align-items:center;flex-wrap:wrap}\n.composer input[type=text]{flex:1;min-width:140px}\n.attach{font-size:.8rem;color:var(--muted);width:100%}\n.mlist{list-style:none;margin:0;padding:0;display:grid;gap:.4rem}\n.mlist li{display:flex;align-items:center;gap:.5rem}\n.dot{width:9px;height:9px;border-radius:50%;background:#c4c9d4}\n.dot.on{background:var(--ok)}\n.overlay{position:fixed;inset:0;background:rgba(20,24,40,.55);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:5}\n.overlay[hidden]{display:none}\n.card{background:var(--panel);border-radius:16px;padding:1.5rem;width:100%;max-width:360px;display:grid;gap:.75rem}\n.card h2{margin:0}\n.err{color:var(--danger);font-size:.85rem;min-height:1em}\n.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:.5rem .9rem;border-radius:8px;font-size:.85rem;opacity:0;transition:.2s;pointer-events:none}\n.toast.show{opacity:1}\n@media (max-width:820px){\n .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}\n aside{border-right:0;border-bottom:1px solid var(--line);padding:.7rem 1rem}\n .glist{display:flex;overflow:auto}\n .glist button{white-space:nowrap}\n aside.members{border-left:0;border-top:1px solid var(--line);max-height:120px}\n .mlist{display:flex;flex-wrap:wrap;gap:.75rem}\n .msg{max-width:90%}\n}\n</style>\n</head>\n<body>\n<header data-mc-el=\"e1\" data-mc=\"n1\">\n  <h1>📚 Study Group Chat</h1>\n  <span class=\"me\" id=\"meLabel\" data-mc-el=\"e2\" data-mc=\"n5\"></span>\n  <button class=\"ghost\" id=\"renameBtn\" data-mc-el=\"e3\" data-mc=\"n5\">Change nickname</button>\n</header>\n\n<div class=\"layout\" data-mc-el=\"e4\" data-mc=\"n6\">\n  <aside data-mc-el=\"e5\" data-mc=\"n8\">\n    <h2>Study groups</h2>\n    <ul class=\"glist\" id=\"groupList\" data-mc-el=\"e6\" data-mc=\"n8\"></ul>\n    <form id=\"groupForm\" data-mc-el=\"e7\" data-mc=\"n8\">\n      <input type=\"text\" id=\"groupName\" placeholder=\"New group name\" maxlength=\"40\" aria-label=\"New group name\">\n      <button type=\"submit\" style=\"margin-top:.4rem;width:100%\">+ Create group</button>\n    </form>\n    <p class=\"note\" data-mc-el=\"e8\" data-mc=\"n8\">Assumed: multiple study groups are supported, each with its own room link.</p>\n  </aside>\n\n  <main class=\"chat\" data-mc-el=\"e9\" data-mc=\"n2 n6\">\n    <div class=\"chathead\">\n      <h2 id=\"roomTitle\" data-mc-el=\"e10\" data-mc=\"n2\">Room</h2>\n      <input type=\"text\" id=\"search\" placeholder=\"Search messages\" aria-label=\"Search messages\" data-mc-el=\"e11\" data-mc=\"n4\">\n      <button class=\"ghost\" id=\"copyLink\" data-mc-el=\"e12\" data-mc=\"n5 n8\">🔗 Copy room link</button>\n    </div>\n    <div class=\"msgs\" id=\"msgs\" aria-live=\"polite\" data-mc-el=\"e13\" data-mc=\"n2 n3 n4\"></div>\n    <form class=\"composer\" id=\"composer\" data-mc-el=\"e14\" data-mc=\"n2 n6\">\n      <label class=\"ghost\" for=\"fileInput\" style=\"cursor:pointer;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;color:var(--brand)\" data-mc-el=\"e15\" data-mc=\"n7\" title=\"Attach notes, PDF or image\">📎</label>\n      <input type=\"file\" id=\"fileInput\" accept=\"image/*,.pdf,.txt,.md,.doc,.docx\" hidden>\n      <input type=\"text\" id=\"msgInput\" placeholder=\"Write a message…\" maxlength=\"1000\" aria-label=\"Message\" autocomplete=\"off\">\n      <button type=\"submit\" data-mc-el=\"e16\" data-mc=\"n2 n3\">Send</button>\n      <div class=\"attach\" id=\"attachInfo\" data-mc-el=\"e17\" data-mc=\"n7\"></div>\n      <div class=\"note\" style=\"margin:0\" data-mc-el=\"e18\" data-mc=\"n7 n3\">Assumed: files up to 1 MB are stored in this browser; live updates sync across open tabs.</div>\n    </form>\n  </main>\n\n  <aside class=\"members\" data-mc-el=\"e19\" data-mc=\"n6 n5\">\n    <h2>Members <span id=\"memberCount\"></span></h2>\n    <ul class=\"mlist\" id=\"memberList\"></ul>\n  </aside>\n</div>\n\n<div class=\"overlay\" id=\"joinOverlay\" hidden data-mc-el=\"e20\" data-mc=\"n5\">\n  <form class=\"card\" id=\"joinForm\">\n    <h2>Join the study group</h2>\n    <p style=\"margin:0;color:var(--muted)\">Just pick a nickname — no account or password needed.</p>\n    <input type=\"text\" id=\"nickInput\" placeholder=\"Your nickname\" maxlength=\"24\" aria-label=\"Nickname\">\n    <div class=\"err\" id=\"joinErr\"></div>\n    <button type=\"submit\">Join chat</button>\n  </form>\n</div>\n<div class=\"toast\" id=\"toast\"></div>\n\n<script>\nconst mem = {}; const storage = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return mem[k] ?? null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch { mem[k] = v; } } };\nconst $ = id => document.getElementById(id);\nconst uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);\nconst esc = s => String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nconst K = {g:'sgc.groups', m:'sgc.messages', mb:'sgc.members', me:'sgc.me'};\n\nlet bc = { postMessage(){} };\ntry { bc = new BroadcastChannel('study-group-chat'); } catch {}\n\nconst store = {\n  groups(){ return storage.get(K.g) || []; },\n  addGroup(name, remote){ const g = remote || {id: uid(), name, created: Date.now()}; const all = store.groups(); if(!all.some(x=>x.id===g.id)){ all.push(g); storage.set(K.g, all); } if(!remote) bc.postMessage({t:'group', g}); return g; },\n  messages(gid){ return (storage.get(K.m) || []).filter(m => m.groupId === gid).sort((a,b)=>a.ts-b.ts); },\n  addMessage(m, remote){ const all = storage.get(K.m) || []; if(!all.some(x=>x.id===m.id)){ all.push(m); storage.set(K.m, all); } if(!remote) bc.postMessage({t:'msg', m}); return m; },\n  deleteMessage(id, remote){ storage.set(K.m, (storage.get(K.m)||[]).filter(m=>m.id!==id)); if(!remote) bc.postMessage({t:'del', id}); },\n  members(gid){ return (storage.get(K.mb) || []).filter(x => x.groupId === gid); },\n  touchMember(rec, remote){ const all = (storage.get(K.mb) || []).filter(x => !(x.groupId===rec.groupId && x.deviceId===rec.deviceId)); all.push(rec); storage.set(K.mb, all); if(!remote) bc.postMessage({t:'member', rec}); }\n};\n\nfunction seed(){\n  if(store.groups().length) return;\n  const now = Date.now(), H = 3600e3;\n  const g1 = {id:'bio101', name:'Bio 101 Study Group', created: now-5*H}, g2 = {id:'calc2', name:'Calc II Crew', created: now-4*H};\n  storage.set(K.g, [g1, g2]);\n  const ppl = [['d-maya','Maya'],['d-leo','Leo'],['d-priya','Priya']];\n  storage.set(K.mb, [...ppl.map(([d,n])=>({groupId:'bio101', deviceId:d, name:n, lastSeen: now-2*H})), {groupId:'calc2', deviceId:'d-leo', name:'Leo', lastSeen: now-3*H}]);\n  const msg = (g,d,n,ts,c,file) => ({id:uid(), groupId:g, senderId:d, senderName:n, ts, content:c, file:file||null});\n  storage.set(K.m, [\n    msg('bio101','d-maya','Maya',now-3*H,'Hey all! Quiz on cell respiration is Friday 🧬'),\n    msg('bio101','d-leo','Leo',now-2.8*H,'Can we meet in the library Thursday at 6?'),\n    msg('bio101','d-priya','Priya',now-2.5*H,'Works for me. I\\'ll bring my Krebs cycle summary.'),\n    msg('bio101','d-maya','Maya',now-2*H,'Uploaded my notes here:', {name:'krebs-notes.txt', type:'text/plain', size:120, data:'data:text/plain;charset=utf-8,'+encodeURIComponent('Krebs cycle\\n- Acetyl-CoA + oxaloacetate -> citrate\\n- 3 NADH, 1 FADH2, 1 ATP per turn')}),\n    msg('calc2','d-leo','Leo',now-3*H,'Anyone solved problem 7 on integration by parts?')\n  ]);\n}\n\nlet me = storage.get(K.me);\nlet current = null;\nlet pendingFile = null;\n\nfunction toast(t){ const el=$('toast'); if(!el) return; el.textContent=t; el.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('show'),1800); }\nfunction fmtTime(ts){ const d=new Date(ts); const today=new Date().toDateString()===d.toDateString(); return (today?'':d.toLocaleDateString([], {month:'short', day:'numeric'})+' ')+d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }\nfunction fmtSize(b){ return b>1024*1024 ? (b/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(b/1024))+' KB'; }\n\nfunction groupFromHash(){ const m = location.hash.match(/g=([\\w-]+)/); return m ? m[1] : null; }\nfunction roomLink(gid){ return location.href.split('#')[0] + '#g=' + gid; }\n\nfunction selectGroup(gid){\n  const g = store.groups().find(x=>x.id===gid) || store.groups()[0];\n  if(!g) return;\n  current = g.id;\n  try { history.replaceState(null,'','#g='+g.id); } catch {}\n  if(me) store.touchMember({groupId:g.id, deviceId:me.deviceId, name:me.name, lastSeen:Date.now()});\n  renderAll();\n}\n\nfunction renderGroups(){\n  const ul=$('groupList'); if(!ul) return;\n  ul.innerHTML = store.groups().map(g=>`<li><button data-gid=\"${esc(g.id)}\" class=\"${g.id===current?'active':''}\"># ${esc(g.name)}</button></li>`).join('');\n}\n\nfunction renderMessages(){\n  const box=$('msgs'); if(!box) return;\n  const q = ($('search')?.value||'').trim().toLowerCase();\n  const list = store.messages(current).filter(m=>!q || m.content.toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q) || (m.file && m.file.name.toLowerCase().includes(q)));\n  const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;\n  if(!list.length){ box.innerHTML = `<p class=\"empty\">${q?'No messages match your search.':'No messages yet — say hi 👋'}</p>`; return; }\n  box.innerHTML = list.map(m=>{\n    const mine = me && m.senderId===me.deviceId;\n    let file='';\n    if(m.file){ file = m.file.type.startsWith('image/') ? `<a href=\"${m.file.data}\" download=\"${esc(m.file.name)}\"><img src=\"${m.file.data}\" alt=\"${esc(m.file.name)}\"></a>` : `<a class=\"file\" href=\"${m.file.data}\" download=\"${esc(m.file.name)}\">📄 ${esc(m.file.name)} · ${fmtSize(m.file.size)}</a>`; }\n    return `<div class=\"msg ${mine?'mine':''}\"><div class=\"meta\"><strong>${esc(m.senderName)}</strong><span>${fmtTime(m.ts)}</span>${mine?`<button data-del=\"${m.id}\" aria-label=\"Delete message\">delete</button>`:''}</div>${m.content?`<div>${esc(m.content)}</div>`:''}${file}</div>`;\n  }).join('');\n  if(nearBottom || renderMessages.force){ box.scrollTop = box.scrollHeight; renderMessages.force=false; }\n}\n\nfunction renderMembers(){\n  const ul=$('memberList'); if(!ul) return;\n  const list = store.members(current).sort((a,b)=>b.lastSeen-a.lastSeen);\n  const c=$('memberCount'); if(c) c.textContent='('+list.length+')';\n  ul.innerHTML = list.map(x=>{ const on = Date.now()-x.lastSeen < 60e3; return `<li title=\"${on?'Online':'Last seen '+fmtTime(x.lastSeen)}\"><span class=\"dot ${on?'on':''}\"></span>${esc(x.name)}${me&&x.deviceId===me.deviceId?' (you)':''}</li>`; }).join('');\n}\n\nfunction renderAll(){\n  const g = store.groups().find(x=>x.id===current);\n  const t=$('roomTitle'); if(t) t.textContent = g ? '# '+g.name : 'Room';\n  const ml=$('meLabel'); if(ml) ml.textContent = me ? 'Signed in as '+me.name : '';\n  renderGroups(); renderMessages(); renderMembers();\n}\n\nfunction showJoin(){ const o=$('joinOverlay'); if(!o) return; o.hidden=false; const n=$('nickInput'); if(n){ n.value=me?me.name:''; setTimeout(()=>n.focus(),50); } }\n\n$('joinForm')?.addEventListener('submit', e=>{\n  e.preventDefault();\n  const name = ($('nickInput').value||'').trim();\n  const err=$('joinErr');\n  if(name.length<2){ if(err) err.textContent='Nickname must be at least 2 characters.'; return; }\n  me = { name, deviceId: me?.deviceId || 'd-'+uid() };\n  storage.set(K.me, me);\n  if(err) err.textContent='';\n  $('joinOverlay').hidden = true;\n  store.groups().forEach(g=>{ if(store.members(g.id).some(x=>x.deviceId===me.deviceId) || g.id===current) store.touchMember({groupId:g.id, deviceId:me.deviceId, name:me.name, lastSeen:Date.now()}); });\n  toast('Welcome, '+name+'!'); renderAll();\n});\n$('renameBtn')?.addEventListener('click', showJoin);\n\n$('groupList')?.addEventListener('click', e=>{ const b=e.target.closest('[data-gid]'); if(b){ renderMessages.force=true; selectGroup(b.dataset.gid); } });\n\n$('groupForm')?.addEventListener('submit', e=>{\n  e.preventDefault();\n  const inp=$('groupName'); const name=(inp.value||'').trim();\n  if(name.length<2){ toast('Group name needs at least 2 characters'); inp.focus(); return; }\n  if(store.groups().some(g=>g.name.toLowerCase()===name.toLowerCase())){ toast('A group with that name exists'); return; }\n  const g = store.addGroup(name); inp.value=''; selectGroup(g.id); toast('Group created');\n});\n\n$('copyLink')?.addEventListener('click', async ()=>{\n  const link = roomLink(current);\n  try { await navigator.clipboard.writeText(link); toast('Room link copied'); }\n  catch { window.prompt('Copy this room link:', link); }\n});\n\n$('search')?.addEventListener('input', renderMessages);\n\n$('fileInput')?.addEventListener('change', e=>{\n  const f = e.target.files && e.target.files[0]; const info=$('attachInfo');\n  pendingFile = null; if(info) info.textContent='';\n  if(!f) return;\n  if(f.size > 1024*1024){ toast('File too large (max 1 MB)'); e.target.value=''; return; }\n  const r = new FileReader();\n  r.onload = () => { pendingFile = {name:f.name, type:f.type||'application/octet-stream', size:f.size, data:r.result}; if(info) info.innerHTML = `📎 ${esc(f.name)} (${fmtSize(f.size)}) <button type=\"button\" class=\"ghost\" id=\"clearFile\" style=\"padding:.1rem .4rem\">remove</button>`; };\n  r.readAsDataURL(f);\n});\n$('attachInfo')?.addEventListener('click', e=>{ if(e.target.id==='clearFile'){ pendingFile=null; $('fileInput').value=''; $('attachInfo').textContent=''; } });\n\n$('composer')?.addEventListener('submit', e=>{\n  e.preventDefault();\n  if(!me){ showJoin(); return; }\n  const inp=$('msgInput'); const content=(inp.value||'').trim();\n  if(!content && !pendingFile){ inp.focus(); return; }\n  store.addMessage({id:uid(), groupId:current, senderId:me.deviceId, senderName:me.name, ts:Date.now(), content, file:pendingFile});\n  store.touchMember({groupId:current, deviceId:me.deviceId, name:me.name, lastSeen:Date.now()});\n  inp.value=''; pendingFile=null; const fi=$('fileInput'); if(fi) fi.value=''; const ai=$('attachInfo'); if(ai) ai.textContent='';\n  renderMessages.force=true; renderMessages(); renderMembers(); inp.focus();\n});\n\n$('msgs')?.addEventListener('click', e=>{\n  const b=e.target.closest('[data-del]'); if(!b) return;\n  if(confirm('Delete this message?')){ store.deleteMessage(b.dataset.del); renderMessages(); toast('Message deleted'); }\n});\n\nbc.onmessage = ev => {\n  const d = ev.data || {};\n  if(d.t==='msg') store.addMessage(d.m, true);\n  else if(d.t==='del') store.deleteMessage(d.id, true);\n  else if(d.t==='member') store.touchMember(d.rec, true);\n  else if(d.t==='group') store.addGroup(null, d.g);\n  renderAll();\n};\n\nwindow.addEventListener('hashchange', ()=>{ const g=groupFromHash(); if(g && g!==current){ renderMessages.force=true; selectGroup(g); } });\n\nsetInterval(()=>{ if(me && current) store.touchMember({groupId:current, deviceId:me.deviceId, name:me.name, lastSeen:Date.now()}); renderMembers(); }, 20000);\n\nseed();\nrenderMessages.force = true;\ncurrent = (store.groups().find(g=>g.id===groupFromHash()) || store.groups()[0]).id;\nselectGroup(current);\nif(!me) showJoin(); else toast('Welcome back, '+me.name);\n</script>\n</body>\n</html>",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Study Crew · Group Chat</title>\n<style>\n:root{\n  --bg:#f3f8f7;--panel:#ffffff;--ink:#1f3340;--muted:#5f7682;--line:#dbe7e6;\n  --blue:#3d7fb8;--blue-soft:#e3eff8;--green:#3e9c7d;--green-soft:#e2f3ec;\n  --warn:#c0603f;--radius:14px;--shadow:0 2px 10px rgba(31,51,64,.07);\n  font-family:Inter,\"Segoe UI\",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;\n}\n*{box-sizing:border-box}\nhtml,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}\nbutton,input,select,textarea{font:inherit;color:inherit}\nbutton{cursor:pointer;border:0;border-radius:10px;padding:.55rem .9rem;background:var(--blue);color:#fff;font-weight:600}\nbutton.ghost{background:transparent;color:var(--blue);border:1px solid var(--line)}\nbutton.soft{background:var(--green-soft);color:#24684f}\nbutton:hover{filter:brightness(.96)}\n:focus-visible{outline:3px solid #8cc3e8;outline-offset:2px}\ninput,select,textarea{width:100%;padding:.6rem .75rem;border:1px solid var(--line);border-radius:10px;background:#fff}\nlabel{display:block;font-size:.85rem;color:var(--muted);margin:.7rem 0 .25rem}\n.hidden{display:none!important}\n.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem}\n.muted{color:var(--muted);font-size:.85rem}\n.err{color:var(--warn);font-size:.85rem;min-height:1.2em;margin-top:.4rem}\n/* auth */\n#auth{min-height:100%;display:grid;place-items:center;padding:1.2rem}\n#auth .card{max-width:420px;width:100%;padding:1.6rem}\n.logo{display:flex;align-items:center;gap:.6rem;font-weight:700;font-size:1.15rem}\n.logo span.dot{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--green));display:grid;place-items:center;color:#fff}\n/* app */\n#app{display:flex;flex-direction:column;height:100dvh}\nheader{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1rem;background:var(--panel);border-bottom:1px solid var(--line)}\nheader .sub{font-size:.78rem;color:var(--muted);font-weight:500}\n.shell{flex:1;display:flex;flex-direction:column;min-height:0}\nmain{flex:1;min-height:0;overflow:auto;padding:1rem}\nnav{display:flex;background:var(--panel);border-top:1px solid var(--line)}\nnav button{flex:1;background:transparent;color:var(--muted);border-radius:0;padding:.65rem .3rem;font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:.1rem}\nnav button.active{color:var(--blue);background:var(--blue-soft)}\nnav .ic{font-size:1.15rem}\n@media(min-width:760px){\n  .shell{flex-direction:row-reverse}\n  nav{flex-direction:column;width:200px;border-top:0;border-left:1px solid var(--line);padding:.8rem;gap:.3rem}\n  nav button{flex:none;flex-direction:row;gap:.6rem;border-radius:10px;font-size:.92rem;padding:.65rem .8rem;justify-content:flex-start}\n}\n.view{max-width:820px;margin:0 auto}\n#view-chat{display:flex;flex-direction:column;height:100%}\n#feed{flex:1;overflow:auto;display:flex;flex-direction:column;gap:.7rem;padding-bottom:.5rem}\n.msg{max-width:85%;align-self:flex-start}\n.msg.mine{align-self:flex-end}\n.bubble{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:.55rem .8rem;word-wrap:break-word}\n.mine .bubble{background:var(--blue-soft);border-color:#c9def0;border-radius:14px 14px 4px 14px}\n.meta{font-size:.75rem;color:var(--muted);margin:0 .3rem .15rem}\n.reacts{display:flex;gap:.3rem;margin-top:.25rem;flex-wrap:wrap}\n.reacts button{background:#fff;border:1px solid var(--line);color:var(--ink);padding:.1rem .45rem;font-weight:500;font-size:.8rem;border-radius:20px}\n.reacts button.on{background:var(--green-soft);border-color:#a9d9c5}\n.session{border-left:4px solid var(--green)}\n.rsvp{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}\n.rsvp button{padding:.3rem .6rem;font-size:.8rem;background:#fff;color:var(--ink);border:1px solid var(--line)}\n.rsvp button.on{background:var(--green);color:#fff;border-color:var(--green)}\n.filechip{display:flex;align-items:center;gap:.5rem;background:#f7fbfa;border:1px dashed #b9d5cd;border-radius:10px;padding:.45rem .6rem;margin-top:.3rem}\n.composer{display:flex;gap:.45rem;align-items:center;padding-top:.6rem;border-top:1px solid var(--line);background:var(--bg)}\n.composer input[type=text]{flex:1}\n.iconbtn{padding:.55rem .7rem;background:var(--panel);color:var(--ink);border:1px solid var(--line)}\n.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}\n.list{display:flex;flex-direction:column;gap:.6rem;margin-top:.8rem}\n.item{display:flex;gap:.75rem;align-items:center}\n.item .grow{flex:1;min-width:0}\n.item .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.ava{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}\n.pill{font-size:.72rem;padding:.1rem .5rem;border-radius:20px;background:var(--green-soft);color:#24684f}\n.pill.off{background:#eef2f3;color:var(--muted)}\nh2{font-size:1.1rem;margin:0 0 .3rem}\nh3{font-size:.95rem;margin:1.4rem 0 .4rem}\n.switch{display:flex;align-items:center;justify-content:space-between;gap:1rem}\n.switch input{width:auto;transform:scale(1.3)}\npre.note{white-space:pre-wrap;background:#f7fbfa;border-radius:10px;padding:.6rem;margin:.5rem 0 0;font-family:inherit;font-size:.88rem}\ndialog{border:0;border-radius:var(--radius);padding:1.2rem;max-width:400px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.18)}\ndialog::backdrop{background:rgba(31,51,64,.35)}\n#toast{position:fixed;left:50%;top:1rem;transform:translateX(-50%);background:var(--ink);color:#fff;padding:.6rem 1rem;border-radius:10px;font-size:.88rem;z-index:20;box-shadow:var(--shadow);max-width:90%}\n.empty{text-align:center;color:var(--muted);padding:2rem 1rem}\n</style>\n</head>\n<body>\n\n<section id=\"auth\" data-mc-el=\"e1\" data-mc=\"n11 n24\">\n  <form class=\"card\" id=\"joinForm\" data-mc-el=\"e2\" data-mc=\"n11 n24 n16 n35\" novalidate>\n    <div class=\"logo\" data-mc-el=\"e3\" data-mc=\"n6 n1\"><span class=\"dot\">📚</span> Study Crew</div>\n    <p class=\"muted\" id=\"joinRoomName\" data-mc-el=\"e4\" data-mc=\"n16\">You've been invited to a private study group.</p>\n    <label for=\"joinLink\">Room invite link</label>\n    <input id=\"joinLink\" autocomplete=\"off\" data-mc-el=\"e5\" data-mc=\"n24 n35\">\n    <label for=\"joinNick\">Choose a nickname</label>\n    <input id=\"joinNick\" maxlength=\"20\" placeholder=\"e.g. Priya\" autocomplete=\"nickname\" data-mc-el=\"e6\" data-mc=\"n24\">\n    <div class=\"err\" id=\"joinErr\" role=\"alert\"></div>\n    <button type=\"submit\" style=\"width:100%;margin-top:.4rem\" data-mc-el=\"e7\" data-mc=\"n24 n11\">Join the group</button>\n    <p class=\"muted\" style=\"margin-bottom:0\">No passwords. Your session stays on this device.</p>\n  </form>\n</section>\n\n<div id=\"app\" class=\"hidden\">\n  <header data-mc-el=\"e8\" data-mc=\"n1 n6 n15\">\n    <div class=\"logo\"><span class=\"dot\">📚</span><div><div id=\"roomTitle\">Study Crew</div><div class=\"sub\" id=\"roomSub\"></div></div></div>\n    <button class=\"ghost\" id=\"inviteBtn\" data-mc-el=\"e9\" data-mc=\"n25 n24\">🔗 Invite</button>\n  </header>\n  <div class=\"shell\">\n    <main>\n      <section id=\"view-chat\" class=\"view\" data-mc-el=\"e10\" data-mc=\"n12 n20\">\n        <div id=\"feed\" aria-live=\"polite\" data-mc-el=\"e11\" data-mc=\"n12 n20 n15\"></div>\n        <form class=\"composer\" id=\"composer\" data-mc-el=\"e12\" data-mc=\"n12 n25\">\n          <button type=\"button\" class=\"iconbtn\" id=\"attachBtn\" title=\"Attach file\" aria-label=\"Attach file\" data-mc-el=\"e13\" data-mc=\"n25 n21\">📎</button>\n          <button type=\"button\" class=\"iconbtn\" id=\"schedBtn\" title=\"Schedule study session\" aria-label=\"Schedule study session\" data-mc-el=\"e14\" data-mc=\"n25 n22\">📅</button>\n          <input type=\"text\" id=\"msgInput\" placeholder=\"Message the group…\" maxlength=\"1000\" aria-label=\"Message\" data-mc-el=\"e15\" data-mc=\"n20\">\n          <button type=\"submit\" data-mc-el=\"e16\" data-mc=\"n25 n20\">Send</button>\n        </form>\n      </section>\n\n      <section id=\"view-files\" class=\"view hidden\" data-mc-el=\"e17\" data-mc=\"n13 n21\">\n        <h2>Shared files</h2>\n        <p class=\"muted\">Notes, PDFs and images shared in the group.</p>\n        <div class=\"row\">\n          <input id=\"fileSearch\" placeholder=\"Search files…\" style=\"flex:1;min-width:160px\" aria-label=\"Search files\" data-mc-el=\"e18\" data-mc=\"n13\">\n          <select id=\"fileFilter\" style=\"width:auto\" aria-label=\"Filter by type\" data-mc-el=\"e19\" data-mc=\"n13\">\n            <option value=\"all\">All types</option><option value=\"pdf\">PDFs</option><option value=\"image\">Images</option><option value=\"note\">Notes</option><option value=\"other\">Other</option>\n          </select>\n          <button id=\"uploadBtn\" data-mc-el=\"e20\" data-mc=\"n21 n25\">⬆ Upload</button>\n          <button class=\"soft\" id=\"noteBtn\" data-mc-el=\"e21\" data-mc=\"n21\">✎ New note</button>\n        </div>\n        <div class=\"list\" id=\"fileList\" data-mc-el=\"e22\" data-mc=\"n13 n21 n27\"></div>\n      </section>\n\n      <section id=\"view-members\" class=\"view hidden\" data-mc-el=\"e23\" data-mc=\"n14\">\n        <h2>Members & settings</h2>\n        <div class=\"list\" id=\"memberList\" data-mc-el=\"e24\" data-mc=\"n14 n16 n29\"></div>\n        <h3>Your profile</h3>\n        <form class=\"card\" id=\"profileForm\" data-mc-el=\"e25\" data-mc=\"n14 n24\">\n          <label for=\"profNick\" style=\"margin-top:0\">Nickname</label>\n          <div class=\"row\"><input id=\"profNick\" maxlength=\"20\" style=\"flex:1\"><button type=\"submit\">Save</button></div>\n          <div class=\"err\" id=\"profErr\" role=\"alert\"></div>\n        </form>\n        <h3>Notifications</h3>\n        <div class=\"card switch\" data-mc-el=\"e26\" data-mc=\"n23 n33\">\n          <div><strong>Alert me on new messages</strong><div class=\"muted\" id=\"notifState\">In-app and browser alerts.</div></div>\n          <input type=\"checkbox\" id=\"notifToggle\" aria-label=\"Notifications on new messages\">\n        </div>\n        <h3>Invite link</h3>\n        <div class=\"card\" data-mc-el=\"e27\" data-mc=\"n24 n35 n17\">\n          <p class=\"muted\" style=\"margin-top:0\">Anyone with this link can join. Regenerate it to revoke old links.</p>\n          <input id=\"inviteLink\" readonly aria-label=\"Invite link\">\n          <div class=\"row\" style=\"margin-top:.6rem\">\n            <button id=\"copyLink\" data-mc-el=\"e28\" data-mc=\"n25 n24\">Copy link</button>\n            <button class=\"ghost\" id=\"regenLink\" data-mc-el=\"e29\" data-mc=\"n24\">↻ Regenerate</button>\n          </div>\n        </div>\n        <h3>Session</h3>\n        <button class=\"ghost\" id=\"signOut\" style=\"color:var(--warn)\" data-mc-el=\"e30\" data-mc=\"n24\">Sign out on this device</button>\n      </section>\n    </main>\n    <nav aria-label=\"Main\" data-mc-el=\"e31\" data-mc=\"n10 n9 n15\">\n      <button data-view=\"chat\" class=\"active\" data-mc-el=\"e32\" data-mc=\"n12\"><span class=\"ic\">💬</span>Chat</button>\n      <button data-view=\"files\" data-mc-el=\"e33\" data-mc=\"n13\"><span class=\"ic\">📁</span>Files</button>\n      <button data-view=\"members\" data-mc-el=\"e34\" data-mc=\"n14\"><span class=\"ic\">👥</span>Members</button>\n    </nav>\n  </div>\n</div>\n\n<dialog id=\"schedDlg\" data-mc-el=\"e35\" data-mc=\"n22\">\n  <form id=\"schedForm\" method=\"dialog\" novalidate>\n    <h2>Propose a study session</h2>\n    <label for=\"sTitle\">Topic</label><input id=\"sTitle\" placeholder=\"e.g. Ch. 9 photosynthesis review\">\n    <label for=\"sWhen\">When</label><input id=\"sWhen\" type=\"datetime-local\">\n    <label for=\"sWhere\">Where</label><input id=\"sWhere\" placeholder=\"Library room 3B or video call\">\n    <div class=\"err\" id=\"schedErr\"></div>\n    <div class=\"row\" style=\"justify-content:flex-end\"><button type=\"button\" class=\"ghost\" id=\"schedCancel\">Cancel</button><button type=\"submit\">Propose</button></div>\n  </form>\n</dialog>\n\n<dialog id=\"noteDlg\" data-mc-el=\"e36\" data-mc=\"n21\">\n  <form id=\"noteForm\" method=\"dialog\" novalidate>\n    <h2>Share a note</h2>\n    <label for=\"nTitle\">Title</label><input id=\"nTitle\" placeholder=\"e.g. Krebs cycle mnemonic\">\n    <label for=\"nBody\">Note</label><textarea id=\"nBody\" rows=\"5\"></textarea>\n    <div class=\"err\" id=\"noteErr\"></div>\n    <div class=\"row\" style=\"justify-content:flex-end\"><button type=\"button\" class=\"ghost\" id=\"noteCancel\">Cancel</button><button type=\"submit\">Share</button></div>\n  </form>\n</dialog>\n\n<input type=\"file\" id=\"fileInput\" class=\"hidden\" accept=\".pdf,image/*,.txt,.doc,.docx,.ppt,.pptx\">\n<div id=\"toast\" class=\"hidden\" role=\"status\" data-mc-el=\"e37\" data-mc=\"n23\"></div>\n\n<script>\nconst mem = {}; const storage = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return mem[k] ?? null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch { mem[k] = v; } } };\nconst $ = id => document.getElementById(id);\nconst uid = () => Math.random().toString(36).slice(2,10);\nconst esc = s => String(s ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nconst KEY='sgc.state', MEKEY='sgc.me', DEVKEY='sgc.device', NOTIFKEY='sgc.notif';\nconst LINK_BASE='https://studycrew.app/join/';\nconst COLORS=['#3d7fb8','#3e9c7d','#6a8fc7','#4aa3a0','#7c8fb0','#5b9e6e'];\nconst MIN=60000, HR=60*MIN;\nlet device = storage.get(DEVKEY); if(!device){ device=uid(); storage.set(DEVKEY,device); }\n\nfunction newCode(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s='BIO-'; for(let i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }\nfunction seed(){\n  const n=Date.now();\n  const members=[\n    {id:'m1',nick:'Priya',device:'seed1',lastSeen:n-2*MIN,color:COLORS[0]},\n    {id:'m2',nick:'Mateo',device:'seed2',lastSeen:n-40*MIN,color:COLORS[1]},\n    {id:'m3',nick:'Hana',device:'seed3',lastSeen:n-3*MIN,color:COLORS[2]},\n    {id:'m4',nick:'Tomás',device:'seed4',lastSeen:n-5*HR,color:COLORS[3]}];\n  return {\n    room:{name:'BIO 201 · Cell Biology Crew',code:'BIO-7K2Q'},\n    members,\n    files:[\n      {id:'f1',name:'Ch7_Cellular_Respiration_notes.pdf',kind:'pdf',size:842000,by:'m1',at:n-26*HR},\n      {id:'f2',name:'mitosis_phases_diagram.png',kind:'image',size:318000,by:'m3',at:n-20*HR},\n      {id:'f3',name:'Krebs cycle mnemonic',kind:'note',body:'\"Can I Keep Selling Sex For Money, Officer?\"\\nCitrate → Isocitrate → α-Ketoglutarate → Succinyl-CoA → Succinate → Fumarate → Malate → Oxaloacetate',by:'m2',at:n-3*HR}],\n    messages:[\n      {id:'a1',type:'text',by:'m1',at:n-26*HR,text:'Uploaded my Ch. 7 notes — the ETC section is the part Dr. Okafor said will be on the midterm.',reacts:{'👍':['m2','m3']}},\n      {id:'a2',type:'file',by:'m1',at:n-26*HR+MIN,fileId:'f1',reacts:{}},\n      {id:'a3',type:'text',by:'m3',at:n-20*HR,text:'Here is the mitosis diagram from lab, labeled prophase → telophase.',reacts:{'💡':['m1']}},\n      {id:'a4',type:'session',by:'m2',at:n-4*HR,title:'Midterm review — Ch. 5–8',when:new Date(n+2*24*HR).setHours(18,30,0,0),where:'Library study room 3B',rsvp:{m1:'going',m2:'going',m3:'maybe'},reacts:{}},\n      {id:'a5',type:'text',by:'m2',at:n-3*HR,text:'Also dropped a Krebs cycle mnemonic in Files. It saved me on the last quiz 😅',reacts:{'🎉':['m4']}},\n      {id:'a6',type:'text',by:'m3',at:n-25*MIN,text:'Can someone explain why NADH yields more ATP than FADH₂? I keep mixing it up.',reacts:{}}]\n  };\n}\n\nconst store = {\n  state: storage.get(KEY) || seed(),\n  save(broadcast=true){ storage.set(KEY,this.state); if(broadcast) rt.send(this.state); },\n  list(kind){ return this.state[kind]; },\n  add(kind,item){ this.state[kind].push(item); this.save(); return item; },\n  update(kind,id,fn){ const it=this.state[kind].find(x=>x.id===id); if(it){ fn(it); this.save(); } return it; },\n  member(id){ return this.state.members.find(m=>m.id===id); }\n};\nstorage.set(KEY, store.state);\n\nlet meId = storage.get(MEKEY);\nconst me = () => store.member(meId);\n\nconst rt = { ch:null,\n  init(){ try{ this.ch=new BroadcastChannel('study-crew'); this.ch.onmessage=e=>onRemote(e.data); }catch{ this.ch=null; } },\n  send(state){ try{ this.ch && this.ch.postMessage(state); }catch{} } };\n\nfunction onRemote(state){\n  if(!state || !state.messages) return;\n  const known=new Set(store.state.messages.map(m=>m.id));\n  const fresh=state.messages.filter(m=>!known.has(m.id) && m.by!==meId);\n  store.state=state; store.save(false);\n  if(meId && !me()){ signOutLocal(); return; }\n  renderAll();\n  if(fresh.length && storage.get(NOTIFKEY)!==false) fresh.forEach(notify);\n}\n\nfunction notify(m){\n  const who=store.member(m.by)?.nick||'Someone';\n  const text = m.type==='text'? m.text : m.type==='file'? 'shared a file' : 'proposed a study session';\n  toast(`💬 ${who}: ${text}`);\n  try{ if(document.hidden && 'Notification' in window && Notification.permission==='granted') new Notification(store.state.room.name,{body:`${who}: ${text}`}); }catch{}\n}\n\nlet toastT;\nfunction toast(t){ const el=$('toast'); if(!el) return; el.textContent=t; el.classList.remove('hidden'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.add('hidden'),3200); }\n\nfunction ago(t){ const d=Date.now()-t; if(d<MIN) return 'just now'; if(d<HR) return Math.floor(d/MIN)+'m ago'; if(d<24*HR) return Math.floor(d/HR)+'h ago'; return new Date(t).toLocaleDateString([], {month:'short',day:'numeric'}); }\nfunction fmtWhen(t){ return new Date(t).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }\nfunction fmtSize(b){ if(!b) return ''; return b>1e6? (b/1e6).toFixed(1)+' MB' : Math.max(1,Math.round(b/1e3))+' KB'; }\nconst fileIcon = k => ({pdf:'📕',image:'🖼️',note:'📝'}[k]||'📄');\nconst ava = m => `<div class=\"ava\" style=\"background:${m?.color||'#8aa'}\">${esc((m?.nick||'?')[0].toUpperCase())}</div>`;\nconst online = m => Date.now()-m.lastSeen < 10*MIN;\n\nfunction touch(){ if(!me()) return; me().lastSeen=Date.now(); store.save(); }\n\n/* ---------- auth ---------- */\nfunction codeFrom(s){ return String(s||'').trim().split(/[\\/#]/).filter(Boolean).pop()?.toUpperCase()||''; }\nfunction showAuth(){\n  $('app').classList.add('hidden'); $('auth').classList.remove('hidden');\n  const hash=codeFrom(location.hash);\n  $('joinLink').value = LINK_BASE + (hash || store.state.room.code);\n  $('joinRoomName').textContent = `You've been invited to join \"${store.state.room.name}\".`;\n  $('joinErr').textContent='';\n}\nfunction showApp(){ $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); renderAll(); scrollFeed(); }\nfunction nickTaken(nick, exceptId){ return store.state.members.some(m=>m.nick.toLowerCase()===nick.toLowerCase() && m.id!==exceptId); }\n\n$('joinForm').addEventListener('submit', e=>{\n  e.preventDefault();\n  const code=codeFrom($('joinLink').value), nick=$('joinNick').value.trim();\n  const err=$('joinErr');\n  if(code!==store.state.room.code){ err.textContent='This invite link is invalid or has been regenerated. Ask a member for the current link.'; return; }\n  if(!/^[\\p{L}\\p{N} _.-]{2,20}$/u.test(nick)){ err.textContent='Nickname must be 2–20 letters, numbers, spaces or _ . -'; return; }\n  let m=store.state.members.find(x=>x.nick.toLowerCase()===nick.toLowerCase());\n  if(m && m.device!==device){ err.textContent=`\"${nick}\" is already taken in this group. Try another.`; return; }\n  if(!m){ m={id:uid(),nick,device,lastSeen:Date.now(),color:COLORS[store.state.members.length%COLORS.length]}; store.add('members',m); }\n  meId=m.id; storage.set(MEKEY,meId); touch();\n  showApp(); toast(`Welcome, ${nick}! 👋`);\n});\n\nfunction signOutLocal(){ meId=null; storage.set(MEKEY,null); showAuth(); }\n$('signOut').addEventListener('click', signOutLocal);\n\n/* ---------- navigation ---------- */\ndocument.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.view)));\nfunction go(v){\n  ['chat','files','members'].forEach(x=>$('view-'+x)?.classList.toggle('hidden',x!==v));\n  document.querySelectorAll('nav button').forEach(b=>{ b.classList.toggle('active',b.dataset.view===v); b.setAttribute('aria-current', b.dataset.view===v?'page':'false'); });\n  if(v==='chat') scrollFeed();\n}\n\n/* ---------- chat ---------- */\nfunction scrollFeed(){ const f=$('feed'); if(f) f.scrollTop=f.scrollHeight; }\nfunction renderChat(){\n  const feed=$('feed'); if(!feed) return;\n  const msgs=store.list('messages').slice().sort((a,b)=>a.at-b.at);\n  if(!msgs.length){ feed.innerHTML='<div class=\"empty\">No messages yet. Say hi to your group 👋</div>'; return; }\n  feed.innerHTML = msgs.map(m=>{\n    const a=store.member(m.by), mine=m.by===meId;\n    let body='';\n    if(m.type==='text') body=`<div class=\"bubble\">${esc(m.text)}</div>`;\n    else if(m.type==='file'){\n      const f=store.list('files').find(x=>x.id===m.fileId);\n      body=`<div class=\"bubble\">Shared a file<div class=\"filechip\">${fileIcon(f?.kind)} <span>${esc(f?.name||'File removed')}</span></div><button class=\"ghost\" style=\"margin-top:.4rem;padding:.25rem .6rem;font-size:.8rem\" data-open-files>View in Files</button></div>`;\n    } else if(m.type==='session'){\n      const counts={going:0,maybe:0,no:0}; Object.values(m.rsvp||{}).forEach(v=>counts[v]++);\n      const mineR=(m.rsvp||{})[meId];\n      body=`<div class=\"bubble session\"><strong>📅 ${esc(m.title)}</strong><div class=\"muted\">${esc(fmtWhen(m.when))} · ${esc(m.where)}</div>\n      <div class=\"rsvp\">${[['going','✅ Going'],['maybe','🤔 Maybe'],['no','❌ Can\\'t']].map(([k,l])=>`<button data-rsvp=\"${k}\" data-id=\"${m.id}\" class=\"${mineR===k?'on':''}\" aria-pressed=\"${mineR===k}\">${l} ${counts[k]}</button>`).join('')}</div></div>`;\n    }\n    const reacts=['👍','🎉','💡'].map(r=>{ const l=(m.reacts||{})[r]||[]; return `<button data-react=\"${r}\" data-id=\"${m.id}\" class=\"${l.includes(meId)?'on':''}\" aria-label=\"React ${r}\">${r}${l.length?' '+l.length:''}</button>`; }).join('');\n    return `<div class=\"msg ${mine?'mine':''}\"><div class=\"meta\">${esc(a?.nick||'Former member')} · ${ago(m.at)}</div>${body}<div class=\"reacts\">${reacts}</div></div>`;\n  }).join('');\n}\n$('feed').addEventListener('click', e=>{\n  const r=e.target.closest('[data-react]'), s=e.target.closest('[data-rsvp]'), o=e.target.closest('[data-open-files]');\n  if(r){ store.update('messages',r.dataset.id,m=>{ m.reacts=m.reacts||{}; const l=m.reacts[r.dataset.react]=m.reacts[r.dataset.react]||[]; const i=l.indexOf(meId); i>=0?l.splice(i,1):l.push(meId); }); renderChat(); }\n  if(s){ store.update('messages',s.dataset.id,m=>{ m.rsvp=m.rsvp||{}; m.rsvp[meId]===s.dataset.rsvp? delete m.rsvp[meId] : m.rsvp[meId]=s.dataset.rsvp; }); renderChat(); }\n  if(o) go('files');\n});\n$('composer').addEventListener('submit', e=>{\n  e.preventDefault(); const inp=$('msgInput'); const text=inp.value.trim();\n  if(!text){ inp.focus(); return; }\n  store.add('messages',{id:uid(),type:'text',by:meId,at:Date.now(),text,reacts:{}});\n  inp.value=''; touch(); renderAll(); scrollFeed();\n});\n\n/* ---------- scheduling ---------- */\nfunction openDlg(d){ try{ d.showModal(); }catch{ d.setAttribute('open',''); } }\nfunction closeDlg(d){ try{ d.close(); }catch{ d.removeAttribute('open'); } }\n$('schedBtn').addEventListener('click',()=>{ $('schedForm').reset(); $('schedErr').textContent=''; openDlg($('schedDlg')); $('sTitle').focus(); });\n$('schedCancel').addEventListener('click',()=>closeDlg($('schedDlg')));\n$('schedForm').addEventListener('submit', e=>{\n  e.preventDefault();\n  const title=$('sTitle').value.trim(), when=new Date($('sWhen').value).getTime(), where=$('sWhere').value.trim();\n  if(!title||!where||isNaN(when)){ $('schedErr').textContent='Please fill in topic, time and place.'; return; }\n  if(when<Date.now()){ $('schedErr').textContent='Pick a time in the future.'; return; }\n  store.add('messages',{id:uid(),type:'session',by:meId,at:Date.now(),title,when,where,rsvp:{[meId]:'going'},reacts:{}});\n  closeDlg($('schedDlg')); touch(); go('chat'); renderAll(); scrollFeed(); toast('Session proposed 📅');\n});\n\n/* ---------- files ---------- */\nfunction kindOf(f){ if(f.type==='application/pdf'||/\\.pdf$/i.test(f.name)) return 'pdf'; if(f.type.startsWith('image/')) return 'image'; return 'other'; }\n['attachBtn','uploadBtn'].forEach(id=>$(id).addEventListener('click',()=>$('fileInput').click()));\n$('fileInput').addEventListener('change', e=>{\n  const f=e.target.files[0]; if(!f) return;\n  if(f.size>25e6){ toast('Files must be under 25 MB.'); e.target.value=''; return; }\n  const finish=data=>{\n    const rec=store.add('files',{id:uid(),name:f.name,kind:kindOf(f),size:f.size,by:meId,at:Date.now(),data});\n    store.add('messages',{id:uid(),type:'file',by:meId,at:Date.now(),fileId:rec.id,reacts:{}});\n    e.target.value=''; touch(); renderAll(); scrollFeed(); toast(`Shared ${f.name}`);\n  };\n  if(f.size<300000){ const r=new FileReader(); r.onload=()=>finish(r.result); r.onerror=()=>finish(null); r.readAsDataURL(f); } else finish(null);\n});\n$('noteBtn').addEventListener('click',()=>{ $('noteForm').reset(); $('noteErr').textContent=''; openDlg($('noteDlg')); $('nTitle').focus(); });\n$('noteCancel').addEventListener('click',()=>closeDlg($('noteDlg')));\n$('noteForm').addEventListener('submit', e=>{\n  e.preventDefault(); const name=$('nTitle').value.trim(), body=$('nBody').value.trim();\n  if(!name||!body){ $('noteErr').textContent='Add a title and some content.'; return; }\n  const rec=store.add('files',{id:uid(),name,kind:'note',body,by:meId,at:Date.now()});\n  store.add('messages',{id:uid(),type:'file',by:meId,at:Date.now(),fileId:rec.id,reacts:{}});\n  closeDlg($('noteDlg')); touch(); renderAll(); toast('Note shared 📝');\n});\n$('fileSearch').addEventListener('input',renderFiles);\n$('fileFilter').addEventListener('change',renderFiles);\nconst openNotes=new Set();\nfunction renderFiles(){\n  const el=$('fileList'); if(!el) return;\n  const q=$('fileSearch').value.trim().toLowerCase(), t=$('fileFilter').value;\n  const list=store.list('files').filter(f=>(t==='all'||f.kind===t)&&(!q||f.name.toLowerCase().includes(q)||(f.body||'').toLowerCase().includes(q))).sort((a,b)=>b.at-a.at);\n  if(!list.length){ el.innerHTML='<div class=\"empty card\">No files match. Upload notes or share one from chat.</div>'; return; }\n  el.innerHTML=list.map(f=>{\n    const by=store.member(f.by)?.nick||'Former member';\n    let action='';\n    if(f.kind==='note') action=`<button class=\"ghost\" data-note=\"${f.id}\">${openNotes.has(f.id)?'Hide':'Read'}</button>`;\n    else if(f.data) action=`<a href=\"${esc(f.data)}\" download=\"${esc(f.name)}\"><button class=\"ghost\" tabindex=\"-1\">Download</button></a>`;\n    const preview = f.kind==='image'&&f.data ? `<img src=\"${esc(f.data)}\" alt=\"${esc(f.name)}\" style=\"max-width:100%;border-radius:10px;margin-top:.5rem\">` : '';\n    return `<div class=\"card\"><div class=\"item\"><div style=\"font-size:1.6rem\">${fileIcon(f.kind)}</div><div class=\"grow\"><div class=\"name\">${esc(f.name)}</div><div class=\"muted\">${esc(by)} · ${ago(f.at)}${f.size?' · '+fmtSize(f.size):''}</div></div>${action}</div>${f.kind==='note'&&openNotes.has(f.id)?`<pre class=\"note\">${esc(f.body)}</pre>`:''}${preview}</div>`;\n  }).join('');\n}\n$('fileList').addEventListener('click',e=>{ const b=e.target.closest('[data-note]'); if(!b) return; const id=b.dataset.note; openNotes.has(id)?openNotes.delete(id):openNotes.add(id); renderFiles(); });\n\n/* ---------- members & settings ---------- */\nfunction renderMembers(){\n  const el=$('memberList'); if(!el) return;\n  const ms=store.list('members').slice().sort((a,b)=>(b.id===meId)-(a.id===meId)||b.lastSeen-a.lastSeen);\n  el.innerHTML=ms.map(m=>`<div class=\"card item\">${ava(m)}<div class=\"grow\"><div class=\"name\">${esc(m.nick)}${m.id===meId?' (you)':''}</div><div class=\"muted\">${online(m)?'Active now':'Last seen '+ago(m.lastSeen)}</div></div><span class=\"pill ${online(m)?'':'off'}\">${online(m)?'online':'away'}</span></div>`).join('');\n  if(me() && document.activeElement!==$('profNick')) $('profNick').value=me().nick;\n  $('inviteLink').value=LINK_BASE+store.state.room.code;\n  const on=storage.get(NOTIFKEY)!==false; $('notifToggle').checked=on;\n  let perm=''; try{ perm='Notification' in window? Notification.permission : 'unsupported'; }catch{ perm='unsupported'; }\n  $('notifState').textContent = !on ? 'Notifications are off.' : perm==='granted' ? 'In-app and browser alerts are on.' : 'In-app alerts are on.';\n}\n$('profileForm').addEventListener('submit',e=>{\n  e.preventDefault(); const nick=$('profNick').value.trim(), err=$('profErr');\n  if(!/^[\\p{L}\\p{N} _.-]{2,20}$/u.test(nick)){ err.textContent='Nickname must be 2–20 letters, numbers, spaces or _ . -'; return; }\n  if(nickTaken(nick,meId)){ err.textContent=`\"${nick}\" is already taken.`; return; }\n  err.textContent=''; store.update('members',meId,m=>m.nick=nick); renderAll(); toast('Profile updated');\n});\n$('notifToggle').addEventListener('change',e=>{\n  storage.set(NOTIFKEY,e.target.checked);\n  if(e.target.checked){ try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission().then(renderMembers).catch(()=>{}); }catch{} }\n  renderMembers(); toast(e.target.checked?'Notifications on 🔔':'Notifications off 🔕');\n});\nasync function copyInvite(){\n  const link=LINK_BASE+store.state.room.code;\n  try{ await navigator.clipboard.writeText(link); toast('Invite link copied'); }\n  catch{ const i=$('inviteLink'); i.value=link; i.select(); try{ document.execCommand('copy'); toast('Invite link copied'); }catch{ toast('Select the link to copy it'); } }\n}\n$('copyLink').addEventListener('click',copyInvite);\n$('inviteBtn').addEventListener('click',()=>{ go('members'); copyInvite(); $('inviteLink').scrollIntoView({behavior:'smooth',block:'center'}); });\n$('regenLink').addEventListener('click',()=>{ store.state.room.code=newCode(); store.save(); renderMembers(); toast('New invite link created. Old links no longer work.'); });\n\nfunction renderHeader(){\n  $('roomTitle').textContent=store.state.room.name;\n  const n=store.list('members').length, on=store.list('members').filter(online).length;\n  $('roomSub').textContent=`${n} members · ${on} online`;\n}\nfunction renderAll(){ if(!me()) return; renderHeader(); renderChat(); renderFiles(); renderMembers(); }\n\nrt.init();\nsetInterval(()=>{ if(me()){ renderHeader(); renderMembers(); } },60000);\ndocument.addEventListener('visibilitychange',()=>{ if(!document.hidden) touch(); });\nif(me()){ touch(); showApp(); } else showAuth();\n</script>\n</body>\n</html>",
    "trace": {
-    "n1": [
-     "e1"
-    ],
-    "n5": [
+    "n11": [
+     "e1",
      "e2",
-     "e3",
-     "e12",
-     "e19",
-     "e20"
+     "e7"
     ],
-    "n6": [
-     "e4",
-     "e9",
-     "e14",
-     "e19"
-    ],
-    "n8": [
+    "n24": [
+     "e1",
+     "e2",
      "e5",
      "e6",
      "e7",
-     "e8",
-     "e12"
-    ],
-    "n2": [
      "e9",
-     "e10",
+     "e25",
+     "e27",
+     "e28",
+     "e29",
+     "e30"
+    ],
+    "n16": [
+     "e2",
+     "e4",
+     "e24"
+    ],
+    "n35": [
+     "e2",
+     "e5",
+     "e27"
+    ],
+    "n6": [
+     "e3",
+     "e8"
+    ],
+    "n1": [
+     "e3",
+     "e8"
+    ],
+    "n15": [
+     "e8",
+     "e11",
+     "e31"
+    ],
+    "n25": [
+     "e9",
+     "e12",
      "e13",
      "e14",
+     "e16",
+     "e20",
+     "e28"
+    ],
+    "n12": [
+     "e10",
+     "e11",
+     "e12",
+     "e32"
+    ],
+    "n20": [
+     "e10",
+     "e11",
+     "e15",
      "e16"
     ],
-    "n4": [
-     "e11",
-     "e13"
-    ],
-    "n3": [
+    "n21": [
      "e13",
-     "e16",
-     "e18"
-    ],
-    "n7": [
-     "e15",
      "e17",
-     "e18"
+     "e20",
+     "e21",
+     "e22",
+     "e36"
+    ],
+    "n22": [
+     "e14",
+     "e35"
+    ],
+    "n13": [
+     "e17",
+     "e18",
+     "e19",
+     "e22",
+     "e33"
+    ],
+    "n27": [
+     "e22"
+    ],
+    "n14": [
+     "e23",
+     "e24",
+     "e25",
+     "e34"
+    ],
+    "n29": [
+     "e24"
+    ],
+    "n23": [
+     "e26",
+     "e37"
+    ],
+    "n33": [
+     "e26"
+    ],
+    "n17": [
+     "e27"
+    ],
+    "n10": [
+     "e31"
+    ],
+    "n9": [
+     "e31"
     ]
    },
-   "checkpoint_id": "c2"
+   "checkpoint_id": "c2",
+   "audit": {
+    "totalElements": 107,
+    "tracedElements": 35,
+    "coveragePct": 33,
+    "nodeBreakdown": {
+     "n11": 3,
+     "n24": 11,
+     "n16": 3,
+     "n35": 3,
+     "n6": 2,
+     "n1": 2,
+     "n15": 3,
+     "n25": 7,
+     "n12": 4,
+     "n20": 4,
+     "n21": 5,
+     "n22": 1,
+     "n13": 5,
+     "n27": 1,
+     "n14": 4,
+     "n29": 1,
+     "n23": 2,
+     "n33": 1,
+     "n17": 1,
+     "n10": 1,
+     "n9": 1
+    },
+    "untracedNodes": [
+     "n2",
+     "n3",
+     "n4",
+     "n5",
+     "n7",
+     "n8",
+     "n18",
+     "n19",
+     "n26",
+     "n28",
+     "n30",
+     "n31",
+     "n32",
+     "n34"
+    ]
+   }
   }
  ],
  "checkpoints": [
   {
    "id": "c1",
-   "label": "Turn 1: 8 bubbles changed",
+   "label": "Turn 1: 35 bubbles changed",
    "turn": 1,
    "map": {
     "nodes": [
      {
       "id": "n1",
-      "label": "Study Group Chat",
-      "detail": "A chat application for members of the user's study group to communicate.",
+      "label": "Study group chat app",
+      "detail": "Chat space for a study group",
       "kind": "goal",
       "source": "user",
       "inventiveness": 0,
@@ -235,102 +912,490 @@
       "status": "proposed",
       "parent": null,
       "evidence": [
-       "I want a chat app for my study group"
+       "chat app for my study group"
       ],
-      "turn": 1
+      "turn": 1,
+      "facet": "goal"
      },
      {
       "id": "n2",
-      "label": "Group Chat Room",
-      "detail": "Shared conversation space where all study group members exchange messages.",
-      "kind": "feature",
-      "source": "user",
+      "label": "Design",
+      "detail": "Look, feel and screens",
+      "kind": "constraint",
+      "source": "inferred",
       "inventiveness": 0,
-      "importance": 5,
+      "importance": 3,
       "status": "proposed",
       "parent": "n1",
-      "evidence": [
-       "chat app for my study group"
-      ],
-      "turn": 1
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
      },
      {
       "id": "n3",
-      "label": "Real-time Messaging",
-      "detail": "Messages appear instantly for all members via a websocket or realtime service.",
-      "kind": "api",
+      "label": "Audience",
+      "detail": "Who uses it and why",
+      "kind": "constraint",
       "source": "inferred",
-      "inventiveness": 0.1,
-      "importance": 5,
-      "status": "proposed",
-      "parent": "n2",
-      "evidence": [],
-      "turn": 1
-     },
-     {
-      "id": "n4",
-      "label": "Message Data Model",
-      "detail": "Stores messages with sender, timestamp, content, and group reference.",
-      "kind": "data",
-      "source": "inferred",
-      "inventiveness": 0.05,
-      "importance": 4,
-      "status": "proposed",
-      "parent": "n2",
-      "evidence": [],
-      "turn": 1
-     },
-     {
-      "id": "n5",
-      "label": "How do members join?",
-      "detail": "Decide on login and invites: invite link, email signup, or social login.",
-      "kind": "feature",
-      "source": "unknown",
       "inventiveness": 0,
-      "importance": 5,
+      "importance": 3,
       "status": "proposed",
       "parent": "n1",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n4",
+      "label": "Functionality",
+      "detail": "Features, data and backend",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n1",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n5",
+      "label": "Cost",
+      "detail": "Running and growth costs",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n1",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
      },
      {
       "id": "n6",
-      "label": "Chat Page",
-      "detail": "Main screen showing message history, member list, and message input box.",
+      "label": "Brand: calm, focused, friendly",
+      "detail": "Studious but casual peer vibe",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n7",
+      "label": "Color: soft blues and greens",
+      "detail": "Low-strain palette for long sessions",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n8",
+      "label": "Font: clean sans-serif",
+      "detail": "Inter for readable messages",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n9",
+      "label": "Size: mobile-first, responsive",
+      "detail": "Phone primary, desktop for study sessions",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n10",
+      "label": "Pages: core chat screens",
+      "detail": "Minimal set of screens",
       "kind": "page",
       "source": "inferred",
       "inventiveness": 0.1,
       "importance": 4,
       "status": "proposed",
-      "parent": "n1",
+      "parent": "n2",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "design"
      },
      {
-      "id": "n7",
-      "label": "File and Notes Sharing",
-      "detail": "Members can upload study notes, PDFs, and images into the chat.",
-      "kind": "feature",
+      "id": "n11",
+      "label": "Sign-in / invite page",
+      "detail": "Join group via invite link",
+      "kind": "page",
       "source": "inferred",
-      "inventiveness": 0.4,
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n12",
+      "label": "Group chat room",
+      "detail": "Main message feed with composer",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n13",
+      "label": "Shared files page",
+      "detail": "Browse notes and uploads",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.5,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n14",
+      "label": "Members & settings page",
+      "detail": "Member list, profile, notifications",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n15",
+      "label": "Usability: minimal, distraction-free",
+      "detail": "Few menus, clear message threads",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.3,
       "importance": 3,
       "status": "proposed",
       "parent": "n2",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "design"
      },
      {
-      "id": "n8",
-      "label": "One group or many?",
-      "detail": "Is this for a single study group, or should multiple groups be supported?",
+      "id": "n16",
+      "label": "Users: your study group",
+      "detail": "Students in one group",
+      "kind": "constraint",
+      "source": "user",
+      "inventiveness": 0,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n3",
+      "evidence": [
+       "my study group"
+      ],
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n17",
+      "label": "Market: private or public product?",
+      "detail": "Just your group, or any group?",
       "kind": "constraint",
       "source": "unknown",
       "inventiveness": 0,
       "importance": 4,
       "status": "proposed",
-      "parent": "n1",
+      "parent": "n3",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n18",
+      "label": "Research: quick coordination needs",
+      "detail": "Students share notes, plan sessions",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n3",
+      "evidence": [],
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n19",
+      "label": "Features: study-focused chat",
+      "detail": "Messaging plus study tools",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n20",
+      "label": "Real-time group messaging",
+      "detail": "Live messages for whole group",
+      "kind": "feature",
+      "source": "user",
+      "inventiveness": 0,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [
+       "chat app"
+      ],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n21",
+      "label": "File and notes sharing",
+      "detail": "Upload PDFs, images, notes",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.5,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n22",
+      "label": "Study session scheduling",
+      "detail": "Propose and RSVP meetups",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.7,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n23",
+      "label": "Push notifications",
+      "detail": "Alert on new messages",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n24",
+      "label": "How do members sign in?",
+      "detail": "Google, email link, or invite?",
+      "kind": "feature",
+      "source": "unknown",
+      "inventiveness": 0,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n25",
+      "label": "Buttons: send, attach, invite",
+      "detail": "Plus react and schedule session",
+      "kind": "component",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n26",
+      "label": "AI integration: want any?",
+      "detail": "E.g. summarize chats, quiz generation",
+      "kind": "feature",
+      "source": "unknown",
+      "inventiveness": 0,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n27",
+      "label": "Storage: Postgres + file bucket",
+      "detail": "Users, groups, messages, files, sessions",
+      "kind": "data",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n28",
+      "label": "Hosting: serverless + realtime DB",
+      "detail": "Vercel frontend, Supabase backend",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n29",
+      "label": "Scale: under 50 users",
+      "detail": "One group; small realtime load",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n30",
+      "label": "APIs: free tiers likely",
+      "detail": "About $0/month at this scale",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n31",
+      "label": "Realtime backend (Supabase)",
+      "detail": "Free tier covers small group",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n32",
+      "label": "Auth service",
+      "detail": "Supabase Auth or Google OAuth",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n33",
+      "label": "Push service (FCM)",
+      "detail": "Free web/mobile push delivery",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n34",
+      "label": "AI usage: none for now",
+      "detail": "Depends on AI decision",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n35",
+      "label": "Advertising: none, invite-only",
+      "detail": "Shared by link within group",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 1,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
      }
     ],
     "edges": [
@@ -340,22 +1405,22 @@
       "relation": "has"
      },
      {
-      "from": "n2",
+      "from": "n1",
       "to": "n3",
-      "relation": "needs"
+      "relation": "has"
      },
      {
-      "from": "n2",
+      "from": "n1",
       "to": "n4",
-      "relation": "needs"
+      "relation": "has"
      },
      {
       "from": "n1",
       "to": "n5",
-      "relation": "needs"
+      "relation": "has"
      },
      {
-      "from": "n1",
+      "from": "n2",
       "to": "n6",
       "relation": "has"
      },
@@ -365,13 +1430,193 @@
       "relation": "has"
      },
      {
-      "from": "n1",
+      "from": "n2",
       "to": "n8",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n9",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n10",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n11",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n12",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n13",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n14",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n15",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n16",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n17",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n18",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n19",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n20",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n21",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n22",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n23",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n24",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n25",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n26",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n27",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n28",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n29",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n30",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n31",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n32",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n33",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n34",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n35",
+      "relation": "has"
+     },
+     {
+      "from": "n16",
+      "to": "n6",
+      "relation": "informs"
+     },
+     {
+      "from": "n18",
+      "to": "n15",
+      "relation": "informs"
+     },
+     {
+      "from": "n18",
+      "to": "n35",
+      "relation": "informs"
+     },
+     {
+      "from": "n16",
+      "to": "n19",
+      "relation": "informs"
+     },
+     {
+      "from": "n10",
+      "to": "n19",
       "relation": "needs"
      },
      {
-      "from": "n8",
-      "to": "n4",
+      "from": "n19",
+      "to": "n30",
+      "relation": "informs"
+     },
+     {
+      "from": "n28",
+      "to": "n30",
+      "relation": "informs"
+     },
+     {
+      "from": "n29",
+      "to": "n28",
+      "relation": "informs"
+     },
+     {
+      "from": "n26",
+      "to": "n34",
+      "relation": "informs"
+     },
+     {
+      "from": "n17",
+      "to": "n29",
       "relation": "informs"
      }
     ]
@@ -385,8 +1630,8 @@
     "nodes": [
      {
       "id": "n1",
-      "label": "Study Group Chat",
-      "detail": "A chat application for members of the user's study group to communicate.",
+      "label": "Study group chat app",
+      "detail": "Chat space for a study group",
       "kind": "goal",
       "source": "user",
       "inventiveness": 0,
@@ -394,102 +1639,490 @@
       "status": "approved",
       "parent": null,
       "evidence": [
-       "I want a chat app for my study group"
+       "chat app for my study group"
       ],
-      "turn": 1
+      "turn": 1,
+      "facet": "goal"
      },
      {
       "id": "n2",
-      "label": "Group Chat Room",
-      "detail": "Shared conversation space where all study group members exchange messages.",
-      "kind": "feature",
-      "source": "user",
+      "label": "Design",
+      "detail": "Look, feel and screens",
+      "kind": "constraint",
+      "source": "inferred",
       "inventiveness": 0,
-      "importance": 5,
-      "status": "approved",
+      "importance": 3,
+      "status": "proposed",
       "parent": "n1",
-      "evidence": [
-       "chat app for my study group"
-      ],
-      "turn": 1
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
      },
      {
       "id": "n3",
-      "label": "Real-time Messaging",
-      "detail": "Messages appear instantly for all members via a websocket or realtime service.",
-      "kind": "api",
+      "label": "Audience",
+      "detail": "Who uses it and why",
+      "kind": "constraint",
       "source": "inferred",
-      "inventiveness": 0.1,
-      "importance": 5,
+      "inventiveness": 0,
+      "importance": 3,
       "status": "proposed",
-      "parent": "n2",
+      "parent": "n1",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "audience"
      },
      {
       "id": "n4",
-      "label": "Message Data Model",
-      "detail": "Stores messages with sender, timestamp, content, and group reference.",
-      "kind": "data",
+      "label": "Functionality",
+      "detail": "Features, data and backend",
+      "kind": "constraint",
       "source": "inferred",
-      "inventiveness": 0.05,
-      "importance": 4,
+      "inventiveness": 0,
+      "importance": 3,
       "status": "proposed",
-      "parent": "n2",
+      "parent": "n1",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "functionality"
      },
      {
       "id": "n5",
-      "label": "Nickname-Only Join",
-      "detail": "Members join via the room link by entering a nickname, with no accounts or passwords. The nickname and a random device ID are saved in localStorage so returning members are recognized automatically.",
-      "kind": "feature",
-      "source": "unknown",
+      "label": "Cost",
+      "detail": "Running and growth costs",
+      "kind": "constraint",
+      "source": "inferred",
       "inventiveness": 0,
-      "importance": 5,
-      "status": "approved",
+      "importance": 3,
+      "status": "proposed",
       "parent": "n1",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "cost"
      },
      {
       "id": "n6",
-      "label": "Chat Page",
-      "detail": "Main screen showing message history, member list, and message input box.",
+      "label": "Brand: calm, focused, friendly",
+      "detail": "Studious but casual peer vibe",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n7",
+      "label": "Color: soft blues and greens",
+      "detail": "Low-strain palette for long sessions",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n8",
+      "label": "Font: clean sans-serif",
+      "detail": "Inter for readable messages",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n9",
+      "label": "Size: mobile-first, responsive",
+      "detail": "Phone primary, desktop for study sessions",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n2",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n10",
+      "label": "Pages: core chat screens",
+      "detail": "Minimal set of screens",
       "kind": "page",
       "source": "inferred",
       "inventiveness": 0.1,
       "importance": 4,
       "status": "proposed",
-      "parent": "n1",
+      "parent": "n2",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "design"
      },
      {
-      "id": "n7",
-      "label": "File and Notes Sharing",
-      "detail": "Members can upload study notes, PDFs, and images into the chat.",
-      "kind": "feature",
+      "id": "n11",
+      "label": "Sign-in / invite page",
+      "detail": "Join group via invite link",
+      "kind": "page",
       "source": "inferred",
-      "inventiveness": 0.4,
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n12",
+      "label": "Group chat room",
+      "detail": "Main message feed with composer",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n13",
+      "label": "Shared files page",
+      "detail": "Browse notes and uploads",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.5,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n14",
+      "label": "Members & settings page",
+      "detail": "Member list, profile, notifications",
+      "kind": "page",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n10",
+      "evidence": [],
+      "turn": 1,
+      "facet": "design"
+     },
+     {
+      "id": "n15",
+      "label": "Usability: minimal, distraction-free",
+      "detail": "Few menus, clear message threads",
+      "kind": "style",
+      "source": "inferred",
+      "inventiveness": 0.3,
       "importance": 3,
       "status": "proposed",
       "parent": "n2",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "design"
      },
      {
-      "id": "n8",
-      "label": "One group or many?",
-      "detail": "Is this for a single study group, or should multiple groups be supported?",
+      "id": "n16",
+      "label": "Users: your study group",
+      "detail": "Students in one group",
+      "kind": "constraint",
+      "source": "user",
+      "inventiveness": 0,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n3",
+      "evidence": [
+       "my study group"
+      ],
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n17",
+      "label": "Market: private or public product?",
+      "detail": "Just your group, or any group?",
       "kind": "constraint",
       "source": "unknown",
       "inventiveness": 0,
       "importance": 4,
       "status": "proposed",
-      "parent": "n1",
+      "parent": "n3",
       "evidence": [],
-      "turn": 1
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n18",
+      "label": "Research: quick coordination needs",
+      "detail": "Students share notes, plan sessions",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.4,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n3",
+      "evidence": [],
+      "turn": 1,
+      "facet": "audience"
+     },
+     {
+      "id": "n19",
+      "label": "Features: study-focused chat",
+      "detail": "Messaging plus study tools",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n20",
+      "label": "Real-time group messaging",
+      "detail": "Live messages for whole group",
+      "kind": "feature",
+      "source": "user",
+      "inventiveness": 0,
+      "importance": 5,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [
+       "chat app"
+      ],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n21",
+      "label": "File and notes sharing",
+      "detail": "Upload PDFs, images, notes",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.5,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n22",
+      "label": "Study session scheduling",
+      "detail": "Propose and RSVP meetups",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.7,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n23",
+      "label": "Push notifications",
+      "detail": "Alert on new messages",
+      "kind": "feature",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n24",
+      "label": "Nickname + room link sign-in",
+      "detail": "Members join through a shared, regenerable room link and choose a unique nickname, with no passwords. Supabase anonymous auth keeps a persistent session on each device.",
+      "kind": "feature",
+      "source": "unknown",
+      "inventiveness": 0,
+      "importance": 4,
+      "status": "approved",
+      "parent": "n19",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n25",
+      "label": "Buttons: send, attach, invite",
+      "detail": "Plus react and schedule session",
+      "kind": "component",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n26",
+      "label": "AI integration: want any?",
+      "detail": "E.g. summarize chats, quiz generation",
+      "kind": "feature",
+      "source": "unknown",
+      "inventiveness": 0,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n27",
+      "label": "Storage: Postgres + file bucket",
+      "detail": "Users, groups, messages, files, sessions",
+      "kind": "data",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n28",
+      "label": "Hosting: serverless + realtime DB",
+      "detail": "Vercel frontend, Supabase backend",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n29",
+      "label": "Scale: under 50 users",
+      "detail": "One group; small realtime load",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n4",
+      "evidence": [],
+      "turn": 1,
+      "facet": "functionality"
+     },
+     {
+      "id": "n30",
+      "label": "APIs: free tiers likely",
+      "detail": "About $0/month at this scale",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 3,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n31",
+      "label": "Realtime backend (Supabase)",
+      "detail": "Free tier covers small group",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n32",
+      "label": "Auth service",
+      "detail": "Supabase Auth or Google OAuth",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.2,
+      "importance": 4,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n33",
+      "label": "Push service (FCM)",
+      "detail": "Free web/mobile push delivery",
+      "kind": "api",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n30",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n34",
+      "label": "AI usage: none for now",
+      "detail": "Depends on AI decision",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.1,
+      "importance": 2,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
+     },
+     {
+      "id": "n35",
+      "label": "Advertising: none, invite-only",
+      "detail": "Shared by link within group",
+      "kind": "constraint",
+      "source": "inferred",
+      "inventiveness": 0.3,
+      "importance": 1,
+      "status": "proposed",
+      "parent": "n5",
+      "evidence": [],
+      "turn": 1,
+      "facet": "cost"
      }
     ],
     "edges": [
@@ -499,22 +2132,22 @@
       "relation": "has"
      },
      {
-      "from": "n2",
+      "from": "n1",
       "to": "n3",
-      "relation": "needs"
+      "relation": "has"
      },
      {
-      "from": "n2",
+      "from": "n1",
       "to": "n4",
-      "relation": "needs"
+      "relation": "has"
      },
      {
       "from": "n1",
       "to": "n5",
-      "relation": "needs"
+      "relation": "has"
      },
      {
-      "from": "n1",
+      "from": "n2",
       "to": "n6",
       "relation": "has"
      },
@@ -524,18 +2157,199 @@
       "relation": "has"
      },
      {
-      "from": "n1",
+      "from": "n2",
       "to": "n8",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n9",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n10",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n11",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n12",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n13",
+      "relation": "has"
+     },
+     {
+      "from": "n10",
+      "to": "n14",
+      "relation": "has"
+     },
+     {
+      "from": "n2",
+      "to": "n15",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n16",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n17",
+      "relation": "has"
+     },
+     {
+      "from": "n3",
+      "to": "n18",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n19",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n20",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n21",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n22",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n23",
+      "relation": "has"
+     },
+     {
+      "from": "n19",
+      "to": "n24",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n25",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n26",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n27",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n28",
+      "relation": "has"
+     },
+     {
+      "from": "n4",
+      "to": "n29",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n30",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n31",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n32",
+      "relation": "has"
+     },
+     {
+      "from": "n30",
+      "to": "n33",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n34",
+      "relation": "has"
+     },
+     {
+      "from": "n5",
+      "to": "n35",
+      "relation": "has"
+     },
+     {
+      "from": "n16",
+      "to": "n6",
+      "relation": "informs"
+     },
+     {
+      "from": "n18",
+      "to": "n15",
+      "relation": "informs"
+     },
+     {
+      "from": "n18",
+      "to": "n35",
+      "relation": "informs"
+     },
+     {
+      "from": "n16",
+      "to": "n19",
+      "relation": "informs"
+     },
+     {
+      "from": "n10",
+      "to": "n19",
       "relation": "needs"
      },
      {
-      "from": "n8",
-      "to": "n4",
+      "from": "n19",
+      "to": "n30",
+      "relation": "informs"
+     },
+     {
+      "from": "n28",
+      "to": "n30",
+      "relation": "informs"
+     },
+     {
+      "from": "n29",
+      "to": "n28",
+      "relation": "informs"
+     },
+     {
+      "from": "n26",
+      "to": "n34",
+      "relation": "informs"
+     },
+     {
+      "from": "n17",
+      "to": "n29",
       "relation": "informs"
      }
     ]
    },
    "build_id": "b1"
   }
- ]
+ ],
+ "turn": null
 }
