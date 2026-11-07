@@ -1,0 +1,252 @@
+/* web/src/mindmap.css */
+
+.mindmap-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #0b1120;
+}
+
+/* React Flow container override */
+.mindmap-wrapper .react-flow {
+  background-color: transparent;
+}
+
+/* Custom Node Styles */
+.mindmap-node {
+  min-width: 140px;
+  max-width: 220px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.mindmap-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.4);
+}
+
+.mindmap-node-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.mindmap-node-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.7rem;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mindmap-kind-tag {
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+/* Sources & Statuses */
+/* 1. User: Solid Blue */
+.source-user {
+  border: 2px solid #3b82f6;
+  background: linear-gradient(145deg, #1e293b 0%, rgba(37, 99, 235, 0.15) 100%);
+}
+
+/* 2. Inferred Low: Pale Amber Dashed */
+.source-inferred-low {
+  border: 2px dashed #f59e0b;
+  background: linear-gradient(145deg, #1e293b 0%, rgba(245, 158, 11, 0.1) 100%);
+}
+
+/* 3. Inferred High: Deep Amber Dashed */
+.source-inferred-high {
+  border: 2px dashed #d97706;
+  background: linear-gradient(145deg, #1e293b 0%, rgba(217, 119, 6, 0.25) 100%);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.15);
+}
+
+/* 4. Unknown: Red Outline + ? */
+.source-unknown {
+  border: 2px solid #ef4444;
+  background: linear-gradient(145deg, #1e293b 0%, rgba(239, 68, 68, 0.15) 100%);
+}
+
+.unknown-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 5. Approved: Green Checkmark */
+.status-approved {
+  border-color: #10b981 !important;
+  background: linear-gradient(145deg, #1e293b 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+}
+
+.approved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #065f46;
+  color: #34d399;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.locked-badge {
+  font-size: 0.7rem;
+}
+
+/* Selected state */
+.node-selected {
+  outline: 3px solid #38bdf8 !important;
+  outline-offset: 2px;
+  transform: scale(1.03);
+}
+
+/* Highlighted state (from preview hover) */
+.node-highlighted {
+  box-shadow: 0 0 0 4px #facc15, 0 0 18px rgba(250, 204, 21, 0.6) !important;
+  animation: pulse-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from {
+    box-shadow: 0 0 0 3px #facc15, 0 0 12px rgba(250, 204, 21, 0.5);
+  }
+  to {
+    box-shadow: 0 0 0 5px #facc15, 0 0 22px rgba(250, 204, 21, 0.8);
+  }
+}
+
+/* Newly changed pulse */
+.node-pulsing {
+  animation: pulse-border 1.2s ease-in-out 3;
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+
+/* Handles */
+.mindmap-handle {
+  width: 8px;
+  height: 8px;
+  background: #64748b;
+  border: 2px solid #1e293b;
+  border-radius: 50%;
+}
+
+/* Corner Legend */
+.mindmap-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  z-index: 5;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.legend-title {
+  font-weight: 600;
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-bullet {
+  width: 14px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-bullet.user {
+  background: rgba(59, 130, 246, 0.3);
+  border: 1.5px solid #3b82f6;
+}
+
+.legend-bullet.inferred-low {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1.5px dashed #f59e0b;
+}
+
+.legend-bullet.inferred-high {
+  background: rgba(217, 119, 6, 0.3);
+  border: 1.5px dashed #d97706;
+}
+
+.legend-bullet.unknown {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1.5px solid #ef4444;
+}
+
+.legend-bullet.approved {
+  background: rgba(16, 185, 129, 0.25);
+  border: 1.5px solid #10b981;
+}
+
+/* Empty map state */
+.mindmap-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.mindmap-empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}

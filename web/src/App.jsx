@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as api from './api';
 import Chat from './Chat';
+import MindMap from './MindMap';
 
 const STORAGE_KEY = 'mindcode_session_id';
 
@@ -10,6 +11,9 @@ export default function App() {
   const [map, setMap] = useState({ nodes: [], edges: [] });
   const [builds, setBuilds] = useState([]);
   const [checkpoints, setCheckpoints] = useState([]);
+  const [hoverNodes, setHoverNodes] = useState([]);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [changedIds, setChangedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [buildLoading, setBuildLoading] = useState(false);
@@ -65,6 +69,9 @@ export default function App() {
       setMap({ nodes: [], edges: [] });
       setBuilds([]);
       setCheckpoints([]);
+      setSelectedNodeId(null);
+      setHoverNodes([]);
+      setChangedIds([]);
     } catch (err) {
       setError(`Failed to create new session: ${err.message}`);
     } finally {
@@ -86,6 +93,10 @@ export default function App() {
       }
       if (res.map) {
         setMap(res.map);
+      }
+      if (res.changed && res.changed.length > 0) {
+        setChangedIds(res.changed);
+        setTimeout(() => setChangedIds([]), 4000);
       }
     } catch (err) {
       setError(`Failed to send message: ${err.message}`);
@@ -147,7 +158,7 @@ export default function App() {
           />
         </section>
 
-        {/* Center Pane: Mind Map (placeholder for Task #7) */}
+        {/* Center Pane: Mind Map (Task #7) */}
         <section className="pane mindmap-pane" aria-label="Mind map pane">
           <div className="pane-header">
             <h2>Mind Map</h2>
@@ -155,25 +166,14 @@ export default function App() {
               {map.nodes?.length || 0} bubble{map.nodes?.length === 1 ? '' : 's'}
             </span>
           </div>
-          <div className="pane-body placeholder-container">
-            <div className="placeholder-card">
-              <div className="placeholder-icon">🧠</div>
-              <h3>Live Mind Map</h3>
-              <p>Bubbles will appear here as you chat (Task #7).</p>
-              {map.nodes?.length > 0 && (
-                <div className="map-summary-preview">
-                  <p><strong>{map.nodes.length} nodes loaded:</strong></p>
-                  <ul>
-                    {map.nodes.slice(0, 5).map((n) => (
-                      <li key={n.id}>
-                        [{n.source}] {n.label}
-                      </li>
-                    ))}
-                    {map.nodes.length > 5 && <li>...and {map.nodes.length - 5} more</li>}
-                  </ul>
-                </div>
-              )}
-            </div>
+          <div className="pane-body">
+            <MindMap
+              map={map}
+              highlighted={hoverNodes}
+              changedIds={changedIds}
+              selectedId={selectedNodeId}
+              onSelect={(n) => setSelectedNodeId(n?.id ?? null)}
+            />
           </div>
         </section>
 
