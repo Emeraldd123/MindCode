@@ -1,7 +1,7 @@
 // All /api routes from docs/api-contract.md. Pure Request -> Response so tests can call it directly.
 import { addCheckpoint, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, traceOf, userTurn } from "./store";
 import type { Storage } from "./storage";
-import { inject } from "./trace";
+import { auditTrace, inject } from "./trace";
 import type { AI, Session } from "./types";
 import demoSession from "./demo/study-group.json";
 
@@ -44,7 +44,12 @@ export async function runBuild(deps: Pick<Deps, "storage" | "ai">, sid: string, 
   let patch: Partial<typeof b>;
   try {
     const html = await deps.ai.buildApp(cp.map, prev);
-    patch = { status: "done", html, trace: traceOf(html, new Set(cp.map.nodes.map((n) => n.id))) };
+    patch = {
+      status: "done",
+      html,
+      trace: traceOf(html, new Set(cp.map.nodes.map((n) => n.id))),
+      audit: auditTrace(html, cp.map),
+    };
   } catch (e) {
     console.error("build failed", e);
     patch = { status: "error", error: (e as Error).message };

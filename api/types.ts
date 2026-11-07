@@ -22,6 +22,14 @@ export interface Edge { from: string; to: string; relation: "has" | "needs" | "i
 export interface MindMap { nodes: MapNode[]; edges: Edge[] }
 export interface Message { role: "user" | "assistant"; text: string; node_id?: string }
 
+export interface BuildAudit {
+  totalElements: number;
+  tracedElements: number;
+  coveragePct: number;
+  nodeBreakdown: Record<string, number>;
+  untracedNodes: string[];
+}
+
 export interface Build {
   id: string;
   status: "pending" | "done" | "error";
@@ -29,6 +37,7 @@ export interface Build {
   html: string;
   trace: Record<string, string[]>;
   checkpoint_id: string;
+  audit?: BuildAudit;
 }
 
 export interface Checkpoint { id: string; label: string; turn: number; map: MindMap; build_id?: string }

@@ -30,6 +30,14 @@ interface MindMap { nodes: Node[]; edges: Edge[]; }
 
 interface Message { role: "user" | "assistant"; text: string; node_id?: string; } // node_id set for bubble brainstorms
 
+interface BuildAudit {
+  totalElements: number;
+  tracedElements: number;
+  coveragePct: number;
+  nodeBreakdown: Record<string, number>;
+  untracedNodes: string[];
+}
+
 interface Build {
   id: string;            // "b1", "b2", ...
   status: "pending" | "done" | "error"; // builds run in a background function; poll until not pending
@@ -37,6 +45,7 @@ interface Build {
   html: string;          // full standalone HTML; every traced element has data-mc="n3 n7"
   trace: Record<string, string[]>; // node id -> list of data-mc-el ids it informed
   checkpoint_id: string;
+  audit?: BuildAudit;    // server-side traceability audit metrics
 }
 
 interface Checkpoint { id: string; label: string; turn: number; map: MindMap; build_id?: string; }
