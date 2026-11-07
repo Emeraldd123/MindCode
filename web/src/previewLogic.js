@@ -117,3 +117,10 @@ export function emptyStep(map) {
   if (!hasApproved) return 2;
   return 3;
 }
+
+/**
+ * Generates the download filename for a build.
+ */
+export function buildDownloadFilename(buildId) {
+  return `mindcode-${buildId}.html`;
+}

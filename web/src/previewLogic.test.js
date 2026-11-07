@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildDownloadFilename,
   buildStage,
   emptyStep,
   formatElapsed,
@@ -105,6 +106,13 @@ describe('previewLogic', () => {
       expect(titleFromHtml('<div>No title here</div>')).toBe('');
       expect(titleFromHtml('')).toBe('');
       expect(titleFromHtml(null)).toBe('');
+    });
+  });
+
+  describe('buildDownloadFilename', () => {
+    it('returns mindcode-${buildId}.html', () => {
+      expect(buildDownloadFilename('b1')).toBe('mindcode-b1.html');
+      expect(buildDownloadFilename('b42')).toBe('mindcode-b42.html');
     });
   });
 
