@@ -232,7 +232,7 @@
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: #0f172a;
+  background: var(--bg-app);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 0.45rem 0.65rem;
@@ -258,7 +258,7 @@
   transform: translateX(-50%);
   border-width: 5px;
   border-style: solid;
-  border-color: #0f172a transparent transparent transparent;
+  border-color: var(--bg-app) transparent transparent transparent;
 }
 
 .checkpoint-item:hover .checkpoint-tooltip,

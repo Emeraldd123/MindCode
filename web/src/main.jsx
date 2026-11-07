@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { createDemoSession } from './api';
 import './styles.css';
+import './ui/theme.css';
 
 const SESSION_KEY = 'mindcode_session_id'; // same key App.jsx restores from
 

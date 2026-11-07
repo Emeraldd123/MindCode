@@ -1,0 +1,89 @@
+/*
+ * MindCode UI theme: Tailwind v4 utilities + shadcn-style tokens.
+ *
+ * Deliberately NO Tailwind preflight (global reset), so the existing CSS — in particular
+ * Oliver & Tenma's bubble styles in mindmap.css — renders exactly as before.
+ *
+ * Look: Obsidian + Claude chat. Warm near-black surfaces, 1px hairline dividers instead of
+ * boxes, typographic hierarchy, and color only where it carries meaning:
+ *   user = orange #d67408, AI/Claude = green #17c894, unknown = red, approved = white.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+/* Utilities are imported UNLAYERED on purpose: the legacy styles.css has an unlayered
+   `* { margin:0; padding:0 }` reset that would otherwise beat every layered utility. */
+@import 'tailwindcss/utilities.css';
+
+:root {
+  --mc-bg: #1c1b1a;          /* app background (warm near-black) */
+  --mc-surface: #232220;     /* panes */
+  --mc-raised: #2c2b28;      /* inputs, user message pill, menus */
+  --mc-hover: #353430;
+  --mc-hairline: rgba(255, 255, 255, 0.07);
+  --mc-hairline-strong: rgba(255, 255, 255, 0.13);
+  --mc-text: #ebe8e2;
+  --mc-muted: #a6a29a;
+  --mc-dim: #6f6b64;
+  --mc-user: #d67408;
+  --mc-ai: #17c894;
+  --mc-unknown: #ef4444;
+  --mc-approved: #ffffff;
+  --mc-focus: rgba(23, 200, 148, 0.45);
+}
+
+/* shadcn / 21st.dev token names, mapped onto the MindCode palette. */
+@theme inline {
+  --color-background: var(--mc-bg);
+  --color-foreground: var(--mc-text);
+  --color-card: var(--mc-surface);
+  --color-card-foreground: var(--mc-text);
+  --color-popover: var(--mc-raised);
+  --color-popover-foreground: var(--mc-text);
+  --color-primary: var(--mc-ai);
+  --color-primary-foreground: #0b1a14;
+  --color-secondary: var(--mc-raised);
+  --color-secondary-foreground: var(--mc-text);
+  --color-muted: var(--mc-raised);
+  --color-muted-foreground: var(--mc-muted);
+  --color-accent: var(--mc-hover);
+  --color-accent-foreground: var(--mc-text);
+  --color-destructive: var(--mc-unknown);
+  --color-border: var(--mc-hairline);
+  --color-input: var(--mc-hairline-strong);
+  --color-ring: var(--mc-focus);
+
+  --color-surface: var(--mc-surface);
+  --color-raised: var(--mc-raised);
+  --color-hairline: var(--mc-hairline);
+  --color-dim: var(--mc-dim);
+  --color-user: var(--mc-user);
+  --color-ai: var(--mc-ai);
+  --color-unknown: var(--mc-unknown);
+  --color-approved: var(--mc-approved);
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Source Serif 4', 'Iowan Old Style', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+/* Minimal base without a full reset: just the app canvas + quiet scrollbars. */
+@layer base {
+  html,
+  body {
+    background: var(--mc-bg);
+    color: var(--mc-text);
+  }
+  .mc-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+  .mc-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .mc-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
+  .mc-scroll::-webkit-scrollbar-track { background: transparent; }
+  :focus-visible { outline: 2px solid var(--mc-focus); outline-offset: 2px; }
+}

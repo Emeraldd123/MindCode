@@ -1,21 +1,21 @@
 /* web/src/styles.css */
 :root {
-  --bg-app: #0f172a;
-  --bg-pane: #1e293b;
-  --bg-pane-subtle: #334155;
-  --bg-input: #0f172a;
-  --border-color: #334155;
-  --border-focus: #38bdf8;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --bg-app: #1c1b1a;           /* warm near-black (Obsidian/Claude look, see ui/theme.css) */
+  --bg-pane: #232220;
+  --bg-pane-subtle: #2c2b28;
+  --bg-input: #1c1b1a;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(23, 200, 148, 0.55);
+  --text-main: #ebe8e2;
+  --text-muted: #a6a29a;
+  --text-dim: #6f6b64;
+  --primary: #17c894;
+  --primary-hover: #13a97d;
   --accent-user: #d67408;       /* Ben: user input = orange */
   --accent-inferred: #17c894;   /* Ben: AI = green */
   --accent-unknown: #ef4444;    /* Red */
-  --accent-approved: #10b981;   /* Green */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --accent-approved: #ffffff;   /* approved = white (green is reserved for AI) */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
