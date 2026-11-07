@@ -804,3 +804,15 @@ describe("abuse protection & input limits", () => {
     expect(b3.status).toBe(200);
   });
 });
+
+describe("bubble suggestions + build quality", () => {
+  it("chat returns Claude's suggested sub-bubbles minus ones already on the map; builds carry a quality report", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    ai.nodeChat = async () => ({ reply: "ok", suggest: [{ label: "Read receipts", detail: "Show who has seen a message" }, { label: "Main page", detail: "dup" }] });
+    const r = (await call("POST", `/sessions/${id}/nodes/n2/chat`, { text: "what else?" })).body;
+    expect(r.suggest.map((x: { label: string }) => x.label)).toEqual(["Read receipts"]);
+    const b = (await call("POST", `/sessions/${id}/build`)).body;
+    expect(typeof b.quality.score).toBe("number");
+  });
+});

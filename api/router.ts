@@ -2,6 +2,7 @@
 import { describeDiff, diffSize, mapDiff, addCheckpoint, addEdge, addNode, BIG_CHANGE, findNode, mergeMap, newSession, publicSession, removeEdge, removeNode, traceOf, userTurn } from "./store";
 import type { Storage } from "./storage";
 import { auditTrace, inject } from "./trace";
+import { checkQuality } from "./quality";
 import type { AI, ChangeRequest, Session } from "./types";
 import demoSession from "./demo/study-group.json";
 
@@ -109,6 +110,7 @@ export async function runBuild(deps: Pick<Deps, "storage" | "ai">, sid: string, 
       html,
       trace: traceOf(html, new Set(cp.map.nodes.map((n) => n.id))),
       audit: auditTrace(html, cp.map),
+      quality: checkQuality(html),
     };
   } catch (e) {
     console.error("build failed", e);
@@ -287,7 +289,9 @@ async function route(req: Request, deps: Deps): Promise<Response> {
         ln.detail = out.detail || ln.detail;
       }
       await storage.put(latest);
-      return json({ reply: out.reply ?? "", node: ln, history: lh });
+      const existing = new Set(latest.map.nodes.map((x) => x.label.trim().toLowerCase()));
+      const suggest = ln.status === "locked" ? [] : (out.suggest ?? []).filter((x) => x?.label && !existing.has(x.label.trim().toLowerCase())).slice(0, 4);
+      return json({ reply: out.reply ?? "", node: ln, history: lh, suggest });
     }
 
     if (m === "POST" && action === "approve") {

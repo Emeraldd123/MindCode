@@ -39,6 +39,8 @@ export interface Build {
   trace: Record<string, string[]>;
   checkpoint_id: string;
   audit?: BuildAudit;
+  /** Automatic ship-readiness check of the generated HTML (api/quality.ts). */
+  quality?: import("./quality").QualityReport;
   /** "full" = generated from scratch; "incremental" = small map changes applied as patches to the previous build. */
   mode?: "full" | "incremental" | "edit";
   /** Set when this build is a targeted edit of another build (right-click in the preview). */
@@ -85,7 +87,7 @@ export interface ProposedMap { nodes?: ProposedNode[]; edges?: Partial<Edge>[] }
 /** The ai/ module interface (implemented in ai/, stubbed in api/stubs.ts). */
 export interface AI {
   updateMap(messages: Message[], current: MindMap): Promise<{ reply: string; map: ProposedMap }>;
-  nodeChat(node: MapNode, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string }>;
+  nodeChat(node: MapNode, map: MindMap, history: Message[], text: string): Promise<{ reply: string; label?: string; detail?: string; suggest?: Array<{ label: string; detail: string; kind?: string }> }>;
   buildApp(map: MindMap, previousHtml: string | null): Promise<string>;
   /** Apply one targeted change to an existing build's HTML (right-click edit). */
   editApp(html: string, map: MindMap, request: ChangeRequest): Promise<string>;

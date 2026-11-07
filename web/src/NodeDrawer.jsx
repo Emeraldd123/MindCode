@@ -48,6 +48,7 @@ export default function NodeDrawer({
   const [childLabel, setChildLabel] = useState('');
   const [connectTo, setConnectTo] = useState('');
   const [relation, setRelation] = useState('informs');
+  const [suggestions, setSuggestions] = useState([]); // Claude's suggested sub-bubbles from the brainstorm
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -64,6 +65,7 @@ export default function NodeDrawer({
     setPanel(null);
     setChildLabel('');
     setConnectTo('');
+    setSuggestions([]);
   }, [currentNodeId]);
 
   // Escape closes the drawer
@@ -127,6 +129,7 @@ export default function NodeDrawer({
         if (Array.isArray(res.history) && res.history.length > 0) setMessages(res.history);
         else if (res.reply) setMessages((prev) => [...prev, { role: 'assistant', text: res.reply }]);
         if (res.node) onNodeChange(res.node);
+        setSuggestions(Array.isArray(res.suggest) ? res.suggest : []);
       }
     } catch (err) {
       onError(err?.message || 'Failed to send message to Claude');
@@ -216,6 +219,20 @@ export default function NodeDrawer({
   const otherNodes = (map.nodes || []).filter((n) => n.id !== node.id);
   const linked = (map.edges || []).filter((e) => e.from === node.id || e.to === node.id);
   const labelOf = (id) => (map.nodes || []).find((n) => n.id === id)?.label || '?';
+
+  const addSuggestion = async (sg) => {
+    if (actionLoading) return;
+    setActionLoading(true);
+    try {
+      await api.createNode(sessionId, { label: sg.label, detail: sg.detail, kind: sg.kind || 'feature', parent: node.id });
+      setSuggestions((prev) => prev.filter((x) => x !== sg));
+      await onMapChange();
+    } catch (err) {
+      onError(err?.message || 'Failed to add the suggested bubble');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleChatKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -482,6 +499,27 @@ export default function NodeDrawer({
             <div className="mt-3 flex items-center gap-1.5" aria-label="Claude is thinking">
               {[0, 1, 2].map((i) => (
                 <span key={i} className="size-1.5 animate-bounce rounded-full bg-ai/80" style={{ animationDelay: `${i * 140}ms` }} />
+              ))}
+            </div>
+          )}
+          {suggestions.length > 0 && (
+            <div className="mt-3 flex flex-col gap-1.5">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-dim">Claude suggests adding</p>
+              {suggestions.map((sg, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => addSuggestion(sg)}
+                  disabled={actionLoading}
+                  className="flex cursor-pointer items-start gap-2 rounded-md border border-dashed border-ai/50 bg-transparent px-2.5 py-1.5 text-left font-sans text-[12.5px] text-foreground hover:bg-ai/10 disabled:opacity-50"
+                  title="Add as a child bubble"
+                >
+                  <Plus className="mt-0.5 size-3.5 shrink-0 text-ai" />
+                  <span>
+                    <span className="font-medium">{sg.label}</span>
+                    {sg.detail && <span className="block text-[11.5px] text-muted-foreground">{sg.detail}</span>}
+                  </span>
+                </button>
               ))}
             </div>
           )}

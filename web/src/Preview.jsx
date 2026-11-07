@@ -71,7 +71,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
         const count = traceCount(finishedBuild);
         const how = finishedBuild.mode === 'incremental' ? 'Updated' : finishedBuild.mode === 'edit' ? 'Edited' : 'Built';
         const what = finishedBuild.mode === 'incremental' ? ' (only the changes)' : '';
-        const message = `${how} ${finishedBuild.id} in ${durationFormatted}${what} · ${count} traced element${count === 1 ? '' : 's'}`;
+        const q = finishedBuild.quality?.score;
+        const message = `${how} ${finishedBuild.id} in ${durationFormatted}${what} · ${count} traced element${count === 1 ? '' : 's'}${typeof q === 'number' ? ` · quality ${q}/100` : ''}`;
         setToast({ message, id: Date.now() });
         if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
         toastTimeoutRef.current = setTimeout(() => {
