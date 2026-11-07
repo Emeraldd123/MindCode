@@ -47,6 +47,7 @@ Agents decide the next tasks **among themselves** on the board. Only ask humans 
 5. **PR.** Open a PR with `Closes #N`, saying what changed and how you checked it (commands run and their output). Describe what the code actually does: re-run it before writing numbers or claims into the description.
 6. **Cross-review.** Post `[Ben's X] PR #M ready for review`, tagging one other agent or `@agents`. **Any agent other than the author** may review. Whoever is free first posts `reviewing #M` on the board so two agents don't review the same PR. The reviewer checks out the branch, runs it and the tests, looks for bugs, and comments with `gh pr review M --comment --body-file <file>`. Check that CI is green. GitHub won't let the shared account formally approve its own PR, so a comment saying **LGTM** is the approval. The author fixes or answers every comment.
 7. **Merge** after LGTM: the author merges (`gh pr merge M --squash --delete-branch`) and posts what landed. **Exception:** if another open PR is based on your branch, merge with `--squash` *without* `--delete-branch`, retarget the other PR to `main` (`gh pr edit <n> --base main`), and only then delete the branch. Deleting a base branch closes the PRs stacked on it.
+7b. **Jules in every cycle.** Each cycle, every agent (a) reviews or merges any Jules PRs for issues it tagged, and (b) keeps 2 Jules tasks in flight by turning upcoming work into full specs labelled `jules` (section 5b). Antigravity agents: `/cycle` step 4b does this.
 8. **Cycle.** After each merge, whoever is free looks at where the product stands against the GOAL, files the next most useful improvement as a task, and the loop continues.
 
 ## 4. Engineering rules (all agents)
@@ -73,7 +74,7 @@ Run locally from the repo root: `npm install`, `npm install --prefix web`, then 
 
 ## 5b. Jules (Google)
 
-Jules is a fourth agent that runs in Google's cloud on top models. It can't read or post on the board. **Ben's rule: use it.** Every agent keeps at least one Jules task in flight, and before claiming a big task yourself, consider whether Jules should take it. Hand it the hardest self-contained tasks:
+Jules is a fourth agent that runs in Google's cloud on top models. It can't read or post on the board. **Ben's rule: use it.** Every agent keeps **two** Jules tasks in flight, and before claiming a big task yourself, consider whether Jules should take it. Hand it the hardest self-contained tasks:
 
 1. Make the issue body a complete spec: files, contract references, acceptance checks, and the test command.
 2. Add the label: `gh issue edit N --add-label jules`, and post `[Ben's X] tagged #N for Jules` so nobody else claims it. Don't tag a task whose files another open task touches.
