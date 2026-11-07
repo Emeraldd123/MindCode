@@ -48,6 +48,8 @@ describe("AI: node_chat", () => {
     assert.ok(res.reply.includes("Chat app"), "Reply should reference the node");
     assert.equal(res.label, undefined, "Label should not be changed for generic question");
     assert.equal(res.detail, undefined, "Detail should not be changed for generic question");
+    assert.ok(Array.isArray(res.suggest), "Suggest should be an array");
+    assert.ok(res.suggest.length >= 1 && res.suggest.length <= 4, "Should return 1-4 suggestions");
   });
 
   test("fake mode updates label and detail when user suggests nickname login", async () => {
@@ -63,6 +65,7 @@ describe("AI: node_chat", () => {
     assert.ok(res.reply.length > 0, "Must return reply");
     assert.equal(res.label, "Nickname login", "Should update label to Nickname login");
     assert.ok(res.detail?.includes("nickname"), "Should update detail with nickname explanation");
+    assert.ok(Array.isArray(res.suggest) && res.suggest.length > 0, "Should include suggestions");
   });
 
   test("fake mode updates label when user asks to rename", async () => {
@@ -79,7 +82,7 @@ describe("AI: node_chat", () => {
     assert.ok(res.detail?.includes("Study Lounge"));
   });
 
-  test("does not update label or detail if node is locked", async () => {
+  test("does not update label, detail, or return suggestions if node is locked", async () => {
     process.env.MINDCODE_FAKE_LLM = "1";
     const lockedNode: Node = {
       ...sampleMap.nodes[0],
@@ -95,6 +98,7 @@ describe("AI: node_chat", () => {
 
     assert.equal(res.label, undefined, "Locked node label must not be updated");
     assert.equal(res.detail, undefined, "Locked node detail must not be updated");
+    assert.equal(res.suggest, undefined, "Locked node must not have suggestions");
     assert.ok(res.reply.includes("locked"), "Reply should mention locked status");
   });
 
@@ -117,7 +121,7 @@ describe("AI: node_chat", () => {
     }
   });
 
-  test("real mode parses LLM reply and enforces locked status even if LLM returns a label", async () => {
+  test("real mode parses LLM reply and enforces locked status even if LLM returns a label and suggestions", async () => {
     const oldFake = process.env.MINDCODE_FAKE_LLM;
     const oldKey = process.env.OPENROUTER_API_KEY;
     delete process.env.MINDCODE_FAKE_LLM;
@@ -134,7 +138,10 @@ describe("AI: node_chat", () => {
               content: JSON.stringify({
                 reply: "I changed it anyway!",
                 label: "Hacked Label",
-                detail: "Hacked Detail"
+                detail: "Hacked Detail",
+                suggest: [
+                  { label: "Hacked Suggestion", detail: "Should be dropped" }
+                ]
               })
             }
           }
@@ -148,10 +155,72 @@ describe("AI: node_chat", () => {
         status: "locked"
       };
 
-      const res = await node_chat(lockedNode, sampleMap, [], "change it", );
+      const res = await node_chat(lockedNode, sampleMap, [], "change it");
       assert.equal(res.label, undefined, "Locked node label must be stripped");
       assert.equal(res.detail, undefined, "Locked node detail must be stripped");
+      assert.equal(res.suggest, undefined, "Locked node suggestions must be stripped");
       assert.equal(res.reply, "I changed it anyway!");
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (oldFake !== undefined) process.env.MINDCODE_FAKE_LLM = oldFake;
+      if (oldKey !== undefined) process.env.OPENROUTER_API_KEY = oldKey;
+      else delete process.env.OPENROUTER_API_KEY;
+    }
+  });
+
+  test("real mode parses, deduplicates, drops existing map labels, drops invalid entries, and caps suggestions at 4", async () => {
+    const oldFake = process.env.MINDCODE_FAKE_LLM;
+    const oldKey = process.env.OPENROUTER_API_KEY;
+    delete process.env.MINDCODE_FAKE_LLM;
+    process.env.OPENROUTER_API_KEY = "mock-key";
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                reply: "Here are some ideas for your chat app.",
+                suggest: [
+                  // 1. Should be dropped because "chat app" exists in sampleMap.nodes
+                  { label: "chat app", detail: "Already in map" },
+                  // 2. Should be dropped because label is empty
+                  { label: "", detail: "Empty label" },
+                  // 3. Should be dropped because detail is empty
+                  { label: "Valid Label 0", detail: "   " },
+                  // 4. Valid suggestion 1
+                  { label: "Typing indicator", detail: "Shows live typing status", kind: "feature" },
+                  // 5. Duplicate of 4 (case-insensitive) - should be dropped
+                  { label: "TYPING INDICATOR", detail: "Duplicate typing indicator" },
+                  // 6. Valid suggestion 2
+                  { label: "Read receipts", detail: "Shows message delivery and read status" },
+                  // 7. Valid suggestion 3
+                  { label: "Emoji reactions", detail: "React with emojis to messages", kind: "feature" },
+                  // 8. Valid suggestion 4
+                  { label: "Audio notes", detail: "Send voice messages to group", kind: "feature" },
+                  // 9. Extra suggestion - should be dropped by cap (max 4)
+                  { label: "Video calls", detail: "Live group video calling", kind: "feature" }
+                ]
+              })
+            }
+          }
+        ]
+      })
+    })) as any;
+
+    try {
+      const res = await node_chat(sampleMap.nodes[0], sampleMap, [], "What features can we add?");
+      assert.ok(res.suggest !== undefined, "Should have suggestions");
+      assert.equal(res.suggest?.length, 4, "Must cap at 4 suggestions");
+      assert.deepEqual(res.suggest, [
+        { label: "Typing indicator", detail: "Shows live typing status", kind: "feature" },
+        { label: "Read receipts", detail: "Shows message delivery and read status" },
+        { label: "Emoji reactions", detail: "React with emojis to messages", kind: "feature" },
+        { label: "Audio notes", detail: "Send voice messages to group", kind: "feature" }
+      ]);
     } finally {
       globalThis.fetch = originalFetch;
       if (oldFake !== undefined) process.env.MINDCODE_FAKE_LLM = oldFake;

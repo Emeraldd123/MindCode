@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 import { ai } from "./ai";
 import { handle, runBuild, type Deps } from "./router";
 import { memoryStorage } from "./storage";
-import type { Build, Checkpoint, MapNode, MindMap, Session } from "./types";
+/** The smoke flow runs builds back to back; clear the per-session cooldown between them. */
+async function clearBuildCooldown(deps: { storage: { get(id: string): Promise<any>; put(s: any): Promise<void> } }, sid: string) {
+  const s = await deps.storage.get(sid);
+  if (s) { s.last_build_at = 0; await deps.storage.put(s); }
+}
+
+import type { Build, Checkpoint, Edge, MapNode, MindMap, Session } from "./types";
 
 function createTestDeps(): Deps {
   const storage = memoryStorage();
@@ -48,12 +54,14 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(session.map.edges).toEqual([]);
     const sid = session.id;
 
-    // 3. Prompt extraction: POST /api/sessions/:sid/messages with { "text": "I want a chat app for my study group" }
+    // 3. Prompt extraction & async turn: POST /api/sessions/:sid/messages with { "text": "I want a chat app for my study group" }
     const msgRes = await request(deps, "POST", `/sessions/${sid}/messages`, {
       text: "I want a chat app for my study group",
     });
     expect(msgRes.status).toBe(200);
     const msgBody = msgRes.body as { reply: string; map: MindMap; changed: string[] };
+    expect(typeof msgBody.reply).toBe("string");
+    expect(Array.isArray(msgBody.changed)).toBe(true);
 
     // - Returns at least 5 nodes in map.nodes
     expect(msgBody.map.nodes.length).toBeGreaterThanOrEqual(5);
@@ -75,6 +83,20 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(unknownNodes.length).toBeGreaterThanOrEqual(1);
     const unknownNode = unknownNodes[0];
 
+    // Async turn: simulate a pending turn in storage; a second POST while turn is pending returns 409
+    const sBeforePending = (await deps.storage.get(sid))!;
+    sBeforePending.turn = { status: "pending", changed: [], started_at: Date.now() };
+    await deps.storage.put(sBeforePending);
+
+    const pendingConflictRes = await request(deps, "POST", `/sessions/${sid}/messages`, {
+      text: "Another message while Claude is working",
+    });
+    expect(pendingConflictRes.status).toBe(409);
+
+    // Restore turn to done
+    sBeforePending.turn = { status: "done", changed: [], started_at: sBeforePending.turn.started_at };
+    await deps.storage.put(sBeforePending);
+
     // 4. Bubble brainstorm & rewrite: POST /api/sessions/:sid/nodes/:nid/chat on the unknown node
     // with { "text": "just a nickname, no passwords" }
     const chatRes = await request(deps, "POST", `/sessions/${sid}/nodes/${unknownNode.id}/chat`, {
@@ -94,7 +116,59 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     // - Returns node with status === "approved"
     expect(approvedNode.status).toBe("approved");
 
-    // 6. Build generation: POST /api/sessions/:sid/build
+    // 6. Bubble ops: create node -> 201, create edge -> 201, delete edge, delete node -> children re-parented
+    const parentNodeRes = await request(deps, "POST", `/sessions/${sid}/nodes`, {
+      label: "Parent Feature",
+      parent: "n1",
+    });
+    expect(parentNodeRes.status).toBe(201);
+    const parentNode = parentNodeRes.body as MapNode;
+    expect(parentNode.id).toBeDefined();
+    expect(parentNode.label).toBe("Parent Feature");
+    expect(parentNode.parent).toBe("n1");
+
+    const childNodeRes = await request(deps, "POST", `/sessions/${sid}/nodes`, {
+      label: "Child Subfeature",
+      parent: parentNode.id,
+    });
+    expect(childNodeRes.status).toBe(201);
+    const childNode = childNodeRes.body as MapNode;
+    expect(childNode.id).toBeDefined();
+    expect(childNode.parent).toBe(parentNode.id);
+
+    // Create edge -> 201
+    const createEdgeRes = await request(deps, "POST", `/sessions/${sid}/edges`, {
+      from: "n1",
+      to: childNode.id,
+      relation: "informs",
+    });
+    expect(createEdgeRes.status).toBe(201);
+    const createdEdge = createEdgeRes.body as Edge;
+    expect(createdEdge.from).toBe("n1");
+    expect(createdEdge.to).toBe(childNode.id);
+    expect(createdEdge.relation).toBe("informs");
+
+    // Delete edge -> 200
+    const deleteEdgeRes = await request(deps, "DELETE", `/sessions/${sid}/edges`, {
+      from: "n1",
+      to: childNode.id,
+    });
+    expect(deleteEdgeRes.status).toBe(200);
+    const postDelEdgeSession = (await request(deps, "GET", `/sessions/${sid}`)).body as Session;
+    expect(
+      postDelEdgeSession.map.edges.some((e) => e.from === "n1" && e.to === childNode.id && e.relation === "informs"),
+    ).toBe(false);
+
+    // Delete node -> 200, children re-parented
+    const deleteNodeRes = await request(deps, "DELETE", `/sessions/${sid}/nodes/${parentNode.id}`);
+    expect(deleteNodeRes.status).toBe(200);
+    const postDelNodeSession = (await request(deps, "GET", `/sessions/${sid}`)).body as Session;
+    expect(postDelNodeSession.map.nodes.some((n) => n.id === parentNode.id)).toBe(false);
+    const reParentedChild = postDelNodeSession.map.nodes.find((n) => n.id === childNode.id);
+    expect(reParentedChild).toBeDefined();
+    expect(reParentedChild?.parent).toBe("n1");
+
+    // 7. Build generation: POST /api/sessions/:sid/build
     const buildRes = await request(deps, "POST", `/sessions/${sid}/build`);
     expect([200, 202]).toContain(buildRes.status);
     let build = buildRes.body as Build;
@@ -118,7 +192,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(build.audit?.totalElements).toBeGreaterThan(0);
     expect(build.audit?.coveragePct).toBeGreaterThanOrEqual(0);
 
-    // 7. Preview HTML & Traceability: GET /api/sessions/:sid/builds/:bid/preview
+    // 8. Preview HTML & Traceability: GET /api/sessions/:sid/builds/:bid/preview
     const previewRes = await request(deps, "GET", `/sessions/${sid}/builds/${bid}/preview`);
     expect(previewRes.status).toBe(200);
     expect(previewRes.headers.get("content-type")).toContain("text/html");
@@ -146,7 +220,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
       expect(nodeIds.has(refId)).toBe(true);
     }
 
-    // 8. Standalone Download Check: GET /api/sessions/:sid/builds/:bid/download
+    // 9. Standalone Download Check: GET /api/sessions/:sid/builds/:bid/download
     const downloadRes = await request(deps, "GET", `/sessions/${sid}/builds/${bid}/download`);
     expect(downloadRes.status).toBe(200);
     expect(downloadRes.headers.get("content-type")).toBe("text/html; charset=utf-8");
@@ -155,7 +229,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(downloadHtml).not.toMatch(/mc-hover/);
     expect(downloadHtml).toBe(build.html);
 
-    // 9. Checkpoints: GET /api/sessions/:sid/checkpoints
+    // 10. Checkpoints: GET /api/sessions/:sid/checkpoints
     const checkpointsRes = await request(deps, "GET", `/sessions/${sid}/checkpoints`);
     expect(checkpointsRes.status).toBe(200);
     const checkpoints = checkpointsRes.body as Checkpoint[];
@@ -170,7 +244,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
       expect(Array.isArray(cp.map.edges)).toBe(true);
     }
 
-    // 10. Checkpoint Restore Check: POST /api/sessions/:sid/checkpoints/:cid/restore
+    // 11. Checkpoint Restore Check: POST /api/sessions/:sid/checkpoints/:cid/restore
     const c1 = checkpoints[0];
     const restoreRes = await request(deps, "POST", `/sessions/${sid}/checkpoints/${c1.id}/restore`);
     expect(restoreRes.status).toBe(200);
@@ -182,8 +256,8 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     const postRestoreCheckpoints = postRestoreCheckpointsRes.body as Checkpoint[];
     expect(postRestoreCheckpoints.some((cp) => cp.label.startsWith("Restored to "))).toBe(true);
 
-    // 11. Mind map export (Mermaid & JSON)
-    // 11a. Mermaid export: GET /api/sessions/:sid/map/export?format=mermaid
+    // 12. Mind map export (Mermaid & JSON)
+    // 12a. Mermaid export: GET /api/sessions/:sid/map/export?format=mermaid
     const mermaidRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=mermaid`);
     expect(mermaidRes.status).toBe(200);
     expect(mermaidRes.headers.get("content-type")).toBe("text/vnd.mermaid; charset=utf-8");
@@ -196,7 +270,7 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(mermaidBody).toContain("classDef unknown");
     expect(mermaidBody).toContain("classDef approved");
 
-    // 11b. JSON export: GET /api/sessions/:sid/map/export?format=json (and default without format query)
+    // 12b. JSON export: GET /api/sessions/:sid/map/export?format=json (and default without format query)
     const jsonRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=json`);
     expect(jsonRes.status).toBe(200);
     expect(jsonRes.headers.get("content-type")).toBe("application/json; charset=utf-8");
@@ -222,8 +296,92 @@ describe("End-to-end smoke test (MINDCODE_FAKE_LLM=1)", () => {
     expect(defaultBody.nodes).toEqual(curMap.nodes);
     expect(defaultBody.edges).toEqual(curMap.edges);
 
-    // 11c. Invalid format validation: GET /api/sessions/:sid/map/export?format=invalid
+    // 12c. Invalid format validation: GET /api/sessions/:sid/map/export?format=invalid
     const invalidRes = await request(deps, "GET", `/sessions/${sid}/map/export?format=invalid`);
     expect(invalidRes.status).toBe(422);
+
+    // 13. Demo session: POST /api/sessions/demo -> map has >= 30 bubbles, build b1 done, /builds/b1/app has no mc-hover script
+    const demoRes = await request(deps, "POST", "/sessions/demo");
+    expect(demoRes.status).toBe(200);
+    const demoSession = demoRes.body as Session;
+    const demoSid = demoSession.id;
+    expect(demoSession.map.nodes.length).toBeGreaterThanOrEqual(30);
+    const b1 = demoSession.builds.find((b) => b.id === "b1");
+    expect(b1).toBeDefined();
+    expect(b1?.status).toBe("done");
+
+    const appRes = await request(deps, "GET", `/sessions/${demoSid}/builds/b1/app`);
+    expect(appRes.status).toBe(200);
+    expect(appRes.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    const appHtml = appRes.body as string;
+    expect(appHtml).not.toMatch(/mc-hover/);
+    expect(appHtml).toBe(b1?.html);
+
+    // 14. Edit: POST /builds/b1/edit {instruction} -> b2 mode: "edit", done; the checkpoint list ends with build_id: b2
+    const editRes = await request(deps, "POST", `/sessions/${demoSid}/builds/b1/edit`, {
+      instruction: "Add dark mode toggle to header",
+    });
+    expect([200, 202]).toContain(editRes.status);
+    let b2 = editRes.body as Build;
+    if (b2.status === "pending") {
+      let attempts = 0;
+      while (b2.status === "pending" && attempts < 10) {
+        attempts++;
+        const pollRes = await request(deps, "GET", `/sessions/${demoSid}/builds/${b2.id}`);
+        expect(pollRes.status).toBe(200);
+        b2 = pollRes.body as Build;
+      }
+    }
+    expect(b2.id).toBe("b2");
+    expect(b2.mode).toBe("edit");
+    expect(b2.status).toBe("done");
+
+    const editCheckpointsRes = await request(deps, "GET", `/sessions/${demoSid}/checkpoints`);
+    expect(editCheckpointsRes.status).toBe(200);
+    const editCheckpoints = editCheckpointsRes.body as Checkpoint[];
+    expect(editCheckpoints.at(-1)?.build_id).toBe("b2");
+
+    // 15. Incremental: POST /nodes {label:"Dark mode", parent:"n1"} then POST /build -> mode: "incremental"; POST /build {full:true} -> mode: "full"
+    const addNodeRes = await request(deps, "POST", `/sessions/${demoSid}/nodes`, {
+      label: "Dark mode",
+      parent: "n1",
+    });
+    expect(addNodeRes.status).toBe(201);
+    const addedNode = addNodeRes.body as MapNode;
+    expect(addedNode.label).toBe("Dark mode");
+
+    await clearBuildCooldown(deps, demoSid);
+    const incrementalBuildRes = await request(deps, "POST", `/sessions/${demoSid}/build`);
+    expect([200, 202]).toContain(incrementalBuildRes.status);
+    let b3 = incrementalBuildRes.body as Build;
+    if (b3.status === "pending") {
+      let attempts = 0;
+      while (b3.status === "pending" && attempts < 10) {
+        attempts++;
+        const pollRes = await request(deps, "GET", `/sessions/${demoSid}/builds/${b3.id}`);
+        expect(pollRes.status).toBe(200);
+        b3 = pollRes.body as Build;
+      }
+    }
+    expect(b3.mode).toBe("incremental");
+    expect(b3.status).toBe("done");
+
+    await clearBuildCooldown(deps, demoSid);
+    const fullBuildRes = await request(deps, "POST", `/sessions/${demoSid}/build`, {
+      full: true,
+    });
+    expect([200, 202]).toContain(fullBuildRes.status);
+    let b4 = fullBuildRes.body as Build;
+    if (b4.status === "pending") {
+      let attempts = 0;
+      while (b4.status === "pending" && attempts < 10) {
+        attempts++;
+        const pollRes = await request(deps, "GET", `/sessions/${demoSid}/builds/${b4.id}`);
+        expect(pollRes.status).toBe(200);
+        b4 = pollRes.body as Build;
+      }
+    }
+    expect(b4.mode).toBe("full");
+    expect(b4.status).toBe("done");
   });
 });
