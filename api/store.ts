@@ -54,7 +54,13 @@ export function mergeMap(s: Session, proposed: ProposedMap, turn: number): strin
       label: String(raw.label ?? prev?.label ?? "Idea"),
       detail: String(raw.detail ?? prev?.detail ?? ""),
       kind: (KINDS.has(raw.kind as string) ? raw.kind : prev?.kind ?? "feature") as MapNode["kind"],
-      source: prev?.source ?? ((SOURCES.has(raw.source as string) ? raw.source : "inferred") as MapNode["source"]),
+      // Source is fixed at creation, with one exception: an open question the user has now answered
+      // (unknown -> user, backed by a quote) becomes the user's own idea.
+      source: prev
+        ? prev.source === "unknown" && raw.source === "user" && Array.isArray(raw.evidence) && raw.evidence.length > 0
+          ? "user"
+          : prev.source
+        : ((SOURCES.has(raw.source as string) ? raw.source : "inferred") as MapNode["source"]),
       inventiveness: clamp(raw.inventiveness, 0, 1, prev?.inventiveness ?? 0),
       importance: Math.round(clamp(raw.importance, 1, 5, prev?.importance ?? 3)),
       status: prev ? prev.status : "proposed",
@@ -63,7 +69,7 @@ export function mergeMap(s: Session, proposed: ProposedMap, turn: number): strin
       turn: prev?.turn ?? turn,
     };
     if (!prev) changed.push(nid);
-    else if ((["label", "detail", "kind", "parent", "importance", "inventiveness"] as const).some((k) => n[k] !== prev[k]))
+    else if ((["label", "detail", "kind", "source", "parent", "importance", "inventiveness"] as const).some((k) => n[k] !== prev[k]))
       changed.push(nid);
     out.set(nid, n);
   }

@@ -146,3 +146,24 @@ describe("api", () => {
     expect(traceOf(html, new Set(["n1", "n2"]))).toEqual({ n1: ["a"], n2: ["c"] });
   });
 });
+
+describe("answered questions", () => {
+  it("unknown -> user only with a quote; other source changes are ignored", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    ai.updateMap = async () => ({
+      reply: "ok",
+      map: { nodes: [
+        { id: "n5", label: "Nicknames only", source: "user", evidence: ["just nicknames"] },
+        { id: "n2", label: "Main page", source: "user", evidence: ["x"] },
+        { id: "n4", label: "Visual style", source: "user", evidence: [] },
+      ] },
+    });
+    const r = (await call("POST", `/sessions/${id}/messages`, { text: "just nicknames" })).body;
+    const n = byId(r.map.nodes);
+    expect([n.n5.source, n.n5.label]).toEqual(["user", "Nicknames only"]);
+    expect(n.n2.source).toBe("inferred");
+    expect(n.n4.source).toBe("inferred");
+    expect(r.changed).toContain("n5");
+  });
+});
