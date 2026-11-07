@@ -124,3 +124,31 @@ export function emptyStep(map) {
 export function buildDownloadFilename(buildId) {
   return `mindcode-${buildId}.html`;
 }
+
+/**
+ * Returns label for the quality pill (e.g. 'Quality 92/100'), or null if quality/score is missing.
+ */
+export function formatQualityPill(quality) {
+  if (typeof quality?.score !== 'number') return null;
+  return `Quality ${quality.score}/100`;
+}
+
+/**
+ * Returns array of quality issue strings, or ['Ship-ready, no issues'] if issues are empty.
+ */
+export function qualityIssues(quality) {
+  if (Array.isArray(quality?.issues) && quality.issues.length > 0) {
+    return quality.issues;
+  }
+  return ['Ship-ready, no issues'];
+}
+
+/**
+ * Tone based on score: 'good' (>=90), 'warn' (>=70), 'poor' (<70).
+ */
+export function qualityTone(score) {
+  if (typeof score !== 'number') return 'warn';
+  if (score >= 90) return 'good';
+  if (score >= 70) return 'warn';
+  return 'poor';
+}

@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as api from './api';
 import Chat from './Chat';
+import { formatApiError, formatCooldown } from './chatLogic';
 import MindMap from './MindMap';
 import TreeMap from './TreeMap';
 import Preview from './Preview';
 import NodeDrawer from './NodeDrawer';
 import Checkpoints from './Checkpoints';
-import GraphRecommendations from './GraphRecommendations';
+import GraphRecommendations from './GraphRecommendations.jsx'; // explicit: graphRecommendations.js differs only by case (breaks on Windows)
 import { Plus } from 'lucide-react';
 import { Button } from '@/ui/primitives/button';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/ui/primitives/resizable';
@@ -25,6 +26,8 @@ export default function App() {
   const [changedIds, setChangedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
+  const [chatCooldownSeconds, setChatCooldownSeconds] = useState(0);
+  const chatCooldownTimerRef = useRef(null);
   const [error, setError] = useState(null);
   const [activeCheckpointId, setActiveCheckpointId] = useState(null); // null = live
   // Two map views to compare: 'graph' (Oliver & Tenma's MindMap) and 'tree' (Claude's TreeMap).
@@ -115,8 +118,14 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (chatCooldownTimerRef.current) clearInterval(chatCooldownTimerRef.current);
+    };
+  }, []);
+
   const handleSendMessage = async (text) => {
-    if (!session?.id) return;
+    if (!session?.id || chatCooldownSeconds > 0) return;
     setError(null);
     setMessages((prev) => [...prev, { role: 'user', text }]);
     setChatLoading(true);
@@ -156,7 +165,26 @@ export default function App() {
       }
     } catch (err) {
       setMessages((prev) => prev.slice(0, -1)); // the server didn't keep it
-      setError(`Failed to send message: ${err.message}`);
+      if (err.status === 429) {
+        let remaining = err.retry_after_s || 5;
+        setChatCooldownSeconds(remaining);
+        setError(formatCooldown(remaining));
+        if (chatCooldownTimerRef.current) clearInterval(chatCooldownTimerRef.current);
+        chatCooldownTimerRef.current = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(chatCooldownTimerRef.current);
+            chatCooldownTimerRef.current = null;
+            setChatCooldownSeconds(0);
+            setError(null);
+          } else {
+            setChatCooldownSeconds(remaining);
+            setError(formatCooldown(remaining));
+          }
+        }, 1000);
+      } else {
+        setError(formatApiError(err));
+      }
     } finally {
       setChatLoading(false);
     }
@@ -216,7 +244,7 @@ export default function App() {
               <Chat
                 messages={messages}
                 onSendMessage={handleSendMessage}
-                loading={chatLoading}
+                loading={chatLoading || chatCooldownSeconds > 0}
                 error={error}
               />
             </section>

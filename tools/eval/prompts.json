@@ -1,0 +1,42 @@
+[
+  {
+    "id": "chat-app",
+    "name": "Chat app",
+    "prompt": "I want a real-time team chat app with channels, direct messages, user online status, and markdown message formatting for remote engineering squads."
+  },
+  {
+    "id": "banking-app",
+    "name": "Banking app",
+    "prompt": "Build a modern personal banking dashboard where customers can view checking and savings balances, transfer money between accounts, view transaction history, and freeze debit cards."
+  },
+  {
+    "id": "recipe-box",
+    "name": "Recipe box",
+    "prompt": "A recipe box app where home cooks can save culinary recipes with ingredients and step-by-step instructions, organize by category, and generate consolidated shopping lists."
+  },
+  {
+    "id": "portfolio",
+    "name": "Portfolio",
+    "prompt": "A sleek portfolio website for a senior product designer featuring interactive case studies, design philosophy, client testimonials, downloadable resume, and a contact form."
+  },
+  {
+    "id": "habit-tracker",
+    "name": "Habit tracker",
+    "prompt": "A daily habit tracker application with streak tracking, completion checklists, weekly progress analytics, habit categories, and reminder notifications."
+  },
+  {
+    "id": "marketplace",
+    "name": "Marketplace",
+    "prompt": "A peer-to-peer marketplace for buying and selling used musical instruments, featuring product listings with photos and condition filters, seller ratings, and direct messaging."
+  },
+  {
+    "id": "booking",
+    "name": "Booking",
+    "prompt": "An online appointment booking system for a boutique hair salon allowing clients to select stylists, view available time slots, book services, and manage appointments."
+  },
+  {
+    "id": "agency-pm-tool",
+    "name": "Agency PM tool",
+    "prompt": "A project management tool tailored for digital agencies to track client deliverables, assign tasks to designers and developers, log billable hours, and monitor project budgets."
+  }
+]

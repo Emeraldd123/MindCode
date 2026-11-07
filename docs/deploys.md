@@ -29,4 +29,7 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 8 | 2026-11-07 16:35 | main (#107, #$N) | API limits (protects the key), bubble suggestions, quality score, Jules docs/tests | (verify) |
 
-Deploys used: **8 / 15**
+| 9 | 2026-11-07 | main @ ac902c8 (#112) | Tenma's drill-in graph UI; Attention collapsed | **Live.** |
+| 10 | 2026-11-07 (FINAL) | Tenma 0fe09b4 + Jules #113, #114, #106 + case-safe import fix | Final release: graph recommendations, quality report in preview, friendly limit messages, eval harness | (verify) |
+
+Deploy budget: Ben says this is the **last** deploy.

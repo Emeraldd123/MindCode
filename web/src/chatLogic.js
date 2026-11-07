@@ -144,3 +144,61 @@ export function summarizeChange(changedIds, map) {
 
   return parts.join(' · ');
 }
+
+/**
+ * Formats cooldown countdown text.
+ * @param {number} seconds
+ * @returns {string}
+ */
+export function formatCooldown(seconds) {
+  const s = Math.max(0, Math.ceil(seconds || 0));
+  return `Please wait ${s} s`;
+}
+
+/**
+ * Translates HTTP / API errors into user-friendly messages for 429, 413, 409, etc.
+ * @param {any} err Error or response object
+ * @returns {string}
+ */
+export function formatApiError(err) {
+  if (!err) return 'An unexpected error occurred';
+  const status = err.status;
+  const detail = err.detail || err.message || '';
+
+  if (status === 429) {
+    const s = err.retry_after_s;
+    if (typeof s === 'number' && s > 0) {
+      return formatCooldown(s);
+    }
+    // If retry_after_s might be embedded in detail or missing
+    return 'Please wait a moment before trying again';
+  }
+
+  if (status === 413) {
+    if (/chat text exceeds/i.test(detail)) {
+      return 'Message is too long. Maximum length is 4,000 characters.';
+    }
+    if (/label exceeds/i.test(detail)) {
+      return 'Bubble title is too long. Maximum length is 80 characters.';
+    }
+    if (/detail exceeds/i.test(detail)) {
+      return 'Bubble description is too long. Maximum length is 500 characters.';
+    }
+    return detail || 'Input exceeds the maximum allowed length.';
+  }
+
+  if (status === 409) {
+    if (/maximum map node limit/i.test(detail)) {
+      return 'Map limit reached: you cannot add more than 60 bubbles.';
+    }
+    if (/still working on the previous message/i.test(detail)) {
+      return 'Claude is still working on the previous message. Please wait.';
+    }
+    if (/build is already running/i.test(detail)) {
+      return 'A build is already running. Please wait for it to finish.';
+    }
+    return detail || 'An operation is already in progress.';
+  }
+
+  return detail || 'An error occurred. Please try again.';
+}

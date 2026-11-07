@@ -4,11 +4,14 @@ import {
   buildStage,
   emptyStep,
   formatElapsed,
+  formatQualityPill,
   isHoverMessage,
   latestDoneBuild,
   nodeLabels,
   pendingBuild,
   pollBuild,
+  qualityIssues,
+  qualityTone,
   titleFromHtml,
   traceCount,
   upsertBuild,
@@ -148,6 +151,50 @@ describe('previewLogic', () => {
         ],
       };
       expect(emptyStep(mapLocked)).toBe(3);
+    });
+  });
+
+  describe('quality helpers', () => {
+    describe('formatQualityPill', () => {
+      it('formats score as Quality score/100', () => {
+        expect(formatQualityPill({ score: 92 })).toBe('Quality 92/100');
+        expect(formatQualityPill({ score: 100 })).toBe('Quality 100/100');
+        expect(formatQualityPill({ score: 0 })).toBe('Quality 0/100');
+      });
+
+      it('returns null if quality or score is missing or non-number', () => {
+        expect(formatQualityPill(null)).toBeNull();
+        expect(formatQualityPill(undefined)).toBeNull();
+        expect(formatQualityPill({})).toBeNull();
+        expect(formatQualityPill({ score: '92' })).toBeNull();
+      });
+    });
+
+    describe('qualityIssues', () => {
+      it('returns array of issues when issues are present', () => {
+        const issues = ['Missing viewport tag', 'Found 1 placeholder text instance(s)'];
+        expect(qualityIssues({ score: 85, issues })).toEqual(issues);
+      });
+
+      it('returns ["Ship-ready, no issues"] when issues is empty or missing', () => {
+        expect(qualityIssues({ score: 100, issues: [] })).toEqual(['Ship-ready, no issues']);
+        expect(qualityIssues({ score: 100 })).toEqual(['Ship-ready, no issues']);
+        expect(qualityIssues(null)).toEqual(['Ship-ready, no issues']);
+        expect(qualityIssues({})).toEqual(['Ship-ready, no issues']);
+      });
+    });
+
+    describe('qualityTone', () => {
+      it('categorizes scores into good, warn, and poor', () => {
+        expect(qualityTone(100)).toBe('good');
+        expect(qualityTone(90)).toBe('good');
+        expect(qualityTone(89)).toBe('warn');
+        expect(qualityTone(70)).toBe('warn');
+        expect(qualityTone(69)).toBe('poor');
+        expect(qualityTone(0)).toBe('poor');
+        expect(qualityTone(null)).toBe('warn');
+        expect(qualityTone(undefined)).toBe('warn');
+      });
     });
   });
 });
