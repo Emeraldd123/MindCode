@@ -49,3 +49,71 @@ export function nodeLabels(map, ids = []) {
 export function isHoverMessage(data) {
   return !!data && data.type === 'mc-hover' && Array.isArray(data.nodes);
 }
+
+/**
+ * Format milliseconds into m:ss format (e.g. 78000 -> "1:18", 5000 -> "0:05").
+ */
+export function formatElapsed(ms = 0) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+export const BUILD_STAGES = [
+  'Reading N bubbles',
+  'Planning screens',
+  'Writing the data layer',
+  'Wiring interactions',
+  'Tracing elements to bubbles',
+];
+
+/**
+ * Determines stage index (0 to 4) advancing about every 15s (15000ms),
+ * holding at the last stage (index 4) until the build is done.
+ */
+export function buildStage(elapsedMs = 0) {
+  if (elapsedMs < 0) return 0;
+  const stage = Math.floor(elapsedMs / 15000);
+  return Math.min(stage, BUILD_STAGES.length - 1);
+}
+
+/**
+ * Total unique element ids traced across all nodes in build.trace.
+ * build.trace is Record<string, string[]>.
+ */
+export function traceCount(build) {
+  if (!build?.trace || typeof build.trace !== 'object') return 0;
+  const uniqueElements = new Set();
+  for (const els of Object.values(build.trace)) {
+    if (Array.isArray(els)) {
+      for (const el of els) {
+        if (el) uniqueElements.add(el);
+      }
+    }
+  }
+  return uniqueElements.size;
+}
+
+/**
+ * Extracts app title from HTML <title>...</title> tag.
+ */
+export function titleFromHtml(html = '') {
+  if (typeof html !== 'string') return '';
+  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return match ? match[1].trim() : '';
+}
+
+/**
+ * Evaluates the empty state step (1, 2, or 3) from the mind map:
+ * Step 1 ("Describe"): no map or empty nodes.
+ * Step 2 ("Approve bubbles"): map has nodes, but none approved or locked.
+ * Step 3 ("Build"): ready (has at least one approved or locked node).
+ */
+export function emptyStep(map) {
+  const nodes = map?.nodes;
+  if (!nodes || nodes.length === 0) return 1;
+  const hasApproved = nodes.some((n) => n.status === 'approved' || n.status === 'locked');
+  if (!hasApproved) return 2;
+  return 3;
+}
