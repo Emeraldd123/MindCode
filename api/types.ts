@@ -16,6 +16,7 @@ export interface MapNode {
   parent: string | null;
   evidence: string[];
   turn: number;
+  facet?: "design" | "audience" | "functionality" | "cost" | "goal"; // ai/taxonomy.ts
 }
 
 export interface Edge { from: string; to: string; relation: "has" | "needs" | "informs" }

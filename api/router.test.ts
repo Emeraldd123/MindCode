@@ -270,3 +270,23 @@ describe("demo session", () => {
     expect(html).toContain("mc-hover");
   });
 });
+
+describe("facets (Ben's prompt-engineering map)", () => {
+  it("keeps a valid facet, drops an invalid one, and keeps the old facet when the AI omits it", async () => {
+    const id = await sid();
+    ai.updateMap = async () => ({
+      reply: "ok",
+      map: { nodes: [
+        { id: "n1", label: "App", kind: "goal", source: "user", facet: "goal", parent: null, evidence: ["app"] },
+        { id: "n2", label: "Who is it for?", kind: "constraint", source: "unknown", facet: "audience", parent: "n1" },
+        { id: "n3", label: "Bogus", source: "inferred", facet: "vibes" as never, parent: "n1" },
+      ] },
+    });
+    let m = (await call("POST", `/sessions/${id}/messages`, { text: "app" })).body.map;
+    let n = byId(m.nodes);
+    expect([n.n1.facet, n.n2.facet, n.n3.facet]).toEqual(["goal", "audience", undefined]);
+    ai.updateMap = async () => ({ reply: "ok", map: { nodes: [{ id: "n2", label: "Students" }] } });
+    m = (await call("POST", `/sessions/${id}/messages`, { text: "students" })).body.map;
+    expect(byId(m.nodes).n2.facet).toBe("audience");
+  });
+});

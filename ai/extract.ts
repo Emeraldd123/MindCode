@@ -1,6 +1,7 @@
 import type { Message, MindMap, Node, Edge, UpdateMapResult, Source, Status, NodeKind, EdgeRelation } from "./types.ts";
 import { fakeUpdateMap } from "./fake.ts";
 import { callOpenRouter } from "./client.ts";
+import { FACET_IDS, taxonomyPrompt } from "./taxonomy.ts";
 
 const SYSTEM_PROMPT = `You are Claude, an expert software architect and prompt engineering assistant in MindCode.
 Your job is to listen to the user describing an application and translate their vision into an interactive Mind Map of bubbles and connections, while chatting with them naturally.
@@ -39,10 +40,12 @@ Respond with a JSON object containing:
 
 ### SIZE LIMITS (strict, the response must stay small):
 - Return ONLY new or changed nodes. Never repeat unchanged nodes; the app keeps them automatically.
-- First turn: 6 to 10 nodes total. Later turns: usually 0 to 5 nodes.
+- First turn: 8 to 12 nodes total (root + all four facets). Later turns: usually 0 to 5 nodes.
 - label: at most 4 words. detail: one sentence, at most 20 words. evidence: at most 2 short quotes.
-- Node fields to output: id, label, detail, kind, source, inventiveness, importance, parent, evidence. Omit status and turn.
+- Node fields to output: id, label, detail, kind, source, facet, inventiveness, importance, parent, evidence. Omit status and turn.
 - No markdown, no code fences. Raw JSON only.
+
+${taxonomyPrompt()}
 `;
 
 export async function update_map(
@@ -211,6 +214,7 @@ export function normalizeAndValidateMapResult(
       status,
       parent,
       evidence: finalEvidence,
+      ...(FACET_IDS.has(rn.facet) || rn.facet === "goal" ? { facet: rn.facet } : existing?.facet ? { facet: existing.facet } : {}),
       turn: nodeTurn
     };
 

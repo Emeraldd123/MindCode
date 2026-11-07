@@ -7,6 +7,7 @@ const PROTECTED = new Set(["approved", "locked"]);
 const KINDS = new Set(["goal", "feature", "page", "component", "data", "api", "style", "constraint"]);
 const SOURCES = new Set(["user", "inferred", "unknown"]);
 const RELATIONS = new Set(["has", "needs", "informs"]);
+const FACETS = new Set(["design", "audience", "functionality", "cost", "goal"]);
 
 export function newSession(id: string): Session {
   return { id, messages: [], map: { nodes: [], edges: [] }, builds: [], checkpoints: [], node_chats: {} };
@@ -68,6 +69,8 @@ export function mergeMap(s: Session, proposed: ProposedMap, turn: number): strin
       evidence: Array.isArray(raw.evidence) ? raw.evidence.map(String) : prev?.evidence ?? [],
       turn: prev?.turn ?? turn,
     };
+    const facet = FACETS.has(raw.facet as string) ? (raw.facet as MapNode["facet"]) : prev?.facet;
+    if (facet) n.facet = facet;
     if (!prev) changed.push(nid);
     else if ((["label", "detail", "kind", "source", "parent", "importance", "inventiveness"] as const).some((k) => n[k] !== prev[k]))
       changed.push(nid);

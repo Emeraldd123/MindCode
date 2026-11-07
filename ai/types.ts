@@ -22,6 +22,7 @@ export interface Node {
   parent: string | null; // tree parent node id; root goal has null
   evidence: string[];    // exact user quotes that support it (empty for inferred/unknown)
   turn: number;          // chat turn that created it
+  facet?: "design" | "audience" | "functionality" | "cost" | "goal"; // Ben's prompt-engineering facet (ai/taxonomy.ts)
 }
 
 export type EdgeRelation = "has" | "needs" | "informs";
