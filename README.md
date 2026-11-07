@@ -1,36 +1,97 @@
 # MindCode
 
-Our NOVA hackathon project. **The idea is not final yet.** For now this repo holds the setup that lets three coding agents (Claude Code and two Google Antigravity agents) build one product together, alongside the four humans (Ben, Oliver, Lorien, 内山天満).
+MindCode is a prompt engineering tool for building web apps with Claude. It turns natural language brainstorming into a live, interactive **mind map**, separating your ideas from Claude's quiet assumptions and identifying crucial unknowns before a single line of code is written.
 
-## How the agents work together
+When you're ready to build, Claude generates the full application—and **every single UI element traces directly back to the bubbles that informed it**.
 
-- **Message board:** pinned issue [#1](https://github.com/Emeraldd123/MindCode/issues/1). Agents read it with `tools/board unread`, post with `tools/board post "[Ben's Claude] ..."` and tag each other as `@claude`, `@antigravity`, `@antigravity2` or `@agents`.
-- **Tasks:** GitHub issues labelled `task`. An agent claims one on the board, builds it on a branch, and opens a PR.
-- **Review:** any *other* agent reviews the PR, runs it, and comments **LGTM**. Then the author merges.
-- **Cycle:** after each merge, whoever is free files the next most useful task. The agents decide among themselves; humans set the GOAL and settle disputes.
+---
 
-Full rules: [`AGENTS.md`](AGENTS.md). Agent setup on one computer: [`docs/agent-setup.md`](docs/agent-setup.md).
+## Quickstart (Fresh Clone)
 
-| File | What it's for |
-|---|---|
-| `AGENTS.md` | The rules every agent follows (Claude reads it via `CLAUDE.md`) |
-| `GEMINI.md`, `.agents/rules/team.md` | Always-on rules for Antigravity |
-| `.agents/workflows/cycle.md`, `board.md` | `/cycle` and `/board` in Antigravity |
-| `.claude/` | Hooks so Claude Code sees board posts automatically |
-| `tools/board` | The board CLI (needs only `bash` + `gh`) |
-| `tools/goal` | Humans post a GOAL to start the build |
-| `.github/workflows/ci.yml` | CI on every PR |
+### Prerequisites
+- **Node.js 20+** (tested on Node 20, 22, and 24)
+- **Git**
 
-## Give the agents a goal
-
+### 1. Install Dependencies
 ```bash
-BOARD_HUMAN=Ben tools/goal "a web app that ..."
+# Clone the repository
+git clone https://github.com/Emeraldd123/MindCode.git
+cd MindCode
+
+# Install root & backend dependencies
+npm install
+
+# Install web frontend dependencies
+npm install --prefix web
 ```
 
-Or comment on issue #1: `[Lorien's Human] @all GOAL: ...`. To task one agent: `[Oliver's Human] @antigravity2 add a dark mode toggle`.
+### 2. Run the App
 
-## Stack (planned)
+#### A. Offline / Demo Mode (No API key needed)
+Uses deterministic mock responses to run the complete 3-minute demo flow without external calls:
+- **macOS / Linux:**
+  ```bash
+  MINDCODE_FAKE_LLM=1 npx netlify dev
+  ```
+- **Windows (PowerShell):**
+  ```powershell
+  $env:MINDCODE_FAKE_LLM="1"; npx netlify dev
+  ```
+- **Windows (Git Bash / CMD):**
+  ```bash
+  npx cross-env MINDCODE_FAKE_LLM=1 netlify dev
+  ```
 
-React + Vite in `web/`, FastAPI in `api/`, OpenRouter + MCP in `ai/`. Copy `.env.example` to `.env` for keys. Details in `AGENTS.md` section 5.
+Open **[http://localhost:8888](http://localhost:8888)** in your browser.
 
-On Windows, run `tools/board` from Git Bash (`bash tools/board ...`).
+#### B. Live Mode (OpenRouter / Claude Opus 5.5)
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Add your OpenRouter API key in `.env`:
+   ```bash
+   OPENROUTER_API_KEY=sk-or-v1-...
+   ```
+3. Run the development server:
+   ```bash
+   npx netlify dev
+   ```
+
+---
+
+## Running Tests
+
+```bash
+# Run backend and AI test suite
+npm test
+
+# Run frontend tests
+npm test --prefix web
+
+# Build frontend bundle
+npm run build --prefix web
+```
+
+---
+
+## 3-Minute Demo Flow
+
+Follow the exact steps in [`docs/demo.md`](docs/demo.md) to showcase:
+1. Prompt reconstruction into live colored bubbles (solid blue = user, amber dashed = Claude assumed, red = unknown decision).
+2. Distinguishing obvious inferences vs creative leaps via inventiveness shading.
+3. Brainstorming inside a bubble and approving it.
+4. One-click app build with two-way hover and click traceability.
+5. Checkpoint timeline exploration.
+
+---
+
+## Team & Development
+
+MindCode was built collaboratively during NOVA by human engineers alongside autonomous coding agents:
+- **Claude** (`@claude`)
+- **Antigravity** (`@antigravity`)
+- **Antigravity2** (`@antigravity2`)
+- **Jules** (Google Cloud async coding agent)
+
+Coordinated via the pinned GitHub issue [#1](https://github.com/Emeraldd123/MindCode/issues/1) message board. Full agent rules: [`AGENTS.md`](AGENTS.md).
