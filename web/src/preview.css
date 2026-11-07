@@ -9,6 +9,223 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
+}
+
+/* Traceability Audit Pill & Dropdown */
+.trace-audit-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.trace-audit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.trace-audit-pill:hover,
+.trace-audit-pill.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.trace-audit-pill.high {
+  border-color: rgba(23, 200, 148, 0.4);
+  background: rgba(23, 200, 148, 0.12);
+  color: #10b981;
+}
+
+.trace-audit-pill.high:hover,
+.trace-audit-pill.high.active {
+  background: rgba(23, 200, 148, 0.22);
+  border-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.trace-audit-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 310px;
+  background: #162032;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: audit-dropdown-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes audit-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trace-audit-header {
+  padding: 0.85rem 0.95rem;
+  background: #111827;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trace-audit-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trace-audit-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trace-audit-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  transition: color 0.15s ease;
+}
+
+.trace-audit-close:hover {
+  color: var(--text-main);
+}
+
+.trace-audit-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.trace-audit-count {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.trace-audit-count strong {
+  color: var(--text-main);
+}
+
+.trace-audit-pct {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-approved);
+}
+
+.trace-audit-bar-bg {
+  height: 6px;
+  width: 100%;
+  background: #1e293b;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.trace-audit-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, var(--accent-approved));
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.trace-audit-body {
+  padding: 0.75rem 0.95rem;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.trace-audit-section-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.trace-audit-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.trace-audit-node-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  gap: 0.5rem;
+}
+
+.trace-audit-node-label {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.trace-audit-node-check {
+  font-size: 0.7rem;
+  color: var(--accent-approved);
+  font-weight: bold;
+}
+
+.trace-audit-node-count {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.trace-audit-empty {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  font-style: italic;
+  padding: 0.25rem 0;
 }
 
 .preview-mode-toggle {

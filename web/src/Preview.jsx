@@ -14,6 +14,7 @@ import {
   traceCount,
   upsertBuild,
 } from './previewLogic';
+import { analyzeTraceability } from './traceLogic';
 import './preview.css';
 
 /**
@@ -34,6 +35,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   const [viewMode, setViewMode] = useState('desktop'); // 'desktop' | 'mobile'
   const [elapsedMs, setElapsedMs] = useState(0);
   const [toast, setToast] = useState(null); // { message: string, id: number }
+  const [showAudit, setShowAudit] = useState(false);
   const toastTimeoutRef = useRef(null);
   const buildStartTimeRef = useRef(null);
   const prevPendingRef = useRef(null);
@@ -150,11 +152,82 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
   // Empty state step
   const activeEmptyStep = emptyStep(map);
 
+  // Traceability audit metrics
+  const auditHtml = (html.id === shown?.id ? html.text : '') || shown?.html || '';
+  const audit = shown ? analyzeTraceability(auditHtml, map) : null;
+
   return (
     <div className="preview-container">
       <div className="pane-header">
         <h2>App Preview</h2>
         <div className="preview-actions">
+          {shown && audit && (
+            <div className="trace-audit-wrapper">
+              <button
+                type="button"
+                className={`trace-audit-pill ${audit.coveragePct >= 80 ? 'high' : 'medium'} ${showAudit ? 'active' : ''}`}
+                onClick={() => setShowAudit((prev) => !prev)}
+                title="View Traceability Audit"
+                aria-expanded={showAudit}
+              >
+                📊 {audit.coveragePct}% Traceable
+              </button>
+
+              {showAudit && (
+                <div className="trace-audit-card" role="dialog" aria-label="Traceability Audit Breakdown">
+                  <div className="trace-audit-header">
+                    <div className="trace-audit-title-row">
+                      <span className="trace-audit-title">Traceability Audit</span>
+                      <button
+                        type="button"
+                        className="trace-audit-close"
+                        onClick={() => setShowAudit(false)}
+                        aria-label="Close audit breakdown"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="trace-audit-summary">
+                      <span className="trace-audit-count">
+                        <strong>{audit.tracedCount}</strong> of <strong>{audit.totalCount}</strong> components traced
+                      </span>
+                      <span className="trace-audit-pct">{audit.coveragePct}%</span>
+                    </div>
+                    <div className="trace-audit-bar-bg">
+                      <div
+                        className="trace-audit-bar-fill"
+                        style={{ width: `${Math.min(100, audit.coveragePct)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="trace-audit-body">
+                    <span className="trace-audit-section-label">Approved Mind Map Bubbles</span>
+                    <div className="trace-audit-nodes">
+                      {approvedNodes.length > 0 ? (
+                        approvedNodes.map((node) => {
+                          const count = audit.nodeBreakdown[node.id] || 0;
+                          return (
+                            <div key={node.id} className="trace-audit-node-item">
+                              <span className="trace-audit-node-label" title={node.label}>
+                                <span className="trace-audit-node-check">✓</span>
+                                {node.label}
+                              </span>
+                              <span className="trace-audit-node-count">
+                                {count} element{count === 1 ? '' : 's'}
+                              </span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="trace-audit-empty">No approved bubbles yet</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {shown && (
             <div className="preview-mode-toggle" role="group" aria-label="View mode">
               <button
