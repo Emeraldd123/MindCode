@@ -168,6 +168,74 @@ describe("api", () => {
     expect(traceOf(html, new Set(["n1", "n2"]))).toEqual({ n1: ["a"], n2: ["c"] });
   });
 
+  it("exports mind map as mermaid flowchart", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    await call("POST", `/sessions/${id}/nodes/n3/approve`);
+
+    const res = await handle(
+      new Request(`http://x/api/sessions/${id}/map/export?format=mermaid`, { method: "GET" }),
+      deps,
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("text/vnd.mermaid; charset=utf-8");
+
+    const text = await res.text();
+    expect(text).toContain("flowchart TD");
+    // Check nodes and styling classes
+    expect(text).toContain('n1["Your app"]:::user');
+    expect(text).toContain('n2["Main page"]:::inferred');
+    expect(text).toContain('n3["Backend API"]:::approved');
+    expect(text).toContain('n5["Who are the users?"]:::unknown');
+    // Check relation edge
+    expect(text).toContain("n1 -->|has| n2");
+    // Check classDef definitions
+    expect(text).toContain("classDef user stroke:#d67408,stroke-width:2px;");
+    expect(text).toContain("classDef inferred stroke:#17c894,stroke-dasharray: 5 5;");
+    expect(text).toContain("classDef unknown stroke:#e5484d,stroke-dasharray: 2 2;");
+    expect(text).toContain("classDef approved stroke:#30a46c,stroke-width:3px;");
+  });
+
+  it("exports mind map as json by default or when format=json", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+
+    // 1. Default format (no query param)
+    const resDefault = await handle(
+      new Request(`http://x/api/sessions/${id}/map/export`, { method: "GET" }),
+      deps,
+    );
+    expect(resDefault.status).toBe(200);
+    expect(resDefault.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(resDefault.headers.get("content-disposition")).toBe(`attachment; filename="mindcode-map-${id}.json"`);
+
+    const jsonDefault = await resDefault.json();
+    expect(jsonDefault.id).toBe(id);
+    expect(typeof jsonDefault.exportedAt).toBe("string");
+    expect(isNaN(Date.parse(jsonDefault.exportedAt))).toBe(false);
+    expect(jsonDefault.nodes).toHaveLength(5);
+    expect(jsonDefault.edges.length).toBeGreaterThan(0);
+
+    // 2. Explicit format=json
+    const resJson = await handle(
+      new Request(`http://x/api/sessions/${id}/map/export?format=json`, { method: "GET" }),
+      deps,
+    );
+    expect(resJson.status).toBe(200);
+    expect(resJson.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(resJson.headers.get("content-disposition")).toBe(`attachment; filename="mindcode-map-${id}.json"`);
+    const jsonBody = await resJson.json();
+    expect(jsonBody.id).toBe(id);
+    expect(jsonBody.nodes).toEqual(jsonDefault.nodes);
+    expect(jsonBody.edges).toEqual(jsonDefault.edges);
+  });
+
+  it("export returns 404 for nonexistent session and 422 for unsupported format", async () => {
+    const id = await sid();
+    expect((await call("GET", "/sessions/nonexistent/map/export")).status).toBe(404);
+    expect((await call("GET", `/sessions/${id}/map/export?format=xml`)).status).toBe(422);
+  });
+
   it("restore checkpoint rolls back map, records new checkpoint, or returns 404", async () => {
     const id = await sid();
     // 1. Initial message creates checkpoint c1 with initial 5 nodes

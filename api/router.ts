@@ -166,6 +166,49 @@ async function route(req: Request, deps: Deps): Promise<Response> {
     return json(after, after.status === "pending" ? 202 : 200);
   }
 
+  if (rest[0] === "map" && rest[1] === "export" && m === "GET") {
+    const url = new URL(req.url);
+    const format = url.searchParams.get("format") || "json";
+
+    if (format === "mermaid") {
+      const lines = ["flowchart TD"];
+      for (const n of s.map.nodes) {
+        const cls = n.status === "approved" ? "approved" : n.source;
+        // Escape quotes and newlines in labels
+        const escapedLabel = n.label.replace(/"/g, "'").replace(/\n/g, " ");
+        lines.push(`    ${n.id}["${escapedLabel}"]:::${cls}`);
+      }
+      for (const e of s.map.edges) {
+        lines.push(`    ${e.from} -->|${e.relation}| ${e.to}`);
+      }
+      lines.push("    classDef user stroke:#d67408,stroke-width:2px;");
+      lines.push("    classDef inferred stroke:#17c894,stroke-dasharray: 5 5;");
+      lines.push("    classDef unknown stroke:#e5484d,stroke-dasharray: 2 2;");
+      lines.push("    classDef approved stroke:#30a46c,stroke-width:3px;");
+
+      return new Response(lines.join("\n") + "\n", {
+        headers: { "content-type": "text/vnd.mermaid; charset=utf-8" },
+      });
+    }
+
+    if (format === "json") {
+      const body = {
+        id: s.id,
+        exportedAt: new Date().toISOString(),
+        nodes: s.map.nodes,
+        edges: s.map.edges,
+      };
+      return new Response(JSON.stringify(body, null, 2), {
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "content-disposition": `attachment; filename="mindcode-map-${s.id}.json"`,
+        },
+      });
+    }
+
+    throw new HttpError(422, "unsupported format; must be mermaid or json");
+  }
+
   if (rest[0] === "builds" && rest[1]) {
     const b = s.builds.find((x) => x.id === rest[1]);
     if (!b) throw new HttpError(404, "build not found");
