@@ -36,7 +36,7 @@ describe("api", () => {
   it("health and session shape", async () => {
     expect((await call("GET", "/health")).body).toEqual({ ok: true });
     const s = (await call("POST", "/sessions")).body;
-    expect(Object.keys(s).sort()).toEqual(["builds", "checkpoints", "id", "map", "messages"]);
+    expect(Object.keys(s).sort()).toEqual(["builds", "checkpoints", "id", "map", "messages", "next_node_seq"]);
     expect((await call("GET", `/sessions/${s.id}`)).body.id).toBe(s.id);
     expect((await call("GET", "/sessions/nope")).status).toBe(404);
   });
@@ -568,5 +568,81 @@ describe("manual bubbles: validation", () => {
     expect([a.source, a.status]).toEqual(["user", "approved"]);
     const e = (await call("POST", `/sessions/${id}/edges`, { from: a.id, to: b.id, relation: "loves" })).body;
     expect(e.relation).toBe("has");
+  });
+});
+
+describe("never reuse deleted bubble ids", () => {
+  it("delete n3 then create a bubble -> id is not n3", async () => {
+    const id = await sid();
+    // Create initial bubbles (n1, n2, n3, n4, n5) via chat message
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    const s1 = (await call("GET", `/sessions/${id}`)).body;
+    expect(s1.map.nodes.map((n: MapNode) => n.id)).toEqual(["n1", "n2", "n3", "n4", "n5"]);
+
+    // Delete n3
+    const delRes = await call("DELETE", `/sessions/${id}/nodes/n3`);
+    expect(delRes.status).toBe(200);
+
+    // Create a new bubble manually
+    const created = (await call("POST", `/sessions/${id}/nodes`, { label: "New manual bubble" })).body;
+    expect(created.id).not.toBe("n3");
+    expect(created.id).toBe("n6");
+  });
+
+  it("AI-proposed new node after a delete also gets a fresh id", async () => {
+    const id = await sid();
+    // Initial bubbles: n1..n5
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+
+    // Delete n3
+    await call("DELETE", `/sessions/${id}/nodes/n3`);
+
+    // AI proposes a new node with no id or duplicate id
+    ai.updateMap = async (_m, cur) => ({
+      reply: "ok",
+      map: {
+        nodes: [...cur.nodes, { label: "AI suggested node", parent: "n1" }],
+        edges: cur.edges,
+      },
+    });
+
+    const res = await call("POST", `/sessions/${id}/messages`, { text: "suggest something" });
+    const nodes = res.body.map.nodes as MapNode[];
+    const newNode = nodes.find((n) => n.label === "AI suggested node");
+    expect(newNode).toBeDefined();
+    expect(newNode?.id).not.toBe("n3");
+    expect(newNode?.id).toBe("n6");
+  });
+
+  it("old sessions without next_node_seq still work and do not reuse deleted ids", async () => {
+    // Manually create an old session in storage without next_node_seq
+    const oldSession = {
+      id: "old-session-1",
+      messages: [],
+      map: {
+        nodes: [
+          { id: "n1", label: "Goal", detail: "", kind: "goal" as const, source: "user" as const, inventiveness: 0, importance: 5, status: "approved" as const, parent: null, evidence: [], turn: 0 },
+          { id: "n2", label: "Page", detail: "", kind: "page" as const, source: "inferred" as const, inventiveness: 0.1, importance: 3, status: "proposed" as const, parent: "n1", evidence: [], turn: 0 },
+          { id: "n3", label: "API", detail: "", kind: "api" as const, source: "inferred" as const, inventiveness: 0.1, importance: 3, status: "proposed" as const, parent: "n1", evidence: [], turn: 0 },
+        ],
+        edges: [],
+      },
+      builds: [],
+      checkpoints: [],
+      node_chats: {},
+    };
+    await deps.storage.put(oldSession as any);
+
+    // Verify fetching it works
+    const s = (await call("GET", `/sessions/old-session-1`)).body;
+    expect(s.id).toBe("old-session-1");
+
+    // Delete n2
+    await call("DELETE", `/sessions/old-session-1/nodes/n2`);
+
+    // Add a new node -> should be n4, not n2
+    const n = (await call("POST", `/sessions/old-session-1/nodes`, { label: "Fresh Node" })).body;
+    expect(n.id).not.toBe("n2");
+    expect(n.id).toBe("n4");
   });
 });
