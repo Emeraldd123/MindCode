@@ -160,16 +160,52 @@ try {
       }
     }
   }
+  if (!build.audit || build.audit.totalElements <= 0 || typeof build.audit.coveragePct !== "number") {
+    fail("Build audit missing or invalid");
+  }
   console.log("OK");
 
-  // 8. Checkpoint history
-  process.stdout.write("[smoke] 8. Checkpoint history... ");
+  // 8. Standalone download check
+  process.stdout.write("[smoke] 8. Standalone download check... ");
+  const dlRes = await req("GET", `/sessions/${sid}/builds/${bid}/download`);
+  const dlHtml = dlRes.body;
+  const dlDisp = dlRes.headers.get("content-disposition") ?? "";
+  if (dlRes.status !== 200 || typeof dlHtml !== "string") {
+    fail("Failed to download standalone build HTML");
+  }
+  if (!dlDisp.includes(`attachment; filename="mindcode-${bid}.html"`)) {
+    fail(`Invalid content-disposition header: ${dlDisp}`);
+  }
+  if (/<script[\s\S]*?>[\s\S]*?mc-hover[\s\S]*?<\/script>/i.test(dlHtml)) {
+    fail("Standalone download HTML should not contain trace script");
+  }
+  console.log("OK");
+
+  // 9. Checkpoint history
+  process.stdout.write("[smoke] 9. Checkpoint history... ");
   const cpRes = await req("GET", `/sessions/${sid}/checkpoints`);
   const checkpoints = cpRes.body;
   if (cpRes.status !== 200 || !Array.isArray(checkpoints) || checkpoints.length === 0) {
     fail("Failed to fetch checkpoints");
   }
   console.log(`OK (${checkpoints.length} checkpoints)`);
+
+  // 10. Checkpoint restore
+  process.stdout.write("[smoke] 10. Checkpoint restore... ");
+  const c1 = checkpoints[0];
+  const restoreRes = await req("POST", `/sessions/${sid}/checkpoints/${c1.id}/restore`);
+  if (restoreRes.status !== 200) {
+    fail(`Restore failed with status ${restoreRes.status}`);
+  }
+  if (JSON.stringify(restoreRes.body?.map) !== JSON.stringify(c1.map)) {
+    fail("Restored map does not match checkpoint map");
+  }
+  const postRestoreCpRes = await req("GET", `/sessions/${sid}/checkpoints`);
+  const postRestoreCps = postRestoreCpRes.body;
+  if (!Array.isArray(postRestoreCps) || !postRestoreCps.some((c) => c.label.startsWith("Restored to "))) {
+    fail("New restore checkpoint was not recorded");
+  }
+  console.log("OK");
 
   console.log("[smoke] ALL CHECKS PASSED");
 } finally {
