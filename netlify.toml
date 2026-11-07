@@ -5,6 +5,16 @@
   command = "npm ci --prefix web && npm run build --prefix web"
   publish = "web/dist"
   functions = "netlify/functions"
+  # DEPLOY GATE (Ben pays per deploy; max 15 total, see docs/deploys.md).
+  # Netlify skips the build unless the latest commit message contains "[deploy]".
+  # Exit 0 = skip, exit 1 = build. Only Claude adds "[deploy]", after a major change.
+  ignore = "git log -1 --pretty=%B | grep -qF '[deploy]' && exit 1 || exit 0"
+
+[build.environment]
+  # Netlify's secrets scanner flags any env-var value found in the build. These two aren't secrets:
+  # the model slug is a public default in ai/client.ts and the docs, and the fake flag is just 0/1.
+  # OPENROUTER_API_KEY is deliberately NOT listed, so it stays scanned.
+  SECRETS_SCAN_OMIT_KEYS = "OPENROUTER_MODEL,MINDCODE_FAKE_LLM,OPENROUTER_APP_NAME,OPENROUTER_SITE_URL"
 
 [functions]
   node_bundler = "esbuild"
