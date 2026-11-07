@@ -1,7 +1,7 @@
 import { describe, test } from "vitest";
 import assert from "node:assert/strict";
 import { update_map } from "../extract.ts";
-import { fakeUpdateMap } from "../fake.ts";
+import { fakeUpdateMap, fakeNodeChat, fakeBuildApp } from "../fake.ts";
 import { callOpenRouter } from "../client.ts";
 import type { MindMap, Node } from "../types.ts";
 
@@ -137,6 +137,34 @@ describe("MindMap Extraction & Fake Generator", () => {
     assert.equal(loginNode?.label, "Nickname login");
     assert.equal(loginNode?.source, "user");
     assert.ok(turn2.changed.includes("n5"), "n5 must be in changed list");
+  });
+
+  test("fakeNodeChat rewrites login node to Nickname login for demo prompt", () => {
+    const node: Node = {
+      id: "n5",
+      label: "How do users log in?",
+      detail: "Authentication method is currently undefined.",
+      kind: "constraint",
+      source: "unknown",
+      inventiveness: 0,
+      importance: 5,
+      status: "proposed",
+      parent: "n1",
+      evidence: [],
+      turn: 1,
+    };
+    const res = fakeNodeChat(node, { nodes: [node], edges: [] }, [], "just a nickname, no passwords");
+    assert.equal(res.label, "Nickname login");
+    assert.ok(res.reply.includes("nickname"));
+  });
+
+  test("fakeBuildApp produces HTML with demo traces matching n1, n2, n3, n4, n5", () => {
+    const html = fakeBuildApp({ nodes: [], edges: [] });
+    assert.ok(html.includes('data-mc-el="e-title"'));
+    assert.ok(html.includes('data-mc="n1 n2"'));
+    assert.ok(html.includes('data-mc-el="e-login"'));
+    assert.ok(html.includes('data-mc="n5"'));
+    assert.ok(html.includes('data-mc-el="e-messages"'));
   });
 
   test("throws error when MINDCODE_FAKE_LLM is not 1 and API key is missing", async () => {
