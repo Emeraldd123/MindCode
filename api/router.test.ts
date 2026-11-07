@@ -168,6 +168,140 @@ describe("api", () => {
     expect(traceOf(html, new Set(["n1", "n2"]))).toEqual({ n1: ["a"], n2: ["c"] });
   });
 
+  it("POST /nodes creates a new node, auto-adds edge if parent is provided", async () => {
+    const id = await sid();
+    // 400 when label is missing or empty
+    expect((await call("POST", `/sessions/${id}/nodes`, {})).status).toBe(400);
+    expect((await call("POST", `/sessions/${id}/nodes`, { label: "   " })).status).toBe(400);
+
+    // Root node
+    const res1 = await call("POST", `/sessions/${id}/nodes`, {
+      label: "Root Goal",
+      detail: "The main goal",
+      kind: "goal",
+    });
+    expect(res1.status).toBe(201);
+    const n1 = res1.body;
+    expect(n1.id).toBe("n1");
+    expect(n1.label).toBe("Root Goal");
+    expect(n1.detail).toBe("The main goal");
+    expect(n1.kind).toBe("goal");
+    expect(n1.source).toBe("user");
+    expect(n1.status).toBe("approved");
+    expect(n1.inventiveness).toBe(0);
+    expect(n1.importance).toBe(3);
+    expect(n1.evidence).toEqual([]);
+    expect(n1.parent).toBeNull();
+
+    // Child node
+    const res2 = await call("POST", `/sessions/${id}/nodes`, {
+      label: "Child Feature",
+      parent: "n1",
+    });
+    expect(res2.status).toBe(201);
+    const n2 = res2.body;
+    expect(n2.id).toBe("n2");
+    expect(n2.parent).toBe("n1");
+    expect(n2.kind).toBe("feature"); // default
+
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.map.nodes).toHaveLength(2);
+    expect(s.map.edges).toEqual([{ from: "n1", to: "n2", relation: "has" }]);
+  });
+
+  it("DELETE /nodes/:nid removes node, reparents children, and cleans edges", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/nodes`, { label: "Grandparent" }); // n1
+    await call("POST", `/sessions/${id}/nodes`, { label: "Parent", parent: "n1" }); // n2
+    await call("POST", `/sessions/${id}/nodes`, { label: "Child 1", parent: "n2" }); // n3
+    await call("POST", `/sessions/${id}/nodes`, { label: "Child 2", parent: "n2" }); // n4
+
+    // 404 for missing node
+    expect((await call("DELETE", `/sessions/${id}/nodes/n999`)).status).toBe(404);
+
+    // Delete n2 (Parent)
+    const delRes = await call("DELETE", `/sessions/${id}/nodes/n2`);
+    expect(delRes.status).toBe(200);
+    expect(delRes.body).toEqual({ ok: true, id: "n2" });
+
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.map.nodes.map((n: MapNode) => n.id)).toEqual(["n1", "n3", "n4"]);
+    // Children n3 and n4 should now have parent n1
+    const n3 = s.map.nodes.find((n: MapNode) => n.id === "n3");
+    const n4 = s.map.nodes.find((n: MapNode) => n.id === "n4");
+    expect(n3.parent).toBe("n1");
+    expect(n4.parent).toBe("n1");
+
+    // Edges connected to n2 should be removed, and edges from n1 to n3, n4 created
+    expect(s.map.edges).toEqual([
+      { from: "n1", to: "n3", relation: "has" },
+      { from: "n1", to: "n4", relation: "has" },
+    ]);
+  });
+
+  it("DELETE /nodes/:nid for root node leaves children with parent null", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/nodes`, { label: "Root" }); // n1
+    await call("POST", `/sessions/${id}/nodes`, { label: "Child", parent: "n1" }); // n2
+
+    const delRes = await call("DELETE", `/sessions/${id}/nodes/n1`);
+    expect(delRes.status).toBe(200);
+
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.map.nodes).toHaveLength(1);
+    expect(s.map.nodes[0].id).toBe("n2");
+    expect(s.map.nodes[0].parent).toBeNull();
+    expect(s.map.edges).toHaveLength(0);
+  });
+
+  it("POST /edges validates nodes and creates edge", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/nodes`, { label: "A" }); // n1
+    await call("POST", `/sessions/${id}/nodes`, { label: "B" }); // n2
+
+    // Validation failures
+    expect((await call("POST", `/sessions/${id}/edges`, { from: "n1", to: "n1" })).status).toBe(400);
+    expect((await call("POST", `/sessions/${id}/edges`, { from: "n1", to: "missing" })).status).toBe(400);
+    expect((await call("POST", `/sessions/${id}/edges`, { from: "", to: "n2" })).status).toBe(400);
+
+    // Success
+    const res = await call("POST", `/sessions/${id}/edges`, { from: "n1", to: "n2", relation: "needs" });
+    expect(res.status).toBe(201);
+    expect(res.body).toEqual({ from: "n1", to: "n2", relation: "needs" });
+
+    // Deduplication check
+    const dupRes = await call("POST", `/sessions/${id}/edges`, { from: "n1", to: "n2", relation: "needs" });
+    expect(dupRes.status).toBe(201);
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.map.edges).toHaveLength(1);
+  });
+
+  it("DELETE /edges removes edge via query params or body", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/nodes`, { label: "A" }); // n1
+    await call("POST", `/sessions/${id}/nodes`, { label: "B" }); // n2
+    await call("POST", `/sessions/${id}/nodes`, { label: "C" }); // n3
+    await call("POST", `/sessions/${id}/edges`, { from: "n1", to: "n2" });
+    await call("POST", `/sessions/${id}/edges`, { from: "n2", to: "n3" });
+
+    // Validation
+    expect((await call("DELETE", `/sessions/${id}/edges`)).status).toBe(400);
+    expect((await call("DELETE", `/sessions/${id}/edges?from=n1`)).status).toBe(400);
+
+    // Delete with query params
+    const res1 = await call("DELETE", `/sessions/${id}/edges?from=n1&to=n2`);
+    expect(res1.status).toBe(200);
+    expect(res1.body).toEqual({ ok: true, from: "n1", to: "n2" });
+
+    // Delete with json body
+    const res2 = await call("DELETE", `/sessions/${id}/edges`, { from: "n2", to: "n3" });
+    expect(res2.status).toBe(200);
+    expect(res2.body).toEqual({ ok: true, from: "n2", to: "n3" });
+
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.map.edges).toHaveLength(0);
+  });
+
   it("restore checkpoint rolls back map, records new checkpoint, or returns 404", async () => {
     const id = await sid();
     // 1. Initial message creates checkpoint c1 with initial 5 nodes

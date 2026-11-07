@@ -158,7 +158,76 @@ describe('api client wrapper', () => {
     );
   });
 
-  it('throws descriptive error on HTTP failure with json detail', async () => {
+  it('createNode calls POST /sessions/{sid}/nodes', async () => {
+    const mockNode = { id: 'n1', label: 'Feature', status: 'approved' };
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockNode,
+    });
+
+    const res = await api.createNode('s1', { label: 'Feature', detail: 'details', kind: 'feature', parent: null });
+    expect(res).toEqual(mockNode);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/sessions\/s1\/nodes$/),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ label: 'Feature', detail: 'details', kind: 'feature', parent: null }),
+      })
+    );
+  });
+
+  it('deleteNode calls DELETE /sessions/{sid}/nodes/{nid}', async () => {
+    const mockRes = { ok: true, id: 'n1' };
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockRes,
+    });
+
+    const res = await api.deleteNode('s1', 'n1');
+    expect(res).toEqual(mockRes);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/sessions\/s1\/nodes\/n1$/),
+      expect.objectContaining({ method: 'DELETE' })
+    );
+  });
+
+  it('createEdge calls POST /sessions/{sid}/edges', async () => {
+    const mockEdge = { from: 'n1', to: 'n2', relation: 'has' };
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockEdge,
+    });
+
+    const res = await api.createEdge('s1', { from: 'n1', to: 'n2', relation: 'has' });
+    expect(res).toEqual(mockEdge);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/sessions\/s1\/edges$/),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ from: 'n1', to: 'n2', relation: 'has' }),
+      })
+    );
+  });
+
+  it('deleteEdge calls DELETE /sessions/{sid}/edges with body', async () => {
+    const mockRes = { ok: true, from: 'n1', to: 'n2' };
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockRes,
+    });
+
+    const res = await api.deleteEdge('s1', { from: 'n1', to: 'n2' });
+    expect(res).toEqual(mockRes);
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/sessions\/s1\/edges$/),
+      expect.objectContaining({
+        method: 'DELETE',
+        body: JSON.stringify({ from: 'n1', to: 'n2' }),
+      })
+    );
+  });
+
+  it('throws descriptive error on HTTP failure with json detail or error', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
@@ -167,5 +236,14 @@ describe('api client wrapper', () => {
     });
 
     await expect(api.getSession('missing-id')).rejects.toThrow('Session not found');
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      json: async () => ({ error: 'label required' }),
+    });
+
+    await expect(api.createNode('s1', { label: '' })).rejects.toThrow('label required');
   });
 });

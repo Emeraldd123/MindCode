@@ -96,6 +96,78 @@ export function mergeMap(s: Session, proposed: ProposedMap, turn: number): strin
   return changed;
 }
 
+export function addNode(
+  s: Session,
+  input: { label: string; detail?: string; kind?: MapNode["kind"]; parent?: string | null }
+): MapNode {
+  const nid = nextId("n", new Set(s.map.nodes.map((n) => n.id)));
+  const parent = input.parent && s.map.nodes.some((n) => n.id === input.parent) ? input.parent : null;
+  const node: MapNode = {
+    id: nid,
+    label: input.label.trim(),
+    detail: input.detail?.trim() || "",
+    kind: input.kind || "feature",
+    source: "user",
+    status: "approved",
+    inventiveness: 0,
+    importance: 3,
+    evidence: [],
+    turn: userTurn(s),
+    parent,
+  };
+  s.map.nodes.push(node);
+  if (parent) {
+    if (!s.map.edges.some((e) => e.from === parent && e.to === node.id && e.relation === "has")) {
+      s.map.edges.push({ from: parent, to: node.id, relation: "has" });
+    }
+  }
+  return node;
+}
+
+export function removeNode(s: Session, nid: string): boolean {
+  const node = s.map.nodes.find((n) => n.id === nid);
+  if (!node) return false;
+  const parent = node.parent;
+
+  s.map.nodes = s.map.nodes.filter((n) => n.id !== nid);
+  s.map.edges = s.map.edges.filter((e) => e.from !== nid && e.to !== nid);
+
+  for (const child of s.map.nodes) {
+    if (child.parent === nid) {
+      child.parent = parent;
+      if (parent) {
+        if (!s.map.edges.some((e) => e.from === parent && e.to === child.id && e.relation === "has")) {
+          s.map.edges.push({ from: parent, to: child.id, relation: "has" });
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+export function addEdge(
+  s: Session,
+  edge: { from: string; to: string; relation?: Edge["relation"] }
+): Edge {
+  const { from, to } = edge;
+  const relation: Edge["relation"] = edge.relation || "has";
+  if (!s.map.nodes.some((n) => n.id === from) || !s.map.nodes.some((n) => n.id === to) || from === to) {
+    throw new Error("invalid nodes for edge");
+  }
+  const existing = s.map.edges.find((e) => e.from === from && e.to === to && e.relation === relation);
+  if (existing) return existing;
+  const newEdge: Edge = { from, to, relation };
+  s.map.edges.push(newEdge);
+  return newEdge;
+}
+
+export function removeEdge(s: Session, from: string, to: string): boolean {
+  const initLen = s.map.edges.length;
+  s.map.edges = s.map.edges.filter((e) => !(e.from === from && e.to === to));
+  return s.map.edges.length < initLen;
+}
+
 export function addCheckpoint(s: Session, label: string, buildId?: string): Checkpoint {
   const cp: Checkpoint = { id: `c${s.checkpoints.length + 1}`, label, turn: userTurn(s), map: structuredClone(s.map) };
   if (buildId) cp.build_id = buildId;

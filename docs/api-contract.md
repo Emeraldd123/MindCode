@@ -70,6 +70,10 @@ interface Session {
 | POST | `/api/sessions/demo` | - | `Session`: a fresh, independent copy of the recorded real-Opus demo session (`api/demo/study-group.json`: 8 bubbles, 3 approved, finished traced build b1, 2 checkpoints). The web app calls it for `/?demo=1`. | built |
 | GET | `/api/sessions/{sid}` | - | `Session` | built |
 | POST | `/api/sessions/{sid}/messages` | `{ "text": string }` | `{ "reply": string, "map": MindMap, "changed": string[] }`; `changed` = new or updated node ids | built |
+| POST | `/api/sessions/{sid}/nodes` | `{ "label": string, "detail"?: string, "kind"?: Node["kind"], "parent"?: string \| null }` | `Node` (201 Created) | built |
+| DELETE | `/api/sessions/{sid}/nodes/{nid}` | - | `{ "ok": true, "id": string }` (200 OK; re-parents children and cleans up connected edges) | built |
+| POST | `/api/sessions/{sid}/edges` | `{ "from": string, "to": string, "relation"?: Edge["relation"] }` | `Edge` (201 Created) | built |
+| DELETE | `/api/sessions/{sid}/edges` | `{ "from": string, "to": string }` or `?from={from}&to={to}` | `{ "ok": true, "from": string, "to": string }` (200 OK) | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/chat` | `{ "text": string }` | `{ "reply": string, "node": Node, "history": Message[] }`; Claude may rewrite `label`/`detail` (not if locked) | built |
 | POST | `/api/sessions/{sid}/nodes/{nid}/approve` | - | `Node` (status `approved`; a locked node stays locked) | built |
 | PATCH | `/api/sessions/{sid}/nodes/{nid}` | `{ "label"?, "detail"?, "status"?: "locked" \| "approved" \| "proposed" }` | `Node` | built |
