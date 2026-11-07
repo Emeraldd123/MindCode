@@ -41,8 +41,8 @@ export async function update_map(
   messages: Message[],
   current: MindMap = { nodes: [], edges: [] }
 ): Promise<UpdateMapResult> {
-  // If FAKE_LLM is set or no API key, use deterministic canned generator
-  const isFake = process.env.MINDCODE_FAKE_LLM === "1" || !process.env.OPENROUTER_API_KEY;
+  // Only use fake mode when explicitly enabled via MINDCODE_FAKE_LLM=1
+  const isFake = process.env.MINDCODE_FAKE_LLM === "1";
   if (isFake) {
     return fakeUpdateMap(messages, current);
   }

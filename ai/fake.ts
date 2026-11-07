@@ -6,8 +6,6 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
 
   // If map is empty or this is the first turn, provide the canonical demo map
   if (!current.nodes || current.nodes.length === 0) {
-    const isDemo = /study group|chat/i.test(lastUserMsg) || true; // canonical default
-
     const nodes: Node[] = [
       {
         id: "n1",
@@ -93,7 +91,6 @@ export function fakeUpdateMap(messages: Message[], current: MindMap = { nodes: [
   // If map already exists, preserve existing nodes and respect locked/approved nodes
   const existingNodes = [...current.nodes];
   const existingEdges = [...(current.edges || [])];
-  const existingIds = new Set(existingNodes.map(n => n.id));
 
   // Determine next node index
   let maxIndex = 0;

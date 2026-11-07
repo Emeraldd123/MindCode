@@ -1,4 +1,4 @@
-import { test, describe } from "node:test";
+import { describe, test } from "vitest";
 import assert from "node:assert/strict";
 import { update_map } from "../extract.ts";
 import { fakeUpdateMap } from "../fake.ts";
@@ -138,17 +138,35 @@ describe("MindMap Extraction & Fake Generator", () => {
     assert.equal(loginNode?.source, "user");
     assert.ok(turn2.changed.includes("n5"), "n5 must be in changed list");
   });
+
+  test("throws error when MINDCODE_FAKE_LLM is not 1 and API key is missing", async () => {
+    const oldFake = process.env.MINDCODE_FAKE_LLM;
+    const oldKey = process.env.OPENROUTER_API_KEY;
+    delete process.env.MINDCODE_FAKE_LLM;
+    delete process.env.OPENROUTER_API_KEY;
+
+    try {
+      await assert.rejects(
+        async () => {
+          await update_map([{ role: "user", text: "hello" }]);
+        },
+        /OPENROUTER_API_KEY is not set/
+      );
+    } finally {
+      if (oldFake !== undefined) process.env.MINDCODE_FAKE_LLM = oldFake;
+      if (oldKey !== undefined) process.env.OPENROUTER_API_KEY = oldKey;
+    }
+  });
 });
 
 describe("OpenRouter Client", () => {
-  test("retries once when initial response is invalid JSON", async () => {
+  test("retries once when initial response is invalid JSON and time allows", async () => {
     const originalFetch = globalThis.fetch;
     let callCount = 0;
 
-    globalThis.fetch = (async (url: any, options: any) => {
+    globalThis.fetch = (async () => {
       callCount++;
       if (callCount === 1) {
-        // First attempt: invalid JSON
         return {
           ok: true,
           status: 200,
@@ -157,7 +175,6 @@ describe("OpenRouter Client", () => {
           })
         } as any;
       } else {
-        // Second attempt: valid JSON
         return {
           ok: true,
           status: 200,

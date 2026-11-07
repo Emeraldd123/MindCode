@@ -7,6 +7,8 @@ export interface OpenRouterOptions {
   apiKey?: string;
   model?: string;
   temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
   jsonMode?: boolean;
 }
 
@@ -21,6 +23,8 @@ export async function callOpenRouter<T = any>(
 
   const model = options.model || process.env.OPENROUTER_MODEL || "anthropic/claude-opus-5.5";
   const jsonMode = options.jsonMode ?? true;
+  const timeoutMs = options.timeoutMs ?? 24000;
+  const maxTokens = options.maxTokens ?? 2000;
 
   const url = "https://openrouter.ai/api/v1/chat/completions";
   const headers: Record<string, string> = {
@@ -33,24 +37,30 @@ export async function callOpenRouter<T = any>(
   const bodyPayload: any = {
     model,
     messages,
-    temperature: options.temperature ?? 0.2
+    temperature: options.temperature ?? 0.2,
+    max_tokens: maxTokens
   };
 
   if (jsonMode) {
     bodyPayload.response_format = { type: "json_object" };
   }
 
+  const startTime = Date.now();
   let attempt = 0;
   let lastError: Error | null = null;
-  const maxAttempts = 2; // initial attempt + one retry on invalid JSON
+  const maxAttempts = 2; // initial attempt + one retry on invalid JSON if time permits
 
   while (attempt < maxAttempts) {
     attempt++;
     try {
+      const elapsed = Date.now() - startTime;
+      const remainingTimeout = Math.max(1000, timeoutMs - elapsed);
+
       const res = await fetch(url, {
         method: "POST",
         headers,
-        body: JSON.stringify(bodyPayload)
+        body: JSON.stringify(bodyPayload),
+        signal: AbortSignal.timeout(remainingTimeout)
       });
 
       if (!res.ok) {
@@ -67,7 +77,6 @@ export async function callOpenRouter<T = any>(
 
       // Try parsing JSON
       try {
-        // Strip markdown code fences if model enclosed JSON in ```json ... ```
         let cleanText = rawText.trim();
         if (cleanText.startsWith("```")) {
           cleanText = cleanText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
@@ -76,23 +85,25 @@ export async function callOpenRouter<T = any>(
         return { data, rawText };
       } catch (parseErr) {
         lastError = new Error(`Invalid JSON from model (attempt ${attempt}/${maxAttempts}): ${(parseErr as Error).message}\nRaw: ${rawText}`);
-        if (attempt < maxAttempts) {
-          // Add retry prompt to messages for the retry
+
+        // Check if there is enough time left to retry (skip if first attempt took > 12 s)
+        const currentElapsed = Date.now() - startTime;
+        if (attempt < maxAttempts && currentElapsed <= 12000) {
           bodyPayload.messages = [
             ...messages,
             { role: "assistant", content: rawText },
             { role: "user", content: "Your previous response was not valid JSON. Please respond ONLY with valid raw JSON, with no explanation or markdown code fences." }
           ];
           continue;
+        } else {
+          break;
         }
       }
     } catch (err) {
       lastError = err as Error;
-      if (attempt >= maxAttempts) {
-        break;
-      }
+      break;
     }
   }
 
-  throw lastError || new Error("Failed to call OpenRouter after retry");
+  throw lastError || new Error("Failed to call OpenRouter");
 }
