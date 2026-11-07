@@ -21,6 +21,8 @@ Ben pays for every Netlify deploy. **Budget: 15 deploys total, only after major 
 
 | 4 | 2026-11-07 15:55 | main (#72, #77, #79, #83, #84) | Fixes Ben's 'cut off before </html>' build failure; ship-ready builds (no Assumed boxes); add/connect/edit/delete bubbles; re-recorded demo | **Live.** Demo 35 bubbles, 0 Assumed in its app, POST /nodes 201. |
 
-| 5 | 2026-11-07 16:25 | main (#82, #76, #87, #88, #95) | Tree map view + Tree/Graph toggle + breadcrumb; right-click edits ~7 s and small rebuilds ~20 s (patches); robust JSON parsing; no reused bubble ids | (verify) |
+| 5 | 2026-11-07 16:25 | main (#82, #76, #87, #88, #95) | Tree map view + Tree/Graph toggle + breadcrumb; right-click edits ~7 s and small rebuilds ~20 s (patches); robust JSON parsing; no reused bubble ids | **Live.** New bundle has the Tree/Graph toggle. |
 
-Deploys used: **5 / 15**
+| 6 | 2026-11-07 16:45 | main (#102 + Jules merges) | Pin mode in the preview; right-click bubble-id fix; compact header | (verify) |
+
+Deploys used: **6 / 15**
