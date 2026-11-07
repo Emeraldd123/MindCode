@@ -816,3 +816,29 @@ describe("bubble suggestions + build quality", () => {
     expect(typeof b.quality.score).toBe("number");
   });
 });
+
+describe("design widgets: POST /builds/{bid}/style", () => {
+  it("changes font size, font and text of one element in place and keeps the trace", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    await call("POST", `/sessions/${id}/build`);
+    const r = await call("POST", `/sessions/${id}/builds/b1/style`, { el: "e1", fontSize: 40, fontFamily: "Georgia, serif", text: "My Portfolio" });
+    expect(r.status).toBe(200);
+    expect(r.body.id).toBe("b1");
+    expect(r.body.html).toMatch(/<h1 data-mc-el="e1"[^>]*style="font-size: 40px; font-family: Georgia, serif">My Portfolio<\/h1>/);
+    expect(r.body.trace.n1).toContain("e1");
+    const s = (await call("GET", `/sessions/${id}`)).body;
+    expect(s.builds).toHaveLength(1);
+    const preview = (await call("GET", `/sessions/${id}/builds/b1/preview`)).body as string;
+    expect(preview).toContain("My Portfolio");
+  });
+
+  it("422 for bad input or unknown elements, 404 for unknown builds", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    await call("POST", `/sessions/${id}/build`);
+    expect((await call("POST", `/sessions/${id}/builds/b1/style`, { el: "e1" })).status).toBe(422);
+    expect((await call("POST", `/sessions/${id}/builds/b1/style`, { el: "e99", fontSize: 12 })).status).toBe(422);
+    expect((await call("POST", `/sessions/${id}/builds/b9/style`, { el: "e1", fontSize: 12 })).status).toBe(404);
+  });
+});

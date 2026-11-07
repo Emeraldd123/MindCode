@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ReactFlow, Background, Controls, Handle, Position, useReactFlow, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Check, Lock, Minus, Plus } from 'lucide-react';
@@ -74,6 +74,23 @@ const nodeTypes = { bubble: BubbleNode };
 
 function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedIds = [], selectedId = null, onSelect }) {
   const [collapsed, setCollapsed] = useState(() => new Set());
+  const [measurements, setMeasurements] = useState(() => new Map());
+  // Controlled nodes must retain React Flow's measurements when hover/selection
+  // replaces their data. Dropping them hides cards and invalidates edge endpoints.
+  const onNodesChange = useCallback((changes) => {
+    const dimensions = changes.filter((change) => change.type === 'dimensions' && change.dimensions);
+    if (!dimensions.length) return;
+    setMeasurements((prev) => {
+      let next = prev;
+      for (const { id, dimensions: size } of dimensions) {
+        const old = prev.get(id);
+        if (old?.width === size.width && old?.height === size.height) continue;
+        if (next === prev) next = new Map(prev);
+        next.set(id, size);
+      }
+      return next;
+    });
+  }, []);
   const { fitView } = useReactFlow();
   const toggle = (id) =>
     setCollapsed((prev) => {
@@ -104,6 +121,7 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
           id: n.id,
           type: 'bubble',
           position: { x: pos.get(n.id).x, y: pos.get(n.id).y },
+          measured: measurements.get(n.id),
           data: { node: n, state, highlighted: hl.has(n.id), changed: ch.has(n.id), hidden: hiddenCount.get(n.id) || 0, hasKids: hasKids.has(n.id), collapsed: collapsed.has(n.id), onToggle: toggle },
           draggable: false,
         };
@@ -142,7 +160,7 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
           }))
       : [];
     return { nodes: rfNodes, edges: [...tree, ...cross] };
-  }, [map, collapsed, selectedId, highlighted.join(' '), changedIds.join(' ')]);
+  }, [map, collapsed, selectedId, highlighted.join(' '), changedIds.join(' '), measurements]);
 
   useEffect(() => {
     const t = setTimeout(() => fitView({ padding: 0.15, duration: 300 }), 50);
@@ -172,6 +190,7 @@ function TreeInner({ map = { nodes: [], edges: [] }, highlighted = [], changedId
   return (
     <ReactFlow
       nodes={nodes}
+      onNodesChange={onNodesChange}
       edges={edges}
       nodeTypes={nodeTypes}
       onNodeClick={(_, n) => onSelect?.(map.nodes.find((x) => x.id === n.id) || null)}

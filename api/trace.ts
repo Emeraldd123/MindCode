@@ -96,6 +96,45 @@ export const TRACE_SCRIPT = `
     }, '*');
   });
 
+  // Design widgets (side panel): describe a bubble's elements, and apply font/text changes live.
+  function byEl(id) {
+    var found = null;
+    document.querySelectorAll('[data-mc-el]').forEach(function (x) { if (!found && x.getAttribute('data-mc-el') === id) found = x; });
+    return found;
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type === 'mc-inspect') {
+      var want = d.nodes || [], items = [];
+      document.querySelectorAll('[data-mc][data-mc-el]').forEach(function (el) {
+        var ids = el.getAttribute('data-mc').split(/\\s+/);
+        if (!ids.some(function (n) { return want.indexOf(n) >= 0; })) return;
+        var cs = getComputedStyle(el);
+        items.push({
+          el: el.getAttribute('data-mc-el'),
+          tag: el.tagName.toLowerCase(),
+          text: (el.innerText || el.value || el.getAttribute('placeholder') || '').trim().slice(0, 300),
+          textEditable: el.children.length === 0 && !/^(input|textarea|select|img)$/i.test(el.tagName),
+          fontSize: parseFloat(cs.fontSize) || 16,
+          fontFamily: cs.fontFamily
+        });
+      });
+      parent.postMessage({ type: 'mc-inspect-result', id: d.id, items: items }, '*');
+    } else if (d.type === 'mc-style') {
+      var t = byEl(d.el);
+      if (!t) return;
+      if (d.fontSize !== undefined) t.style.fontSize = d.fontSize ? d.fontSize + 'px' : '';
+      if (d.fontFamily !== undefined) t.style.fontFamily = d.fontFamily || '';
+      if (typeof d.text === 'string' && t.children.length === 0) t.textContent = d.text;
+    } else if (d.type === 'mc-flash') {
+      var f = byEl(d.el);
+      if (!f) return;
+      f.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      f.classList.add('mc-edit');
+      setTimeout(function () { f.classList.remove('mc-edit'); }, 900);
+    }
+  });
+
   window.addEventListener('message', function (e) {
     if (e.data && e.data.type === 'mc-edit-clear' && editEl) { editEl.classList.remove('mc-edit'); editEl = null; }
     if (e.data && e.data.type === 'mc-inspect') {

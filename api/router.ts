@@ -3,6 +3,7 @@ import { describeDiff, diffSize, mapDiff, addCheckpoint, addEdge, addNode, BIG_C
 import type { Storage } from "./storage";
 import { auditTrace, inject } from "./trace";
 import { checkQuality } from "./quality";
+import { applyElementStyle, parsePatch, StyleError } from "./style";
 import type { AI, ChangeRequest, Session } from "./types";
 import demoSession from "./demo/study-group.json";
 
@@ -429,6 +430,23 @@ async function route(req: Request, deps: Deps): Promise<Response> {
       await deps.startBuild(s.id, nid);
       const after = (await storage.get(s.id))?.builds.find((x) => x.id === nid) ?? nb;
       return json(after, after.status === "pending" ? 202 : 200);
+    }
+    // Design widgets: change one element's font size / font / text in this build, in place (no LLM).
+    if (m === "POST" && rest[2] === "style") {
+      if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);
+      try {
+        const { el, patch } = parsePatch(await req.json().catch(() => ({})));
+        b.html = applyElementStyle(b.html, el, patch);
+      } catch (e) {
+        if (e instanceof StyleError) throw new HttpError(422, e.message);
+        throw e;
+      }
+      const cp = s.checkpoints.find((c) => c.id === b.checkpoint_id);
+      const map = cp?.map ?? s.map;
+      b.trace = traceOf(b.html, new Set(map.nodes.map((n) => n.id)));
+      b.audit = auditTrace(b.html, map);
+      await save();
+      return json(b);
     }
     if (m === "GET" && rest[2] === "download") {
       if (b.status !== "done") throw new HttpError(409, `build is ${b.status}`);

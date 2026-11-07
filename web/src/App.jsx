@@ -20,6 +20,7 @@ export default function App() {
   const [checkpoints, setCheckpoints] = useState([]);
   const [hoverNodes, setHoverNodes] = useState([]);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [mapLevelId, setMapLevelId] = useState(null); // bubble whose children the map shows, null = top level
   const [changedIds, setChangedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
@@ -102,6 +103,7 @@ export default function App() {
       setBuilds([]);
       setCheckpoints([]);
       setSelectedNodeId(null);
+      setMapLevelId(null);
       setActiveCheckpointId(null);
       setHoverNodes([]);
       setChangedIds([]);
@@ -257,6 +259,8 @@ export default function App() {
                   />
                 ) : (
                   <MindMap
+                    activeId={mapLevelId}
+                    onNavigate={setMapLevelId}
                     map={viewMap}
                     highlighted={hoverNodes}
                     changedIds={activeCheckpoint ? [] : changedIds}

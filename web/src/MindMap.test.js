@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   bubbleClass,
-  bubbleWidth,
+  buildTree,
   inferredFill,
-  edgeStyle,
+  mapStatus,
   getKindIcon,
   KIND_ICONS,
 } from './MindMap';
@@ -59,21 +59,32 @@ describe('MindMap logic and pure helpers', () => {
     });
   });
 
-  describe('bubbleWidth', () => {
-    it('scales linearly from 160px (importance 1) to 240px (importance 5)', () => {
-      expect(bubbleWidth(1)).toBe(160);
-      expect(bubbleWidth(2)).toBe(180);
-      expect(bubbleWidth(3)).toBe(200);
-      expect(bubbleWidth(4)).toBe(220);
-      expect(bubbleWidth(5)).toBe(240);
+  describe('buildTree', () => {
+    it('uses parent links, edges to parentless nodes, and cuts cycles', () => {
+      const t = buildTree(
+        [{ id: 'a' }, { id: 'b', parent: 'a' }, { id: 'c' }, { id: 'x', parent: 'y' }, { id: 'y', parent: 'x' }],
+        [{ from: 'b', to: 'c', relation: 'has' }],
+      );
+      expect(t.children.get('a')).toEqual(['b']);
+      expect(t.children.get('b')).toEqual(['c']);
+      expect(t.roots).toContain('a');
+      expect(t.roots.some((id) => id === 'x' || id === 'y')).toBe(true); // the cycle still shows up
+    });
+  });
+
+  describe('mapStatus', () => {
+    it('maps source/status onto the Figma Clear / Assumed / Needs info vocabulary', () => {
+      expect(mapStatus({ source: 'user' })).toBe('clear');
+      expect(mapStatus({})).toBe('clear');
+      expect(mapStatus({ source: 'inferred' })).toBe('assumed');
+      expect(mapStatus({ source: 'unknown' })).toBe('needs');
+      expect(mapStatus({ source: 'inferred', status: 'approved' })).toBe('clear');
+      expect(mapStatus({ source: 'unknown', status: 'locked' })).toBe('clear');
     });
 
-    it('defaults out-of-range or missing values to 200px (importance 3)', () => {
-      expect(bubbleWidth()).toBe(200);
-      expect(bubbleWidth(null)).toBe(200);
-      expect(bubbleWidth(0)).toBe(200);
-      expect(bubbleWidth(6)).toBe(200);
-      expect(bubbleWidth('large')).toBe(200);
+    it('is exposed as a bubble class', () => {
+      expect(bubbleClass({ source: 'inferred' })).toContain('map-status-assumed');
+      expect(bubbleClass({ source: 'unknown' })).toContain('map-status-needs');
     });
   });
 
@@ -83,43 +94,15 @@ describe('MindMap logic and pure helpers', () => {
       const deep = inferredFill(1);
       const mid = inferredFill(0.5);
 
-      expect(pale).toBe('rgba(23, 200, 148, 0.08)');
-      expect(deep).toBe('rgba(23, 200, 148, 0.42)');
-      expect(mid).toBe('rgba(23, 200, 148, 0.25)');
+      expect(pale).toBe('rgba(198, 97, 63, 0)');
+      expect(deep).toBe('rgba(198, 97, 63, 0.16)');
+      expect(mid).toBe('rgba(198, 97, 63, 0.08)');
     });
 
     it('clamps values below 0 or above 1', () => {
-      expect(inferredFill(-0.5)).toBe('rgba(23, 200, 148, 0.08)');
-      expect(inferredFill(1.5)).toBe('rgba(23, 200, 148, 0.42)');
-      expect(inferredFill(undefined)).toBe('rgba(23, 200, 148, 0.08)');
-    });
-  });
-
-  describe('edgeStyle', () => {
-    it('returns slate solid for has relation', () => {
-      const style = edgeStyle('has');
-      expect(style.stroke).toBe('#64748b');
-      expect(style.strokeDasharray).toBeUndefined();
-      expect(style.animated).toBe(false);
-    });
-
-    it('returns amber animated for needs relation', () => {
-      const style = edgeStyle('needs');
-      expect(style.stroke).toBe('#cbd5e1');
-      expect(style.strokeDasharray).toBeUndefined();
-      expect(style.animated).toBe(true);
-    });
-
-    it('returns blue dashed for informs relation', () => {
-      const style = edgeStyle('informs');
-      expect(style.stroke).toBe('#38bdf8');
-      expect(style.strokeDasharray).toBe('5,5');
-      expect(style.animated).toBe(false);
-    });
-
-    it('defaults to slate for unknown relations', () => {
-      const style = edgeStyle('other');
-      expect(style.stroke).toBe('#64748b');
+      expect(inferredFill(-0.5)).toBe('rgba(198, 97, 63, 0)');
+      expect(inferredFill(1.5)).toBe('rgba(198, 97, 63, 0.16)');
+      expect(inferredFill(undefined)).toBe('rgba(198, 97, 63, 0)');
     });
   });
 
@@ -135,5 +118,20 @@ describe('MindMap logic and pure helpers', () => {
       expect(getKindIcon('constraint')).toBe('⚖️');
       expect(getKindIcon('unknown_kind')).toBe('✨');
     });
+  });
+});
+
+import { needsRefit } from './MindMap';
+
+describe('needsRefit (camera recovery)', () => {
+  it('refits when the pane first gets a real size', () => {
+    expect(needsRefit({ w: 0, h: 0 }, { w: 800, h: 600 })).toBe(true);
+    expect(needsRefit({ w: undefined, h: 600 }, { w: 800, h: 600 })).toBe(true);
+  });
+  it('ignores a 0 size and small changes, refits on big ones', () => {
+    expect(needsRefit({ w: 800, h: 600 }, { w: 0, h: 0 })).toBe(false);
+    expect(needsRefit({ w: 800, h: 600 }, { w: 820, h: 590 })).toBe(false);
+    expect(needsRefit({ w: 800, h: 600 }, { w: 400, h: 600 })).toBe(true);
+    expect(needsRefit({ w: 800, h: 600 }, { w: 1200, h: 600 })).toBe(true);
   });
 });

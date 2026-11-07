@@ -1,467 +1,344 @@
-/* web/src/mindmap.css */
+/* web/src/mindmap.css
+ * Hierarchical bubble explorer in the Figma "Mono" design (design/figma-graph/export/graph.css):
+ * one level at a time; the bubble you're inside is the light lens, its children sit in it,
+ * status = border style (Clear solid / Assumed dashed / Needs info dotted), accent #C6613F.
+ */
 
 .mindmap-wrapper {
+  --g-canvas: #1F1E1D;
+  --g-surface: #FAF9F5;
+  --g-lens: #F1F0EB;          /* Figma lens: #FAF9F5 under 4% ink */
+  --g-surface-border: #E5E2D9;
+  --g-ink: #141413;
+  --g-ink-3: #5E5D59;
+  --g-ink-4: #73726C;
+  --g-accent: #C6613F;
+  --g-needs: #B4532F;
+  --g-needs-bg: #F8E3DA;
+  --g-assumed: #73726C;
+  --g-assumed-bg: #F3F1EA;
+  --g-clear: #141413;
+  --g-clear-bg: #ECEAE3;
+  --g-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --g-font-serif: 'Source Serif 4', ui-serif, Georgia, serif;
+
   width: 100%;
   height: 100%;
   position: relative;
-  background-color: #0b1120;
+  background-color: var(--g-canvas);
+  font-family: var(--g-font-sans);
 }
 
-/* React Flow container override */
 .mindmap-wrapper .react-flow {
   background-color: transparent;
 }
 
-/* Custom Node Styles */
+/* React Flow puts its own box around custom nodes; the circle is ours. */
+.mindmap-wrapper .react-flow__node-bubble { border-radius: 50%; }
+.mindmap-wrapper .react-flow__node-lens { pointer-events: none !important; cursor: default; }
+
+.mindmap-wrapper { display: flex; flex-direction: column; }
+.mindmap-body { position: relative; flex: 1; min-height: 0; }
+.mindmap-stage { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+/* ---------- Header: breadcrumbs + level title + aggregated status ---------- */
+.mm-header {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  z-index: 6;
+}
+.mm-breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mm-breadcrumb ol {
+  display: flex; align-items: center; flex-wrap: nowrap; gap: 0; min-width: 0;
+  list-style: none; margin: 0; padding: 0;
+  font: 400 13px/20px var(--g-font-sans);
+}
+.mm-crumb-item { display: flex; align-items: center; min-width: 0; position: relative; }
+.mm-crumb-item + .mm-crumb-item::before { content: '/'; color: #5E5D59; padding: 0 6px; }
+.mm-crumb {
+  border: 0; background: none; padding: 1px 4px; border-radius: 6px;
+  color: #A3A19A; font: inherit; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;
+}
+button.mm-crumb:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.08); }
+.mm-crumb.current { color: #FFFFFF; font-weight: 600; cursor: default; box-shadow: inset 0 -2px 0 var(--g-accent); border-radius: 0; }
+.mm-back {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16); background: transparent;
+  color: #FFFFFF; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.mm-back:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--g-accent); }
+.mm-back:disabled { opacity: 0.3; cursor: default; }
+.mm-crumb-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  list-style: none; margin: 0; padding: 4px; min-width: 160px;
+  background: var(--g-surface); border: 1px solid var(--g-surface-border); border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 24px 64px rgba(0, 0, 0, 0.28);
+}
+.mm-crumb-menu button {
+  display: block; width: 100%; text-align: left; border: 0; background: none;
+  padding: 6px 10px; border-radius: 6px; color: var(--g-ink); font: 400 13px/18px var(--g-font-sans); cursor: pointer;
+}
+.mm-crumb-menu button:hover { background: var(--g-clear-bg); }
+
+.mm-legend { display: flex; gap: 6px; flex-wrap: wrap; }
+.mm-legend .status-chip { height: 22px; padding: 3px 10px 3px 7px; font-size: 11px; }
+
+/* ---------- Lens: the bubble you're inside ---------- */
+.mindmap-lens {
+  border-radius: 50%;
+  background: var(--g-lens);
+  border: 1px solid #A3A19A;
+  box-shadow: 0px 24px 60px rgba(0, 0, 0, 0.35);
+  display: flex; flex-direction: column; align-items: center;
+  box-sizing: border-box;
+}
+.mindmap-lens-title {
+  margin-top: 26px;
+  max-width: 64%;
+  border: 0; background: none; padding: 0 8px;
+  font: 600 34px/40px var(--g-font-serif);
+  letter-spacing: -0.01em;
+  color: var(--g-ink);
+  text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+button.mindmap-lens-title { pointer-events: auto; cursor: pointer; }
+button.mindmap-lens-title:hover { text-decoration: underline; text-decoration-color: var(--g-accent); text-underline-offset: 6px; }
+.mindmap-lens-empty {
+  margin: auto 0; padding: 0 22%; text-align: center; color: var(--g-ink-3);
+  font: 400 15px/22px var(--g-font-sans);
+}
+.mindmap-lens-empty p:first-child { font: 600 20px/26px var(--g-font-serif); color: var(--g-ink); margin-bottom: 6px; }
+
+/* ---------- Bubbles. Width/height come from levelLayout() inline; text sizes are fixed so
+   every level reads at the same scale. ---------- */
 .mindmap-node {
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: #1e293b;
-  color: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --bubble-base: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14%;
+  border-radius: 50%;
+  background: var(--bubble-base);
+  color: var(--g-ink);
+  text-align: center;
+  font-family: var(--g-font-sans);
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, opacity 0.17s ease;
+  box-shadow: 0px 4px 12px rgba(20, 20, 18, 0.1);
   position: relative;
   box-sizing: border-box;
 }
-
 .mindmap-node:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px -2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px 8px 20px rgba(20, 20, 18, 0.14), 0 0 0 4px rgba(198, 97, 63, 0.22);
 }
 
-/* Importance scaling */
-.mindmap-node.importance-1 {
-  min-width: 160px;
-  max-width: 160px;
+/* ---------- Branch vs leaf ----------
+   Told apart by size (branch = 1.5x, see bubbleRadius), ring (double vs single), fill and text,
+   so color is never the only cue.
+   Branch: structure to explore. Light grey, uniform ink double ring, "N bubbles →".
+   Leaf: one decision. White, single ring in its status style (solid / dashed / dotted). */
+.mindmap-node.is-branch {
+  --bubble-base: #ECEAE3;
+  border: 1.5px solid var(--g-ink) !important;
+  gap: 8px;
 }
-.mindmap-node.importance-2 {
-  min-width: 180px;
-  max-width: 180px;
+.branch-inner-ring {
+  position: absolute; inset: 6px; border-radius: 50%;
+  border: 1px solid rgba(20, 20, 19, 0.35);
+  pointer-events: none;
+  transition: border-color 0.15s ease;
 }
-.mindmap-node.importance-3 {
-  min-width: 200px;
-  max-width: 200px;
+.mindmap-node.is-branch:hover .branch-inner-ring { border-color: var(--g-accent); }
+.mindmap-node.is-branch .mindmap-node-label { font-size: 26px; }
+.branch-explore {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: 600 13px/16px var(--g-font-sans); color: var(--g-ink);
+  border-bottom: 1.5px solid var(--g-accent); padding-bottom: 1px;
+  transition: color 0.15s ease, gap 0.15s ease;
 }
-.mindmap-node.importance-4 {
-  min-width: 220px;
-  max-width: 220px;
-}
-.mindmap-node.importance-5 {
-  min-width: 240px;
-  max-width: 240px;
-  box-shadow: 0 6px 14px -2px rgba(0, 0, 0, 0.45), 0 0 12px rgba(255, 255, 255, 0.08);
-}
+.mindmap-node.is-branch:hover .branch-explore { color: var(--g-accent); gap: 7px; }
+.mindmap-node.is-branch .mindmap-details { position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%); }
 
-.mindmap-node-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
+.mindmap-node.is-leaf { --bubble-base: #FFFFFF; gap: 5px; padding: 15%; }
+.mindmap-node.is-leaf .mindmap-node-label { font-size: 20px; -webkit-line-clamp: 3; }
 
-.mindmap-kind-icon {
-  font-size: 14px;
-  line-height: 1;
-  flex-shrink: 0;
-}
+
+/* Status = border style (Figma "Decision" bubbles) */
+/* Leaf status: fill + ring style + marker, so it never depends on color alone.
+   Clear = white, solid ink. Assumed = warm grey, dashed. Needs info = red tint, thick dotted red. */
+.mindmap-node.map-status-clear   { border: 2px solid var(--g-clear); }
+.mindmap-node.map-status-assumed { border: 2.5px dashed #6B6A64; }
+.mindmap-node.map-status-needs   { border: 4px dotted var(--g-needs); }
+.mindmap-node.is-leaf.map-status-clear   { --bubble-base: #FFFFFF; }
+.mindmap-node.is-leaf.map-status-assumed { --bubble-base: #E2DED2; }
+.mindmap-node.is-leaf.map-status-needs   { --bubble-base: #F4CDBD; }
+.mindmap-node.is-leaf.map-status-needs .mindmap-node-label { color: #5A1F0C; }
+.mindmap-node.status-approved { border-width: 3px; }
 
 .mindmap-node-label {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3;
-  color: #f8fafc;
-  flex: 1;
+  font: 600 22px/1.2 var(--g-font-sans);
+  color: var(--g-ink);
+  max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
 }
-
-/* One-line detail preview in 12px muted text (ellipsis) */
-.mindmap-node-detail-preview {
-  font-size: 12px;
-  line-height: 1.35;
-  color: #94a3b8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 6px;
+.mindmap-details {
+  border: 0; background: none; padding: 0 2px; margin-left: 2px;
+  display: inline-flex; color: var(--g-ink-4); line-height: 1; cursor: pointer; border-radius: 50%;
 }
+.mindmap-details:hover { color: var(--g-accent); }
 
-.mindmap-node-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 0.7rem;
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.mindmap-kind-tag {
-  color: #94a3b8;
-  text-transform: uppercase;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-}
-
-.mindmap-node-badges {
-  display: flex;
+/* ---------- Status chip (Figma component) ---------- */
+.status-chip {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-/* Creative leap marker */
-.creative-leap-badge {
-  color: var(--accent-inferred, #17c894);
-  font-size: 0.8rem;
-  line-height: 1;
-  filter: drop-shadow(0 0 4px rgba(23, 200, 148, 0.6));
+  height: 20px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  font: 500 10px/16px var(--g-font-sans);
+  white-space: nowrap;
   flex-shrink: 0;
 }
-
-/* Corner checkmark badge for approved node */
-.approved-corner-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 18px;
-  height: 18px;
-  background: #ffffff;
-  color: #0f172a;
-  border: 1.5px solid #0f172a;
+.status-chip .marker {
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  font-size: 0.7rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  z-index: 4;
+  flex-shrink: 0;
 }
+.status-chip.clear   { background: var(--g-clear-bg);   color: var(--g-clear); }
+.status-chip.clear .marker   { background: var(--g-clear); border: 1.5px solid var(--g-clear); }
+.status-chip.assumed { background: var(--g-assumed-bg); color: var(--g-assumed); }
+.status-chip.assumed .marker { border: 1.5px dashed var(--g-assumed); }
+.status-chip.needs   { background: var(--g-needs-bg);   color: var(--g-needs); }
+.status-chip.needs .marker   { border: 1.5px dotted var(--g-needs); }
 
-/* Sources & Statuses */
-/* 1. User (Ben's color #d67408 via --accent-user): solid border and soft fill */
-.source-user {
-  border: 2px solid var(--accent-user, #d67408);
-  background: color-mix(in srgb, var(--accent-user, #d67408) 22%, transparent);
-}
-
-/* 2. Inferred = AI (Ben's color #17c894 via --accent-inferred): dashed border */
-.source-inferred,
-.source-inferred-low,
-.source-inferred-high {
-  border: 2px dashed var(--accent-inferred, #17c894);
-}
-
-/* 3. Unknown: red outline and a '?' badge with a slow pulse */
-.source-unknown {
-  border: 2px solid #ef4444;
-  background: rgba(239, 68, 68, 0.15);
-}
-
+/* Inline markers after the label */
+.creative-leap-badge { color: var(--g-accent); }
 .unknown-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 17px;
-  height: 17px;
-  background: #ef4444;
-  color: white;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 0.25em;
+  vertical-align: 0.05em;
+  background: var(--g-needs);
+  color: #FFFFFF;
   border-radius: 50%;
-  font-size: 0.72rem;
+  font-size: 0.75em;
   font-weight: 800;
   line-height: 1;
-  animation: slow-pulse 2.2s ease-in-out infinite;
 }
+.locked-badge { font-size: 0.8em; }
 
-@keyframes slow-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
-  }
-  50% {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
-  }
-}
-
-/* 4. Approved: keeps its source color, thicker solid border + white check (green is reserved for AI) */
-.status-approved {
-  border-width: 3px;
-  border-style: solid;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 0 10px rgba(255, 255, 255, 0.18);
-}
-
-.approved-badge {
-  display: inline-flex;
+.approved-corner-badge {
+  position: absolute;
+  top: 9%;
+  right: 9%;
+  width: 18px;
+  height: 18px;
+  background: var(--g-ink);
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 0.68rem;
-  font-weight: 700;
-  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 4;
 }
 
-/* 5. Locked: 🔒 badge and slightly desaturated look */
-.status-locked {
-  filter: saturate(0.65) contrast(0.95);
-  opacity: 0.92;
-}
-
-.locked-badge {
-  font-size: 0.75rem;
-  line-height: 1;
-}
-
-/* States */
-/* Selected: bright outline and a lift shadow */
-.node-selected {
-  outline: 3px solid #38bdf8 !important;
+/* ---------- Interaction states (no scaling: it would push a bubble out of its parent) ---------- */
+.mindmap-node.node-selected {
+  outline: 3px solid var(--g-accent) !important;
   outline-offset: 3px;
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 14px 24px -4px rgba(0, 0, 0, 0.6), 0 0 14px rgba(56, 189, 248, 0.4) !important;
-  z-index: 5;
+  box-shadow: 0 0 18px rgba(198, 97, 63, 0.45) !important;
 }
 
-/* Highlighted: animated glow ring */
 .node-highlighted {
-  box-shadow: 0 0 0 4px #facc15, 0 0 20px rgba(250, 204, 21, 0.75) !important;
+  box-shadow: 0 0 0 4px rgba(198, 97, 63, 0.85), 0 0 22px rgba(198, 97, 63, 0.45) !important;
   animation: glow-ring 1.4s ease-in-out infinite alternate;
-  z-index: 6;
 }
 
 @keyframes glow-ring {
-  from {
-    box-shadow: 0 0 0 3px #facc15, 0 0 12px rgba(250, 204, 21, 0.5);
-  }
-  to {
-    box-shadow: 0 0 0 6px #facc15, 0 0 26px rgba(250, 204, 21, 0.9);
-  }
+  from { box-shadow: 0 0 0 3px rgba(198, 97, 63, 0.6), 0 0 10px rgba(198, 97, 63, 0.25); }
+  to   { box-shadow: 0 0 0 6px rgba(198, 97, 63, 0.9), 0 0 24px rgba(198, 97, 63, 0.5); }
 }
 
-/* Changed: 1.5s pop in animation */
 .node-changed {
-  animation: node-pop-in 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: node-flash 1.5s ease-out;
 }
 
-@keyframes node-pop-in {
-  0% {
-    transform: scale(0.75);
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.8);
-  }
-  40% {
-    transform: scale(1.08);
-    box-shadow: 0 0 0 12px rgba(56, 189, 248, 0.3);
-  }
-  70% {
-    transform: scale(0.98);
-    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.1);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.35);
-  }
+@keyframes node-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(198, 97, 63, 0.9); }
+  40%  { box-shadow: 0 0 0 10px rgba(198, 97, 63, 0.35); }
+  100% { box-shadow: 0px 4px 12px rgba(20, 20, 18, 0.1); }
 }
 
-/* Hover Tooltip */
-.mindmap-tooltip {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  background: #0f172a;
-  color: #f8fafc;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  width: max-content;
-  max-width: 280px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  z-index: 100;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  white-space: normal;
-  text-align: left;
-}
+/* ---------- Hover tooltip (light card, like the Figma popup) ---------- */
 
-.mindmap-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: #0f172a transparent transparent transparent;
-}
 
-.mindmap-node:hover .mindmap-tooltip {
-  visibility: visible;
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
 
-.tooltip-detail {
-  color: #e2e8f0;
-  margin-bottom: 4px;
-}
+.tooltip-quote { color: var(--g-ink-3); font-family: var(--g-font-serif); font-style: italic; font-size: 13px; line-height: 18px; }
 
-.tooltip-evidence {
-  border-top: 1px solid #334155;
-  padding-top: 4px;
-  margin-top: 4px;
-}
-
-.tooltip-evidence-title {
-  color: #64748b;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  margin-bottom: 2px;
-}
-
-.tooltip-quote {
-  color: #93c5fd;
-  font-style: italic;
-  font-size: 0.72rem;
-}
-
-/* Handles */
-.mindmap-handle {
-  width: 8px;
-  height: 8px;
-  background: #64748b;
-  border: 2px solid #1e293b;
-  border-radius: 50%;
-}
-
-/* ReactFlow dark theme controls styling */
+/* ---------- React Flow controls & minimap ---------- */
 .mindmap-controls {
-  background: rgba(15, 23, 42, 0.85) !important;
-  border: 1px solid #334155 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 8px !important;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
-
 .mindmap-controls button {
   background: transparent !important;
-  border-bottom: 1px solid #334155 !important;
-  color: #cbd5e1 !important;
-  fill: #cbd5e1 !important;
-  transition: background 0.15s ease, color 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  transition: background 0.15s ease;
 }
+.mindmap-controls button:last-child { border-bottom: none !important; }
+.mindmap-controls button:hover { background: rgba(255, 255, 255, 0.12) !important; }
 
-.mindmap-controls button:last-child {
-  border-bottom: none !important;
-}
-
-.mindmap-controls button:hover {
-  background: #334155 !important;
-  color: #f8fafc !important;
-  fill: #f8fafc !important;
-}
-
-/* ReactFlow dark theme minimap styling */
 .mindmap-minimap {
-  background-color: rgba(15, 23, 42, 0.85) !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
+  background-color: var(--g-surface) !important;
+  border: 1px solid var(--g-surface-border) !important;
+  border-radius: 12px !important;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Accessibility: prefers-reduced-motion */
+/* ---------- Level transitions ---------- */
+/* Going in: the clicked bubble swells toward the viewer while its siblings fade. */
+.mindmap-stage.leaving-in .mindmap-node:not(.is-focus) { opacity: 0; }
+.mindmap-stage.leaving-in .mindmap-node.is-focus { transform: scale(1.35); opacity: 0; transition: transform 0.17s ease-in, opacity 0.17s ease-in; }
+.mindmap-stage.leaving-in .mindmap-lens { opacity: 0.6; transition: opacity 0.17s ease; }
+/* Going back: the level shrinks away. */
+.mindmap-stage.leaving-back { animation: mm-out-back 0.17s ease-in forwards; }
+.mindmap-stage.entering-in { animation: mm-in-in 0.24s ease-out; }
+.mindmap-stage.entering-back { animation: mm-in-back 0.24s ease-out; }
+@keyframes mm-out-back { to { opacity: 0; transform: scale(0.94); } }
+@keyframes mm-in-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes mm-in-back { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: none; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .unknown-badge {
-    animation: none !important;
-  }
-  .node-highlighted {
-    animation: none !important;
-  }
-  .node-changed {
-    animation: none !important;
-  }
-  .mindmap-node {
-    transition: none !important;
-  }
-}
-
-/* Corner Legend */
-.mindmap-legend {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.72rem;
-  color: #94a3b8;
-  z-index: 5;
-  backdrop-filter: blur(6px);
-  pointer-events: none;
-}
-
-.legend-title {
-  font-weight: 600;
-  color: #cbd5e1;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-bullet {
-  width: 14px;
-  height: 10px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.legend-bullet.user {
-  background: rgba(214, 116, 8, 0.3);
-  border: 1.5px solid var(--accent-user, #d67408);
-}
-
-.legend-bullet.inferred-low {
-  background: rgba(23, 200, 148, 0.12);
-  border: 1.5px dashed var(--accent-inferred, #17c894);
-}
-
-.legend-bullet.inferred-high {
-  background: rgba(23, 200, 148, 0.42);
-  border: 1.5px dashed var(--accent-inferred, #17c894);
-}
-
-.legend-bullet.unknown {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1.5px solid #ef4444;
-}
-
-.legend-bullet.approved {
-  background: rgba(255, 255, 255, 0.12);
-  border: 3px solid #ffffff;
+  .node-highlighted, .node-changed { animation: none !important; }
+  .mindmap-node { transition: none !important; }
+  .mindmap-stage { animation: none !important; }
 }
 
 /* Empty map state */
@@ -471,13 +348,45 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: #A3A19A;
   gap: 0.5rem;
   padding: 2rem;
   text-align: center;
 }
+.mindmap-empty h3 { font: 600 22px/28px var(--g-font-serif); color: #FFFFFF; }
+.mindmap-empty-icon { font-size: 2.5rem; opacity: 0.6; }
 
-.mindmap-empty-icon {
-  font-size: 2.5rem;
-  opacity: 0.6;
+/* Leaf status dot (the name of the status is in the hover card) */
+.status-dot {
+  width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 800 11px/1 var(--g-font-sans); color: #FFFFFF;
 }
+.status-dot.clear   { width: 12px; height: 12px; background: var(--g-clear); }
+.status-dot.assumed { border: 2px dashed #6B6A64; background: #FFFFFF; }
+.status-dot.needs   { background: var(--g-needs); }
+
+/* ---------- Hover card (NodeToolbar: sits above every bubble) ---------- */
+.mindmap-hovercard {
+  max-width: 280px;
+  background: var(--g-surface, #FAF9F5);
+  color: #141413;
+  border: 1px solid #E5E2D9;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 24px 64px rgba(0, 0, 0, 0.28);
+  font: 400 12px/16px 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  pointer-events: none;
+  text-align: left;
+  animation: hc-in 0.12s ease-out;
+}
+@keyframes hc-in { from { opacity: 0; transform: translateY(4px); } }
+.mindmap-hovercard p { margin: 0; }
+.hc-head { display: flex; align-items: center; gap: 8px; }
+.hc-title { font-weight: 600; font-size: 14px; line-height: 18px; }
+.hc-meta { margin-top: 4px !important; color: #5E5D59; }
+.hc-detail { margin-top: 6px !important; font-size: 13px; line-height: 18px; }
+.hc-evidence { margin-top: 6px; padding-top: 6px; border-top: 1px solid #E5E2D9; }
+.hc-evidence .tooltip-quote { font-size: 12px; line-height: 16px; }
+.hc-hint { margin-top: 8px !important; font-size: 11px; color: #C6613F; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .mindmap-hovercard { animation: none; } }

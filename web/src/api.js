@@ -145,6 +145,14 @@ export async function editBuild(sessionId, buildId, change) {
   });
 }
 
+/** Design widgets: change one element's fontSize / fontFamily / text in a build, in place. Returns the Build. */
+export async function styleBuild(sessionId, buildId, change) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/style`, {
+    method: 'POST',
+    body: JSON.stringify(change),
+  });
+}
+
 export function getBuildDownloadUrl(sessionId, buildId) {
   return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/download`;
 }

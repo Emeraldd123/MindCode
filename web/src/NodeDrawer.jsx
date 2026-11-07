@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowUp, Check, Link2, Lock, Pencil, Plus, Trash2, Unlock, X } from 'lucide-react';
 import * as api from './api';
+import DesignWidgets from './DesignWidgets';
 import { canApprove, nextLockStatus, canChat, normalizeInventiveness } from './nodeDrawerLogic';
 import { cn } from '@/lib/utils';
 import { ancestorsOf } from './treeLayout';
@@ -459,6 +460,8 @@ export default function NodeDrawer({
             <p className="text-[13px] text-muted-foreground">Nobody decided this yet. Tell Claude below.</p>
           )}
         </div>
+
+        <DesignWidgets sessionId={sessionId} node={node} map={map} onError={onError} />
 
         <div className="flex items-center justify-between">
           <SectionLabel>Importance</SectionLabel>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as api from './api';
+import { registerPreview } from './previewBridge';
 import {
   BUILD_STAGES,
   buildStage,
@@ -159,6 +160,8 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
     return () => window.removeEventListener('message', onMessage);
   }, [onHoverNodes]);
 
+  useEffect(() => () => registerPreview(null), []);
+
   // Map -> page: outline elements informed by the selected bubbles.
   const sendHighlight = () => {
     iframeRef.current?.contentWindow?.postMessage({ type: 'mc-highlight', nodes: highlightNodes }, '*');
@@ -316,7 +319,14 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                   title={appTitle}
                   srcDoc={html.id === shown.id ? html.text : ''}
                   sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"
-                  onLoad={sendHighlight}
+                  onLoad={() => {
+                    sendHighlight();
+                    registerPreview({
+                      win: iframeRef.current?.contentWindow,
+                      sessionId,
+                      buildId: html.id === shown.id ? shown.id : null,
+                    });
+                  }}
                 />
               </div>
             </div>

@@ -1,17 +1,19 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  Handle,
-  Position,
-  MarkerType,
-  useReactFlow,
-} from '@xyflow/react';
+import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { ReactFlow, Background, Controls, MiniMap, NodeToolbar, Position, useReactFlow, useStore } from '@xyflow/react';
+import { Info } from 'lucide-react';
 import '@xyflow/react/dist/style.css';
 import './mindmap.css';
 import Attention from './Attention';
+import {
+  STATUS_LABELS, mapStatus, buildTree, effectiveLevel, levelChildren, breadcrumbs, collapseCrumbs,
+  parentLevel, levelOf, descendantCounts, countsText, visibleMarks, bubbleRadius, levelLayout,
+} from './hierarchyLogic';
+
+// Hierarchical bubble explorer: one level of the map at a time. The active bubble is the big light
+// lens; only its direct children are drawn inside it. Clicking a bubble that has children opens it
+// as the next level; clicking a leaf opens its details (onSelect → side panel).
+
+export { STATUS_LABELS, mapStatus, buildTree };
 
 // Pure helper: kinds to icons
 export const KIND_ICONS = {
@@ -31,335 +33,266 @@ export function getKindIcon(kind) {
 
 // Pure helper: bubbleClass(node, options)
 export function bubbleClass(node, { isSelected = false, isHighlighted = false, isChanged = false } = {}) {
-  const classes = ['mindmap-node'];
+  const classes = ['mindmap-node', `map-status-${mapStatus(node)}`];
   const source = node?.source || 'user';
   const status = node?.status || 'proposed';
   const inventiveness = Number(node?.inventiveness ?? 0);
 
-  // Source styling
   if (source === 'user') {
     classes.push('source-user');
   } else if (source === 'inferred') {
     classes.push('source-inferred');
-    if (inventiveness >= 0.5) {
-      classes.push('source-inferred-high');
-    } else {
-      classes.push('source-inferred-low');
-    }
-    if (inventiveness >= 0.6) {
-      classes.push('has-creative-leap');
-    }
+    classes.push(inventiveness >= 0.5 ? 'source-inferred-high' : 'source-inferred-low');
+    if (inventiveness >= 0.6) classes.push('has-creative-leap');
   } else if (source === 'unknown') {
     classes.push('source-unknown');
   }
 
-  // Importance class
   const rawImportance = Number(node?.importance);
-  const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5
-    ? rawImportance
-    : 3;
+  const importance = Number.isInteger(rawImportance) && rawImportance >= 1 && rawImportance <= 5 ? rawImportance : 3;
   classes.push(`importance-${importance}`);
 
-  // Status styling
-  if (status === 'approved') {
-    classes.push('status-approved');
-  }
-  if (status === 'locked') {
-    classes.push('status-locked');
-  }
-
-  // Interaction states
-  if (isSelected) {
-    classes.push('node-selected');
-  }
-  if (isHighlighted) {
-    classes.push('node-highlighted');
-  }
-  if (isChanged) {
-    classes.push('node-changed');
-  }
+  if (status === 'approved') classes.push('status-approved');
+  if (status === 'locked') classes.push('status-locked');
+  if (isSelected) classes.push('node-selected');
+  if (isHighlighted) classes.push('node-highlighted');
+  if (isChanged) classes.push('node-changed');
 
   return classes.join(' ');
 }
 
-// Pure helper: bubbleWidth(importance)
-// Scales linearly from 160px (importance 1) to 240px (importance 5)
-export function bubbleWidth(importance) {
-  const raw = Number(importance);
-  const imp = Number.isInteger(raw) && raw >= 1 && raw <= 5 ? raw : 3;
-  return 160 + (imp - 1) * 20; // 1: 160, 2: 180, 3: 200, 4: 220, 5: 240
-}
-
 // Pure helper: inferredFill(inventiveness)
-// Opacity scales with inventiveness (0 = very pale, 1 = deep AI green #17c894)
+// Warm accent tint (#C6613F) that deepens with inventiveness: 0 = plain bubble, 1 = light terracotta.
 export function inferredFill(inventiveness) {
   const inv = typeof inventiveness === 'number' ? Math.max(0, Math.min(1, inventiveness)) : 0;
-  // Pale: ~0.08 alpha, Deep: ~0.42 alpha
-  const alpha = 0.08 + inv * 0.34;
-  return `rgba(23, 200, 148, ${Number(alpha.toFixed(3))})`; // AI green #17c894
+  const alpha = inv * 0.16;
+  return `rgba(198, 97, 63, ${Number(alpha.toFixed(3))})`;
 }
 
-// Pure helper: edgeStyle(relation)
-// has = slate, needs = light slate animated, informs = sky dashed (orange and green are reserved for user and AI)
-export function edgeStyle(relation) {
-  switch (relation) {
-    case 'needs':
-      return {
-        stroke: '#cbd5e1',
-        strokeWidth: 2,
-        strokeDasharray: undefined,
-        animated: true,
-      };
-    case 'informs':
-      return {
-        stroke: '#38bdf8',
-        strokeWidth: 2,
-        strokeDasharray: '5,5',
-        animated: false,
-      };
-    case 'has':
-    default:
-      return {
-        stroke: '#64748b',
-        strokeWidth: 2,
-        strokeDasharray: undefined,
-        animated: false,
-      };
-  }
+const TRANSITION_OUT_MS = 170;
+
+function StatusChip({ status, children }) {
+  return (
+    <span className={`status-chip ${status}`} title={STATUS_LABELS[status]}>
+      <span className="marker" />
+      <span className="status-chip-label">{children ?? STATUS_LABELS[status]}</span>
+    </span>
+  );
 }
 
-// Custom Node Component
-function MindMapNode({ data }) {
-  const {
-    node,
-    isHighlighted,
-    isSelected,
-    isChanged,
-  } = data;
+// Hover card: everything that isn't the title. Rendered by NodeToolbar so neighbours never cover it.
+function HoverCard({ node, isBranch, kids, counts, visible }) {
+  const evidence = Array.isArray(node?.evidence) ? node.evidence.filter(Boolean) : [];
+  const status = mapStatus(node);
+  return (
+    <NodeToolbar isVisible={visible} position={Position.Top} offset={10} className="mindmap-hovercard">
+      <div className="hc-head">
+        {!isBranch && <StatusChip status={status} />}
+        <span className="hc-title">{node?.label}</span>
+      </div>
+      {isBranch && countsText(counts) && <p className="hc-meta">Inside: {countsText(counts)}</p>}
+      {node?.detail && <p className="hc-detail">{node.detail}</p>}
+      {evidence.length > 0 && (
+        <div className="hc-evidence">
+          {evidence.slice(0, 2).map((q, i) => <p key={i} className="tooltip-quote">&ldquo;{q}&rdquo;</p>)}
+        </div>
+      )}
+      <p className="hc-hint">{isBranch ? 'Click to explore' : 'Click for details'}</p>
+    </NodeToolbar>
+  );
+}
 
+// One bubble on the current level, title-first. Two shapes:
+// - Branch (has bubbles inside): bigger, light grey, double ring, title + "N bubbles →". Click = go in.
+// - Leaf (one decision): smaller, white, single ring in its status style, title + status dot.
+//   Click = open details. Everything else is in the hover card.
+function BubbleNode({ data }) {
+  const { node, size, kids = 0, counts, isFocus, isSelected, isHighlighted, isChanged, onDetails } = data;
+  const [hover, setHover] = useState(false);
   const source = node?.source || 'user';
   const status = node?.status || 'proposed';
   const inventiveness = Number(node?.inventiveness ?? 0);
-  const kind = node?.kind || 'feature';
-  const kindIcon = getKindIcon(kind);
-  const width = bubbleWidth(node?.importance);
+  const isBranch = kids > 0;
 
-  const isApproved = status === 'approved';
-  const isLocked = status === 'locked';
+  // Leaf fill comes from its status (mindmap.css), so it's the same everywhere.
+  const style = { width: `${size}px`, height: `${size}px` };
 
-  const nodeClassName = bubbleClass(node, {
-    isSelected,
-    isHighlighted,
-    isChanged,
-  });
-
-  const nodeStyle = {
-    width: `${width}px`,
-  };
-
-  if (source === 'inferred') {
-    nodeStyle.backgroundColor = inferredFill(inventiveness);
-  }
-
-  const evidenceQuotes = Array.isArray(node?.evidence) ? node.evidence.filter(Boolean) : [];
-  const hasTooltip = Boolean(node?.detail || evidenceQuotes.length > 0);
+  const className = [
+    bubbleClass(node, { isSelected, isHighlighted, isChanged }),
+    isBranch ? 'is-branch' : 'is-leaf',
+    isFocus ? 'is-focus' : '',
+  ].join(' ');
 
   return (
     <div
-      className={nodeClassName}
-      style={nodeStyle}
+      className={className}
+      style={style}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      aria-label={isBranch ? `${node?.label}: ${kids} bubbles inside, explore` : `${node?.label}: ${STATUS_LABELS[mapStatus(node)]}`}
     >
-      <Handle type="target" position={Position.Top} className="mindmap-handle" />
-
-      {isApproved && (
-        <div className="approved-corner-badge" title="Approved">
-          ✓
-        </div>
-      )}
-
-      <div className="mindmap-node-header">
-        <span className="mindmap-kind-icon" title={kind}>
-          {kindIcon}
-        </span>
-        <div className="mindmap-node-label" title={node?.label}>
-          {node?.label}
-        </div>
-        {source === 'inferred' && inventiveness >= 0.6 && (
-          <span className="creative-leap-badge" title={`Creative leap (${Math.round(inventiveness * 100)}%)`}>
-            ✦
-          </span>
-        )}
+      <HoverCard node={node} isBranch={isBranch} kids={kids} counts={counts} visible={hover && !isFocus} />
+      {isBranch && <span className="branch-inner-ring" aria-hidden />}
+      {!isBranch && status === 'approved' && <div className="approved-corner-badge" title="Approved">✓</div>}
+      {!isBranch && <span className={`status-dot ${mapStatus(node)}`} aria-hidden>{mapStatus(node) === 'needs' ? '?' : ''}</span>}
+      <div className="mindmap-node-label">
+        {node?.label}
+        {!isBranch && source === 'inferred' && inventiveness >= 0.6 && <span className="creative-leap-badge"> ✦</span>}
+        {status === 'locked' && <span className="locked-badge"> 🔒</span>}
       </div>
-
-      {node?.detail && (
-        <div className="mindmap-node-detail-preview">
-          {node.detail}
-        </div>
+      {isBranch && (
+        <>
+          <span className="branch-explore">{kids} bubble{kids === 1 ? '' : 's'} <span aria-hidden>→</span></span>
+          <button
+            type="button"
+            className="mindmap-details nodrag"
+            title="Details"
+            aria-label={`Details of ${node?.label}`}
+            onClick={(e) => { e.stopPropagation(); onDetails(node); }}
+          >
+            <Info size={14} aria-hidden />
+          </button>
+        </>
       )}
-
-      <div className="mindmap-node-meta">
-        <span className="mindmap-kind-tag">
-          {kind}
-        </span>
-
-        <div className="mindmap-node-badges">
-          {source === 'unknown' && !isApproved && (
-            <span className="unknown-badge" title="Needs a decision">?</span>
-          )}
-          {isApproved && (
-            <span className="approved-badge" title="User approved">✓</span>
-          )}
-          {isLocked && (
-            <span className="locked-badge" title="Locked by user">🔒</span>
-          )}
-        </div>
-      </div>
-
-      {hasTooltip && (
-        <div className="mindmap-tooltip">
-          {node.detail && (
-            <div className="tooltip-detail">{node.detail}</div>
-          )}
-          {evidenceQuotes.length > 0 && (
-            <div className="tooltip-evidence">
-              <div className="tooltip-evidence-title">Evidence:</div>
-              {evidenceQuotes.map((quote, idx) => (
-                <div key={idx} className="tooltip-quote">
-                  &ldquo;{quote}&rdquo;
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <Handle type="source" position={Position.Bottom} className="mindmap-handle" />
     </div>
   );
 }
 
-const nodeTypes = {
-  mindmapNode: MindMapNode,
-};
-
-// Hierarchical layout calculator (top-to-bottom tree)
-function calculateLayout(rawNodes = [], rawEdges = []) {
-  if (!rawNodes || rawNodes.length === 0) {
-    return { positions: new Map() };
-  }
-
-  const nodeMap = new Map(rawNodes.map((n) => [n.id, n]));
-  const childrenMap = new Map();
-
-  rawNodes.forEach((n) => {
-    childrenMap.set(n.id, []);
-  });
-
-  // Build tree hierarchy from edges or parent pointers
-  rawNodes.forEach((n) => {
-    if (n.parent && nodeMap.has(n.parent)) {
-      childrenMap.get(n.parent).push(n.id);
-    }
-  });
-
-  rawEdges.forEach((e) => {
-    if (nodeMap.has(e.from) && nodeMap.has(e.to)) {
-      const list = childrenMap.get(e.from);
-      if (list && !list.includes(e.to)) {
-        list.push(e.to);
-      }
-    }
-  });
-
-  // Determine root nodes
-  const childSet = new Set();
-  childrenMap.forEach((children) => {
-    children.forEach((c) => childSet.add(c));
-  });
-
-  const roots = rawNodes.filter((n) => !childSet.has(n.id) || n.parent === null);
-  const actualRoots = roots.length > 0 ? roots : [rawNodes[0]];
-
-  // Assign depth / levels via BFS
-  const levels = [];
-  const visited = new Set();
-  let currentLevel = actualRoots.map((r) => r.id);
-
-  while (currentLevel.length > 0) {
-    const nextLevel = [];
-    const validLevelNodes = [];
-
-    currentLevel.forEach((id) => {
-      if (!visited.has(id) && nodeMap.has(id)) {
-        visited.add(id);
-        validLevelNodes.push(id);
-        const children = childrenMap.get(id) || [];
-        children.forEach((cid) => {
-          if (!visited.has(cid)) {
-            nextLevel.push(cid);
-          }
-        });
-      }
-    });
-
-    if (validLevelNodes.length > 0) {
-      levels.push(validLevelNodes);
-    }
-    currentLevel = nextLevel;
-  }
-
-  // Any orphaned nodes
-  rawNodes.forEach((n) => {
-    if (!visited.has(n.id)) {
-      if (levels.length === 0) levels.push([]);
-      levels[levels.length - 1].push(n.id);
-      visited.add(n.id);
-    }
-  });
-
-  // Calculate coordinates with variable bubbleWidth
-  const H_GAP = 36;
-  const V_GAP = 125;
-  const positions = new Map();
-
-  // Width of each level is sum of node widths + gaps
-  const levelWidths = levels.map((lvlNodes) => {
-    return lvlNodes.reduce((sum, nid, idx) => {
-      const n = nodeMap.get(nid);
-      const w = bubbleWidth(n?.importance);
-      return sum + w + (idx > 0 ? H_GAP : 0);
-    }, 0);
-  });
-
-  const maxLevelWidth = Math.max(...levelWidths, 0);
-
-  levels.forEach((lvlNodes, depth) => {
-    const totalLevelWidth = levelWidths[depth];
-    let curX = (maxLevelWidth - totalLevelWidth) / 2 + 50;
-    const y = depth * V_GAP + 50;
-
-    lvlNodes.forEach((nid) => {
-      const n = nodeMap.get(nid);
-      const w = bubbleWidth(n?.importance);
-      positions.set(nid, { x: curX, y });
-      curX += w + H_GAP;
-    });
-  });
-
-  return { positions };
+// The light circular canvas: the bubble you're inside.
+function LensNode({ data }) {
+  return (
+    <div className="mindmap-lens" style={{ width: data.size, height: data.size }}>
+      {data.onTitle ? (
+        <button type="button" className="mindmap-lens-title nodrag nopan" onClick={data.onTitle} title="Show details">
+          {data.label}
+        </button>
+      ) : (
+        <div className="mindmap-lens-title">{data.label}</div>
+      )}
+      {data.empty && (
+        <div className="mindmap-lens-empty">
+          <p>Nothing inside yet.</p>
+          <p>Ask Claude about {data.label} in the chat, or add a bubble from the side panel.</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
-// Inner helper component to handle fitView on load & node count changes
-function ViewportHandler({ nodeCount }) {
-  const { fitView } = useReactFlow();
+const nodeTypes = { bubble: BubbleNode, lens: LensNode };
+const MINIMAP_COLORS = { clear: '#141413', assumed: '#73726C', needs: '#B4532F' };
+
+// Re-fit when bubbles are added to / removed from the level being viewed (not on mount: the
+// ReactFlow instance fits or restores the viewport itself then).
+// Also re-fit when the pane gets a real size or its size changes a lot (a fit computed while the pane
+// was hidden or 0px wide — background tab, hot reload, panel resize — leaves the camera pointing at
+// nothing), when the tab becomes visible again, and whenever the viewport isn't a finite number.
+export function needsRefit(prev, next) {
+  if (!next.w || !next.h) return false;
+  if (!prev.w || !prev.h) return true;
+  return Math.abs(next.w - prev.w) / prev.w > 0.25 || Math.abs(next.h - prev.h) / prev.h > 0.25;
+}
+
+function RefitOnChange({ count }) {
+  const { fitView, getViewport } = useReactFlow();
+  const width = useStore((st) => st.width);
+  const height = useStore((st) => st.height);
+  const prev = useRef(count);
+  const fittedSize = useRef({ w: width, h: height });
+  const refit = useCallback((duration = 0) => {
+    fittedSize.current = { w: width, h: height };
+    fitView({ padding: 0.08, duration, maxZoom: 1.2, minZoom: 0.2 });
+  }, [fitView, width, height]);
 
   useEffect(() => {
-    if (nodeCount > 0) {
-      fitView({ padding: 0.2, duration: 400 });
-    }
-  }, [nodeCount, fitView]);
+    if (prev.current !== count) refit(300);
+    prev.current = count;
+  }, [count, refit]);
 
+  useEffect(() => {
+    const vp = getViewport();
+    const broken = ![vp.x, vp.y, vp.zoom].every(Number.isFinite) || vp.zoom <= 0;
+    if (broken || needsRefit(fittedSize.current, { w: width, h: height })) {
+      // Let React Flow measure the new size first.
+      const id = requestAnimationFrame(() => refit(0));
+      return () => cancelAnimationFrame(id);
+    }
+    return undefined;
+  }, [width, height, getViewport, refit]);
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') refit(0); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refit]);
   return null;
+}
+
+function Breadcrumbs({ crumbs, onGo, onBack, canGoBack }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { head, hidden, tail } = collapseCrumbs(crumbs);
+  const last = crumbs[crumbs.length - 1];
+
+  useEffect(() => setMenuOpen(false), [last?.id]);
+
+  const crumb = (c) => {
+    const current = c === last;
+    return (
+      <li key={c.id ?? '__top'} className="mm-crumb-item">
+        {current ? (
+          <span className="mm-crumb current" aria-current="page">{c.label}</span>
+        ) : (
+          <button type="button" className="mm-crumb" onClick={() => onGo(c.id)}>{c.label}</button>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <nav className="mm-breadcrumb" aria-label="Map location">
+      <button
+        type="button"
+        className="mm-back"
+        onClick={onBack}
+        disabled={!canGoBack}
+        aria-label="Back to parent bubble"
+        title="Back (Backspace)"
+      >
+        ‹
+      </button>
+      <ol>
+        {head.map(crumb)}
+        {hidden.length > 0 && (
+          <li className="mm-crumb-item mm-crumb-more">
+            <button
+              type="button"
+              className="mm-crumb"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label={`Show ${hidden.length} hidden levels`}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              …
+            </button>
+            {menuOpen && (
+              <ul className="mm-crumb-menu" role="menu">
+                {hidden.map((c) => (
+                  <li key={c.id} role="none">
+                    <button type="button" role="menuitem" onClick={() => onGo(c.id)}>{c.label}</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        )}
+        {tail.map(crumb)}
+      </ol>
+    </nav>
+  );
+}
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
 export default function MindMap({
@@ -369,68 +302,158 @@ export default function MindMap({
   changedIds = [],
   selectedId = null,
   onSelect = () => {},
+  activeId: controlledActiveId, // bubble whose children are shown; null = top level. Omit to let MindMap own it.
+  onNavigate,
+  rootLabel = 'Project',
 }) {
   const nodes = map.nodes || [];
   const edges = map.edges || [];
+  const [ownActiveId, setOwnActiveId] = useState(null);
+  const isControlled = controlledActiveId !== undefined;
+  const activeId = isControlled ? controlledActiveId : ownActiveId;
+  const commitNavigate = useCallback((id) => {
+    if (!isControlled) setOwnActiveId(id);
+    onNavigate?.(id);
+  }, [isControlled, onNavigate]);
 
-  const { positions } = useMemo(
-    () => calculateLayout(nodes, edges),
-    [nodes, edges]
+  const tree = useMemo(() => buildTree(nodes, edges), [nodes, edges]);
+  const levelId = effectiveLevel(tree, activeId);
+  const levelNode = levelId ? tree.byId.get(levelId) : null;
+  const visibleIds = levelChildren(tree, levelId);
+  const crumbs = useMemo(() => breadcrumbs(tree, levelId, rootLabel), [tree, levelId, rootLabel]);
+  const levelKey = levelId ?? '__top';
+  const levelCounts = useMemo(
+    () => (levelId ? descendantCounts(tree, levelId) : nodes.reduce((c, n) => {
+      c.total += 1; c[mapStatus(n)] += 1; return c;
+    }, { total: 0, clear: 0, assumed: 0, needs: 0 })),
+    [tree, levelId, nodes],
   );
 
-  const activeHighlighted = (highlighted && highlighted.length > 0) ? highlighted : highlightedIds;
-  const highlightedSet = useMemo(() => new Set(activeHighlighted || []), [activeHighlighted]);
-  const changedSet = useMemo(() => new Set(changedIds || []), [changedIds]);
+  // ----- transitions -----
+  const [leaving, setLeaving] = useState(null); // { dir: 'in' | 'back', focusId }
+  const [enterDir, setEnterDir] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const navigate = useCallback((target, dir, focusId = null) => {
+    clearTimeout(timer.current);
+    if (prefersReducedMotion()) {
+      setEnterDir(null);
+      commitNavigate(target);
+      return;
+    }
+    setLeaving({ dir, focusId });
+    timer.current = setTimeout(() => {
+      setEnterDir(dir);
+      setLeaving(null);
+      commitNavigate(target);
+    }, TRANSITION_OUT_MS);
+  }, [commitNavigate]);
+
+  const goBack = useCallback(() => {
+    if (crumbs.length > 1) navigate(parentLevel(tree, levelId), 'back');
+  }, [crumbs.length, navigate, tree, levelId]);
+
+  const goTo = useCallback((id) => {
+    if (effectiveLevel(tree, id) === levelId) return;
+    navigate(id, 'back');
+  }, [navigate, tree, levelId]);
+
+  // Backspace = up one level (not while typing).
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Backspace' || e.defaultPrevented) return;
+      const t = e.target;
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+      if (t !== document.body && !t.closest?.('.mindmap-wrapper')) return;
+      e.preventDefault();
+      goBack();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [goBack]);
+
+  // Something outside the map (attention list, side panel, chat) selected a bubble that isn't on
+  // this level: go to the level that shows it.
+  const prevSelected = useRef(selectedId);
+  useEffect(() => {
+    if (prevSelected.current === selectedId) return;
+    prevSelected.current = selectedId;
+    if (!selectedId || !tree.byId.has(selectedId) || selectedId === levelId) return;
+    if (visibleIds.includes(selectedId)) return;
+    setEnterDir(null);
+    commitNavigate(levelOf(tree, selectedId));
+  }, [selectedId, tree, levelId, visibleIds, commitNavigate]);
+
+  // ----- layout for this level -----
+  const activeHighlighted = highlighted && highlighted.length > 0 ? highlighted : highlightedIds;
+  const highlightedSet = useMemo(() => visibleMarks(tree, visibleIds, activeHighlighted || []), [tree, visibleIds, activeHighlighted]);
+  const changedSet = useMemo(() => visibleMarks(tree, visibleIds, changedIds || []), [tree, visibleIds, changedIds]);
+
+  const items = useMemo(() => visibleIds.map((id) => {
+    const counts = descendantCounts(tree, id);
+    const kids = (tree.children.get(id) || []).length;
+    return { id, counts, kids, r: bubbleRadius(tree.byId.get(id), kids > 0) };
+  }), [tree, visibleIds]);
+  const layout = useMemo(() => levelLayout(items), [items]);
 
   const flowNodes = useMemo(() => {
-    return nodes.map((node) => {
-      const pos = positions.get(node.id) || { x: 50, y: 50 };
-      return {
-        id: node.id,
-        type: 'mindmapNode',
-        position: pos,
+    const { lens } = layout;
+    const out = [{
+      id: '__lens',
+      type: 'lens',
+      position: { x: lens.x - lens.r, y: lens.y - lens.r },
+      // Keep dimensions across controlled-node updates (including preview hover).
+      // Otherwise React Flow hides nodes until ResizeObserver measures them again.
+      width: lens.r * 2,
+      height: lens.r * 2,
+      selectable: false,
+      focusable: false,
+      draggable: false,
+      zIndex: 0,
+      data: {
+        size: lens.r * 2,
+        label: levelNode?.label || rootLabel,
+        onTitle: levelNode ? () => onSelect(levelNode) : null,
+        empty: items.length === 0,
+      },
+    }];
+    items.forEach(({ id, counts, kids }) => {
+      const p = layout.bubbles.get(id);
+      out.push({
+        id,
+        type: 'bubble',
+        position: { x: p.x - p.r, y: p.y - p.r },
+        width: p.r * 2,
+        height: p.r * 2,
+        draggable: false,
+        zIndex: 1,
         data: {
-          node,
-          isSelected: node.id === selectedId,
-          isHighlighted: highlightedSet.has(node.id),
-          isChanged: changedSet.has(node.id),
+          node: tree.byId.get(id),
+          size: p.r * 2,
+          counts,
+          kids,
+          isFocus: leaving?.focusId === id,
+          isSelected: id === selectedId,
+          isHighlighted: highlightedSet.has(id),
+          isChanged: changedSet.has(id),
+          onDetails: onSelect,
         },
-      };
+      });
     });
-  }, [nodes, positions, selectedId, highlightedSet, changedSet]);
+    return out;
+  }, [layout, items, tree, levelNode, rootLabel, leaving, selectedId, highlightedSet, changedSet, onSelect]);
 
-  const flowEdges = useMemo(() => {
-    return edges.map((e, index) => {
-      const styleConfig = edgeStyle(e.relation);
-      return {
-        id: `edge-${e.from}-${e.to}-${index}`,
-        source: e.from,
-        target: e.to,
-        type: 'smoothstep',
-        animated: styleConfig.animated,
-        style: {
-          stroke: styleConfig.stroke,
-          strokeWidth: styleConfig.strokeWidth,
-          strokeDasharray: styleConfig.strokeDasharray,
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: styleConfig.stroke,
-          width: 14,
-          height: 14,
-        },
-      };
-    });
-  }, [edges]);
+  const handleNodeClick = useCallback((_, flowNode) => {
+    if (!flowNode || flowNode.type !== 'bubble' || leaving) return;
+    const node = flowNode.data.node;
+    if (flowNode.data.kids > 0) navigate(node.id, 'in', node.id);
+    else onSelect(node);
+  }, [leaving, navigate, onSelect]);
 
-  const handleNodeClick = useCallback(
-    (_, flowNode) => {
-      if (flowNode?.data?.node) {
-        onSelect(flowNode.data.node);
-      }
-    },
-    [onSelect]
-  );
+  // Per-level viewport memory, so Back returns to where you were.
+  const viewports = useRef(new Map());
+  const saved = viewports.current.get(levelKey);
 
   if (nodes.length === 0) {
     return (
@@ -440,71 +463,55 @@ export default function MindMap({
           <h3>Your Mind Map is Empty</h3>
           <p>Send a message in the chat to start mapping ideas.</p>
         </div>
-        <Attention
-          nodes={nodes}
-          onSelect={onSelect}
-          selectedId={selectedId}
-        />
       </div>
     );
   }
 
+  const stageClass = [
+    'mindmap-stage',
+    leaving ? `leaving leaving-${leaving.dir}` : '',
+    !leaving && enterDir ? `entering-${enterDir}` : '',
+  ].join(' ');
+
   return (
     <div className="mindmap-wrapper">
-      <Attention
-        nodes={nodes}
-        onSelect={onSelect}
-        selectedId={selectedId}
-      />
-      <ReactFlow
-        nodes={flowNodes}
-        edges={flowEdges}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        nodesDraggable={true}
-        nodesConnectable={false}
-      >
-        <ViewportHandler nodeCount={nodes.length} />
-        <Background color="#1e293b" gap={20} size={1} />
-        <Controls showInteractive={false} className="mindmap-controls" />
-        <MiniMap
-          className="mindmap-minimap"
-          nodeColor={(n) => {
-            const node = n.data?.node;
-            if (node?.status === 'approved') return '#ffffff';
-            if (node?.source === 'user') return '#d67408';
-            if (node?.source === 'inferred') return '#17c894';
-            if (node?.source === 'unknown') return '#ef4444';
-            return '#64748b';
-          }}
-          maskColor="rgba(11, 17, 32, 0.75)"
-        />
-      </ReactFlow>
+      <header className="mm-header">
+        <Breadcrumbs crumbs={crumbs} onGo={goTo} onBack={goBack} canGoBack={crumbs.length > 1} />
+        <div className="mm-legend" aria-label="Status of everything below this level">
+          {['clear', 'assumed', 'needs'].map((k) => levelCounts[k] > 0 && (
+            <StatusChip key={k} status={k}>{levelCounts[k]} {k === 'needs' ? 'need info' : STATUS_LABELS[k].toLowerCase()}</StatusChip>
+          ))}
+        </div>
+      </header>
 
-      {/* Legend */}
-      <div className="mindmap-legend">
-        <div className="legend-title">Mind Map Legend</div>
-        <div className="legend-item">
-          <span className="legend-bullet user" />
-          <span>User (specified)</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-bullet inferred-low" />
-          <span>Claude assumed (obvious)</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-bullet inferred-high" />
-          <span>Claude assumed (leap ✦)</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-bullet unknown" />
-          <span>Unknown (?)</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-bullet approved" />
-          <span>Approved (✓)</span>
+      <div className="mindmap-body">
+        <Attention nodes={nodes} onSelect={onSelect} selectedId={selectedId} />
+        <div className={stageClass} onAnimationEnd={(e) => { if (e.target === e.currentTarget) setEnterDir(null); }}>
+          <ReactFlow
+            key={levelKey}
+            nodes={flowNodes}
+            edges={[]}
+            nodeTypes={nodeTypes}
+            onNodeClick={handleNodeClick}
+            onMoveEnd={(_, vp) => viewports.current.set(levelKey, vp)}
+            defaultViewport={saved}
+            fitView={!saved}
+            fitViewOptions={{ padding: 0.08, maxZoom: 1.2, minZoom: 0.4 }}
+            minZoom={0.2}
+            maxZoom={3}
+            zoomOnDoubleClick={false}
+            nodesDraggable={false}
+            nodesConnectable={false}
+          >
+            <RefitOnChange count={items.length} />
+            <Background color="rgba(255, 255, 255, 0.07)" gap={20} size={1} />
+            <Controls showInteractive={false} className="mindmap-controls" />
+            <MiniMap
+              className="mindmap-minimap"
+              nodeColor={(n) => (n.type === 'lens' ? '#F1F0EB' : MINIMAP_COLORS[mapStatus(n.data?.node)])}
+              maskColor="rgba(31, 30, 29, 0.55)"
+            />
+          </ReactFlow>
         </div>
       </div>
     </div>

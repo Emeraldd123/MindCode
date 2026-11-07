@@ -1,0 +1,175 @@
+/*
+ * Graph (map pane) extracted from Figma frame "MacBook Pro 16" - 3 (Branding drill-in, Mono)", node 16-284.
+ * Source: right-hand "Frame 3" (1036.8 x 1117). The sidebar (hidden) and the chat popup ("Frame 8") are left out.
+ * Cleaned from Figma's Dev Mode CSS: auto-layout noise removed, repeated components collapsed into
+ * one class each, values unchanged. Reference only: this gets ported into web/src/mindmap.css.
+ *
+ * Notes on the export:
+ * - Figma exports dotted strokes as "dashed". Per the Status chip description, "Needs info" is dotted.
+ * - Ellipses (status marker, slider knob, radio dot) come out with no border-radius; they are circles.
+ * - Text content isn't in the CSS; labels below come from the layer names.
+ */
+
+/* ---------- Tokens ---------- */
+:root {
+  --g-canvas: #1F1E1D;            /* pane background */
+  --g-on-canvas: #FFFFFF;         /* header text on canvas */
+  --g-on-canvas-btn: rgba(255, 255, 255, 0.12);
+
+  --g-lens-bg: linear-gradient(0deg, rgba(20, 20, 19, 0.04), rgba(20, 20, 19, 0.04)), #FAF9F5;
+  --g-lens-border: #A3A19A;
+  --g-bubble-bg: #FFFFFF;
+  --g-tile-bg: #F0EEE6;
+
+  --g-ink: #141413;               /* headings */
+  --g-ink-2: #3D3D3A;
+  --g-ink-3: #5E5D59;             /* small labels */
+  --g-ink-4: #73726C;             /* captions, "assumed" */
+  --g-ink-5: #9A9893;             /* ticks, radio border */
+  --g-rail: #D9D6CC;
+
+  --g-accent: #C6613F;            /* Claude's pick / primary action */
+  --g-needs: #B4532F;             /* needs info */
+  --g-needs-bg: #F8E3DA;
+  --g-assumed: #73726C;
+  --g-assumed-bg: #F3F1EA;
+  --g-clear: #141413;
+  --g-clear-bg: #ECEAE3;
+
+  --g-font-sans: 'Inter', sans-serif;
+  --g-font-serif: 'Source Serif 4', serif;
+}
+
+/* ---------- Typography (Figma text styles) ---------- */
+.t-display-title { font: 600 40px/48px var(--g-font-serif); letter-spacing: -0.01em; }
+.t-heading-category { font: 600 18px/24px var(--g-font-sans); }
+.t-body { font: 400 14px/20px var(--g-font-sans); }
+.t-label { font: 500 14px/20px var(--g-font-sans); }
+.t-label-small { font: 500 12px/16px var(--g-font-sans); }
+.t-caption { font: 400 12px/16px var(--g-font-sans); }
+.t-overline { font: 600 11px/16px var(--g-font-sans); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ---------- Pane ---------- */
+.graph-pane {                    /* Frame 3: 1036.8 x 1117 */
+  position: relative;
+  background: var(--g-canvas);
+}
+
+/* ---------- Drill-in header (left 120, top 28, 880 x 112) ---------- */
+.drill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.drill-title { display: flex; flex-direction: column; gap: 8px; color: var(--g-on-canvas); }
+.drill-title h1 { /* "Branding" */ }                                   /* .t-display-title */
+.drill-summary { /* "4 decisions inside · 2 Claude guesses to confirm · 2 need your answer" */ } /* .t-body */
+
+.breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--g-on-canvas); }
+/* items: [back btn] "Project map" / "Design" / "Branding"(.t-label, current) — others .t-body */
+.icon-btn {                      /* Back to map (icon) */
+  width: 28px; height: 28px;
+  display: flex; justify-content: center; align-items: center;
+  background: var(--g-on-canvas-btn);
+  border-radius: 8px;
+}
+
+.drill-legend { display: flex; align-items: center; gap: 8px; }   /* chips: "2 assumed", "2 need info" */
+
+/* ---------- Status chip (component) ---------- */
+/* Variants: Clear (solid marker), Assumed (dashed), Needs info (dotted). */
+.status-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  font: 500 12px/16px var(--g-font-sans);
+}
+.status-chip .marker { box-sizing: border-box; width: 8px; height: 8px; border-radius: 50%; }
+
+.status-chip.clear   { background: var(--g-clear-bg);   color: var(--g-clear); }
+.status-chip.clear .marker   { background: var(--g-clear); border: 1.5px solid var(--g-clear); }
+.status-chip.assumed { background: var(--g-assumed-bg); color: var(--g-assumed); }
+.status-chip.assumed .marker { border: 1.5px dashed var(--g-assumed); }
+.status-chip.needs   { background: var(--g-needs-bg);   color: var(--g-needs); }
+.status-chip.needs .marker   { border: 1.5px dotted var(--g-needs); }
+
+/* ---------- Lens: the topic you drilled into (960 circle, left 48, top 152) ---------- */
+.lens {
+  box-sizing: border-box;
+  width: 960px; height: 960px;
+  background: var(--g-lens-bg);
+  border: 2px solid var(--g-lens-border);
+  box-shadow: 0px 24px 60px rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+}
+.lens-overline {                 /* "INSIDE BRANDING", centered, top 196 (44px inside lens) */
+  color: var(--g-ink-3);         /* .t-overline */
+}
+
+/* ---------- Decision bubble (340 circle, 2x2 grid, 28px gap) ---------- */
+/* Positions in Frame 3: (172,276) (540,276) (172,644) (540,644) */
+.decision {
+  box-sizing: border-box;
+  width: 340px; height: 340px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 12px;
+  background: var(--g-bubble-bg);
+  box-shadow: 0px 4px 12px rgba(20, 20, 18, 0.1);
+  border-radius: 50%;
+}
+.decision.assumed { border: 2px dashed var(--g-assumed); }   /* Tone of voice, Typeface */
+.decision.needs   { border: 3px dotted var(--g-needs); }     /* Logo, Tagline (exported as dashed) */
+/* .decision.clear: not in this frame; presumably solid var(--g-clear). */
+
+.decision-heading { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.decision-heading h3 { color: var(--g-ink); }                 /* .t-heading-category */
+
+.decision-note        { color: var(--g-ink-4); }   /* .t-caption: "Blocked: no product name yet", "Guessed from your prompt · drag to change" */
+.decision-guess       { color: var(--g-accent); }  /* .t-label-small: "Claude's guess: Symbol (bubbles)", "…Sans serif · tap to switch" */
+.decision-write-own   { color: var(--g-accent); }  /* .t-label-small: "+ Write my own" */
+
+/* ---------- Decision/Option tile: pick one (Logo: 96x96 x3 gap 8; Typeface: 112x104 x2 gap 12) ---------- */
+.option-tiles { display: flex; align-items: flex-start; gap: 8px; }
+.option-tile {
+  box-sizing: border-box;
+  width: 96px; height: 96px;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 4px;
+  background: var(--g-tile-bg);
+  border-radius: 12px;
+}
+.option-tile.selected {          /* current pick or Claude's guess */
+  background: #FFFFFF;
+  border: 2px solid var(--g-accent);
+}
+.option-tile .glyph { color: var(--g-ink); }   /* .t-heading-category (Typeface: 40/48 serif or sans) */
+.option-tile .label { color: var(--g-ink-3); } /* .t-label-small */
+
+/* ---------- Decision/Slider: 5-point scale between two poles (Tone of voice, 4 rows, gap 8) ---------- */
+.slider { display: flex; align-items: center; gap: 8px; width: 264px; height: 16px; }
+.slider .pole { width: 84px; color: var(--g-ink-3); }   /* .t-caption; left pole text-align: right */
+.slider .pole.left { text-align: right; }
+.slider .track { position: relative; width: 80px; height: 16px; }
+.slider .rail { position: absolute; left: 0; top: 6px; width: 80px; height: 4px; background: var(--g-rail); border-radius: 2px; }
+.slider .tick { position: absolute; top: 6px; width: 4px; height: 4px; background: var(--g-ink-5); border-radius: 2px; }
+/* ticks at left: 0, 19, 38, 57, 76 */
+.slider .knob {
+  position: absolute; top: 0;
+  box-sizing: border-box; width: 16px; height: 16px;
+  background: var(--g-accent);
+  border: 2px solid #FFFFFF;
+  border-radius: 50%;
+}
+/* knob left = value 0..4 → 0, 19 (15 in export), 38 (34), 57 (53), 76 — i.e. tickLeft - 4 */
+
+/* ---------- Decision/Radio: pick one drafted option (Tagline, 3 rows, gap 8, width 240) ---------- */
+.radio { display: flex; align-items: center; gap: 8px; }
+.radio .dot { box-sizing: border-box; width: 16px; height: 16px; background: #FFFFFF; border: 1.5px solid var(--g-ink-5); border-radius: 50%; }
+.radio .text { color: var(--g-ink); }   /* .t-body */
+
+/* ---------- Drill-in actions (left 24, top 1064) ---------- */
+.drill-actions { display: flex; align-items: center; gap: 8px; }
+.btn { padding: 8px 16px; border-radius: 8px; color: #FFFFFF; font: 500 14px/20px var(--g-font-sans); }
+.btn-primary { background: var(--g-accent); }        /* "Confirm 2 guesses" */
+.btn-ghost   { background: var(--g-on-canvas-btn); } /* "Back to map" */
