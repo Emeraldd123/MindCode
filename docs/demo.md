@@ -9,6 +9,8 @@ Open **http://localhost:8888/?demo=1** (or `<netlify-site>/?demo=1`). It loads a
 1. Run `MINDCODE_FAKE_LLM=1 npx netlify dev` (or `$env:MINDCODE_FAKE_LLM="1"; npx netlify dev` on Windows PowerShell).
 2. Open **http://localhost:8888** in your browser.
 
+![MindCode UI with Study Group Demo](screenshots/mindcode-ui-demo.png)
+
 ---
 
 ## 1. Pitch & First Message (0:00 - 0:40)
@@ -26,9 +28,9 @@ Open **http://localhost:8888/?demo=1** (or `<netlify-site>/?demo=1`). It loads a
 ## 2. Live Mind Map & Source Colors (0:40 - 1:15)
 - **Visual Callouts:**
   The center pane animates 5 connected bubbles:
-  1. **Solid Blue (`user`):** `Chat app` (root) and `Study group`. These came directly from your words.
-  2. **Amber Dashed (`inferred`):** `Message API` and `Real-time updates`. Claude assumed these capabilities.
-  3. **Inventiveness Shading:** Point out that `Message API` is pale amber (obvious necessity, low inventiveness: 0.2), while `Real-time updates` is deep amber (creative design leap, high inventiveness: 0.85).
+  1. **Solid Orange (`user`, #d67408):** `Chat app` (root) and `Study group`. These came directly from your words.
+  2. **Green Dashed (`inferred`, #17c894):** `Message API` and `Real-time updates`. Claude assumed these capabilities.
+  3. **Inventiveness Shading:** Point out that `Message API` is pale green (obvious necessity, low inventiveness: 0.2), while `Real-time updates` is deep green (creative design leap, high inventiveness: 0.85).
   4. **Red Outline with '?' (`unknown`):** `How do users log in?`. Claude detected that a critical architectural decision was left unspecified.
 
 ---
@@ -42,8 +44,8 @@ Open **http://localhost:8888/?demo=1** (or `<netlify-site>/?demo=1`). It loads a
      ```
      and press **Enter**.
   3. Claude responds confirming the change and rewrites the bubble label to **`Nickname login`**.
-  4. Click the green **Approve** button.
-  5. The bubble turns green with a checkmark (**✓ Approved**).
+  4. Click the **Approve** button in the bubble drawer.
+  5. The bubble receives a bold white checkmark badge (**✓ Approved**) with a thicker border in its source color.
 
 ---
 
