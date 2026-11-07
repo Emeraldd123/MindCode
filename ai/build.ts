@@ -1,6 +1,23 @@
 import type { MindMap } from "./types.ts";
 import { fakeBuildApp } from "./fake.ts";
 import { callOpenRouter } from "./client.ts";
+import {
+  findFullElement,
+  extractLockedElements,
+  cleanHtmlOutput,
+  sanitizeTracedElements,
+  ensureTracedElementIds,
+  preserveLockedElements,
+} from "./html_utils.ts";
+
+export {
+  findFullElement,
+  extractLockedElements,
+  cleanHtmlOutput,
+  sanitizeTracedElements,
+  ensureTracedElementIds,
+  preserveLockedElements,
+};
 
 const SYSTEM_PROMPT = `You are Claude, a senior product engineer. From a mind map of requirements, you build a REAL, WORKING single-file web app, not a mockup or a list of features.
 
@@ -30,75 +47,6 @@ const SYSTEM_PROMPT = `You are Claude, a senior product engineer. From a mind ma
    - Do NOT wrap the output in markdown fences (e.g. \`\`\`html ... \`\`\`).
 `;
 
-/**
- * Extracts elements containing locked node IDs in their data-mc attribute from previousHtml.
- */
-function extractLockedElements(previousHtml: string, lockedNodeIds: Set<string>): Map<string, string> {
-  const result = new Map<string, string>();
-  if (!previousHtml) return result;
-
-  const regex = /<([a-zA-Z0-9]+)[^>]*data-mc=["']([^"']*)["'][^>]*>([\s\S]*?)<\/\1>/gi;
-  let match;
-  while ((match = regex.exec(previousHtml)) !== null) {
-    const fullTag = match[0];
-    const mcAttr = match[2];
-    const ids = mcAttr.split(/\s+/).filter(Boolean);
-    for (const id of ids) {
-      if (lockedNodeIds.has(id)) {
-        result.set(id, fullTag);
-      }
-    }
-  }
-  return result;
-}
-
-/**
- * Strips markdown code block wrappers if present (e.g. ```html ... ```).
- */
-export function cleanHtmlOutput(html: string): string {
-  let cleaned = html.trim();
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:html)?\s*/i, "").replace(/\s*```$/, "").trim();
-  }
-  return cleaned;
-}
-
-/**
- * Validates and strips hallucinated / nonexistent node IDs from all data-mc attributes.
- */
-export function sanitizeTracedElements(html: string, validNodeIds: Set<string>): string {
-  // Replace data-mc="..." with only valid node IDs
-  return html.replace(/data-mc=(["'])(.*?)\1/gi, (_match, quote, val) => {
-    const ids = val.split(/\s+/).filter((id: string) => validNodeIds.has(id));
-    return `data-mc=${quote}${ids.join(" ")}${quote}`;
-  });
-}
-
-/**
- * Ensures preserved locked elements from previousHtml replace corresponding elements if needed.
- */
-export function preserveLockedElements(
-  html: string,
-  previousHtml: string | null,
-  lockedNodeIds: Set<string>
-): string {
-  if (!previousHtml || lockedNodeIds.size === 0) return html;
-
-  const preserved = extractLockedElements(previousHtml, lockedNodeIds);
-  if (preserved.size === 0) return html;
-
-  let result = html;
-  for (const [nodeId, preservedSnippet] of preserved.entries()) {
-    // Look for an existing element tagged with this locked nodeId in current html
-    // Regex matching an element whose data-mc includes nodeId
-    const regex = new RegExp(`<([a-zA-Z0-9]+)[^>]*data-mc=["'][^"']*\\b${nodeId}\\b[^"']*["'][^>]*>[\\s\\S]*?<\\/\\1>`, "i");
-    if (regex.test(result)) {
-      result = result.replace(regex, preservedSnippet);
-    }
-  }
-  return result;
-}
-
 export async function build_app(
   map: MindMap,
   previousHtml: string | null = null
@@ -108,9 +56,9 @@ export async function build_app(
     return fakeBuildApp(map, previousHtml);
   }
 
-  const validNodeIds = new Set((map.nodes || []).map(n => n.id));
-  const lockedNodes = (map.nodes || []).filter(n => n.status === "locked");
-  const lockedNodeIds = new Set(lockedNodes.map(n => n.id));
+  const validNodeIds = new Set((map.nodes || []).map((n) => n.id));
+  const lockedNodes = (map.nodes || []).filter((n) => n.status === "locked");
+  const lockedNodeIds = new Set(lockedNodes.map((n) => n.id));
 
   let lockedInstructions = "";
   if (lockedNodes.length > 0 && previousHtml) {
@@ -158,6 +106,7 @@ Return only the complete HTML document, starting with <!doctype html> and ending
     throw new Error("The generated app was cut off before </html>. Try Rebuild.");
   }
   html = sanitizeTracedElements(html, validNodeIds);
+  html = ensureTracedElementIds(html);
   html = preserveLockedElements(html, previousHtml, lockedNodeIds);
 
   // If LLM returned text that somehow didn't include <!doctype html>, prepend it

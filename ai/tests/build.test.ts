@@ -1,6 +1,14 @@
 import { describe, test } from "vitest";
 import assert from "node:assert/strict";
-import { build_app, cleanHtmlOutput, sanitizeTracedElements, preserveLockedElements } from "../build.ts";
+import {
+  build_app,
+  cleanHtmlOutput,
+  sanitizeTracedElements,
+  preserveLockedElements,
+  extractLockedElements,
+  ensureTracedElementIds,
+  findFullElement,
+} from "../build.ts";
 import { fakeBuildApp } from "../fake.ts";
 import type { MindMap } from "../types.ts";
 
@@ -131,6 +139,15 @@ describe("AI: build_app", () => {
     assert.equal(cleaned, `<div data-mc="n1 n2">Content</div>`);
   });
 
+  test("sanitizeTracedElements removes empty data-mc attributes when all IDs are invalid", () => {
+    const rawHtml = `<h1 data-mc="n1 n999">Valid</h1><p data-mc="n888 n999">Invalid</p>`;
+    const valid = new Set(["n1"]);
+    const sanitized = sanitizeTracedElements(rawHtml, valid);
+    assert.ok(sanitized.includes('data-mc="n1"'));
+    assert.ok(!sanitized.includes('data-mc="n888"'));
+    assert.ok(!sanitized.includes('data-mc=""'));
+  });
+
   test("markdown code blocks are stripped from model output", () => {
     const fenced = "```html\n<!doctype html><html><body><h1>Hello</h1></body></html>\n```";
     const cleaned = cleanHtmlOutput(fenced);
@@ -153,6 +170,40 @@ describe("AI: build_app", () => {
 
     assert.ok(newHtml.includes("Preserved Custom Title"), "Locked node HTML from previousHtml must be preserved");
     assert.ok(newHtml.includes('class="custom-header"'), "Locked node attributes must be preserved");
+  });
+
+  test("nested locked elements of the same tag type are preserved completely without truncation", () => {
+    const previousHtml = `<html><body><div data-mc-el="e1" data-mc="n1" class="outer-card"><div class="inner-header"><h3>Title</h3></div><div class="inner-body"><p>Content</p></div></div></body></html>`;
+    const lockedIds = new Set(["n1"]);
+    const extracted = extractLockedElements(previousHtml, lockedIds);
+    assert.equal(
+      extracted.get("n1"),
+      `<div data-mc-el="e1" data-mc="n1" class="outer-card"><div class="inner-header"><h3>Title</h3></div><div class="inner-body"><p>Content</p></div></div>`
+    );
+
+    const currentHtml = `<html><body><div data-mc-el="e9" data-mc="n1" class="old-card"><p>Replaced</p></div></body></html>`;
+    const preserved = preserveLockedElements(currentHtml, previousHtml, lockedIds);
+    assert.ok(preserved.includes('<div class="inner-header"><h3>Title</h3></div>'));
+    assert.ok(preserved.includes('<div class="inner-body"><p>Content</p></div>'));
+    assert.ok(preserved.includes('class="outer-card"'));
+  });
+
+  test("ensureTracedElementIds assigns missing data-mc-el attributes and fixes duplicates", () => {
+    const rawHtml = `<div data-mc="n1"><span data-mc="n2">Hello</span><p data-mc-el="e1" data-mc="n3">World</p></div>`;
+    const tagged = ensureTracedElementIds(rawHtml);
+    assert.ok(/<div data-mc-el="e\d+" data-mc="n1">/.test(tagged));
+    assert.ok(/<span data-mc-el="e\d+" data-mc="n2">/.test(tagged));
+    // Verify each element has a unique data-mc-el
+    const elIds = [...tagged.matchAll(/data-mc-el=["']([^"']*)["']/g)].map(m => m[1]);
+    const unique = new Set(elIds);
+    assert.equal(unique.size, elIds.length, "All data-mc-el IDs must be unique");
+  });
+
+  test("findFullElement properly handles self-closing and void tags", () => {
+    const html = `<input type="text" data-mc="n1" /><p>After</p>`;
+    const parsed = findFullElement(html, 0);
+    assert.ok(parsed);
+    assert.equal(parsed.fullElement, `<input type="text" data-mc="n1" />`);
   });
 
   test("real mode calls OpenRouter with correct options and validates response", async () => {
