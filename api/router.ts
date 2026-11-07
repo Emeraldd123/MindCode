@@ -3,7 +3,6 @@ import { addCheckpoint, BIG_CHANGE, findNode, mergeMap, newSession, publicSessio
 import type { Storage } from "./storage";
 import { inject } from "./trace";
 import type { AI, Session } from "./types";
-import demoSession from "./demo/study-group.json";
 
 export interface Deps {
   storage: Storage;
@@ -76,18 +75,6 @@ async function route(req: Request, deps: Deps): Promise<Response> {
 
   if (m === "POST" && path === "/sessions") {
     const s = newSession((deps.newId ?? (() => crypto.randomUUID().slice(0, 12)))());
-    await storage.put(s);
-    return json(publicSession(s));
-  }
-
-  // A fresh copy of a recorded real-Opus session (map, approvals, working build, checkpoints),
-  // so a live demo never waits on a build or a model call. See docs/demo.md.
-  if (m === "POST" && path === "/sessions/demo") {
-    const s: Session = {
-      ...structuredClone(demoSession as Omit<Session, "id" | "node_chats">),
-      id: (deps.newId ?? (() => crypto.randomUUID().slice(0, 12)))(),
-      node_chats: {},
-    };
     await storage.put(s);
     return json(publicSession(s));
   }

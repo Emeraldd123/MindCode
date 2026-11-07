@@ -8,10 +8,10 @@ While the user chats with Claude about the app they want, a **mind map** fills i
 
 | Source | Meaning | Look |
 |---|---|---|
-| `user` | The user said it | solid, orange **#d67408** |
-| `inferred` | Claude assumed it; the user never said it | dashed, green **#17c894** (AI). Pale for low inventiveness (an obvious step), deep for high (a creative leap) |
+| `user` | The user said it | solid, blue |
+| `inferred` | Claude assumed it; the user never said it | dashed, amber. Pale for low inventiveness (an obvious step), deep for high (a creative leap) |
 | `unknown` | It needs a decision, but nobody has made one | outlined in red with a "?" |
-| `approved` | The user agreed to it after discussing it with Claude | bold white ✓ badge + thicker border in its own source color (green is reserved for AI) |
+| `approved` | The user agreed to it after discussing it with Claude | green check, whatever its source |
 
 The user clicks a bubble to brainstorm about it with Claude, then presses **Approve** once they agree. When ready, they press **Build**, and Claude generates the app (one HTML page) from the map. **Every element of the built app traces back to the bubbles that informed it.** Hover the page title in the preview and the bubbles that shaped it light up. Click a bubble and the parts of the page it shaped are highlighted.
 
