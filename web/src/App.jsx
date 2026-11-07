@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as api from './api';
 import Chat from './Chat';
 import MindMap from './MindMap';
+import Preview from './Preview';
 
 const STORAGE_KEY = 'mindcode_session_id';
 
@@ -16,7 +17,6 @@ export default function App() {
   const [changedIds, setChangedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
-  const [buildLoading, setBuildLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Initialize or restore session from localStorage
@@ -105,20 +105,6 @@ export default function App() {
     }
   };
 
-  const handleBuild = async () => {
-    if (!session?.id || buildLoading) return;
-    setError(null);
-    setBuildLoading(true);
-    try {
-      const buildRes = await api.build(session.id);
-      setBuilds((prev) => [...prev, buildRes]);
-    } catch (err) {
-      setError(`Build failed: ${err.message}`);
-    } finally {
-      setBuildLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="app-loading">
@@ -177,30 +163,17 @@ export default function App() {
           </div>
         </section>
 
-        {/* Right Pane: Preview (placeholder for Task #9) */}
+        {/* Right Pane: build preview with two-way trace highlighting (#9) */}
         <section className="pane preview-pane" aria-label="Preview pane">
-          <div className="pane-header">
-            <h2>App Preview</h2>
-            <button
-              className="build-btn"
-              onClick={handleBuild}
-              disabled={buildLoading || !session}
-            >
-              {buildLoading ? 'Building...' : '⚡ Build App'}
-            </button>
-          </div>
-          <div className="pane-body placeholder-container">
-            <div className="placeholder-card">
-              <div className="placeholder-icon">🖥️</div>
-              <h3>Generated App Preview</h3>
-              <p>Traced preview iframe with hover connections (Task #9).</p>
-              {builds.length > 0 && (
-                <div className="builds-summary">
-                  <p>Latest build: <code>{builds[builds.length - 1].id}</code></p>
-                </div>
-              )}
-            </div>
-          </div>
+          <Preview
+            sessionId={session?.id}
+            map={map}
+            builds={builds}
+            setBuilds={setBuilds}
+            highlightNodes={selectedNodeId ? [selectedNodeId] : []}
+            onHoverNodes={setHoverNodes}
+            onError={setError}
+          />
         </section>
       </main>
     </div>

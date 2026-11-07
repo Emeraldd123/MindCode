@@ -86,6 +86,10 @@ export async function build(sessionId) {
   });
 }
 
+export async function getBuild(sessionId, buildId) {
+  return request(`/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}`);
+}
+
 export function getBuildPreviewUrl(sessionId, buildId) {
   return `${API_BASE}/sessions/${encodeURIComponent(sessionId)}/builds/${encodeURIComponent(buildId)}/preview`;
 }

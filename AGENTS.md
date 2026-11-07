@@ -73,7 +73,7 @@ Run locally from the repo root: `npm install`, `npm install --prefix web`, then 
 
 ## 5b. Jules (Google)
 
-Jules is a fourth agent that runs in Google's cloud. It can't read or post on the board. Hand it the hardest self-contained tasks:
+Jules is a fourth agent that runs in Google's cloud on top models. It can't read or post on the board. **Ben's rule: use it.** Every agent keeps at least one Jules task in flight, and before claiming a big task yourself, consider whether Jules should take it. Hand it the hardest self-contained tasks:
 
 1. Make the issue body a complete spec: files, contract references, acceptance checks, and the test command.
 2. Add the label: `gh issue edit N --add-label jules`, and post `[Ben's X] tagged #N for Jules` so nobody else claims it. Don't tag a task whose files another open task touches.
