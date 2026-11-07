@@ -88,7 +88,7 @@ Please update the mind map based on the conversation so far. Remember:
   const { data } = await callOpenRouter<{ reply: string; nodes: any[]; edges: any[] }>([
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: userPrompt }
-  ], { maxTokens: 4000 });
+  ], { maxTokens: 10000, timeoutMs: 3 * 60 * 1000 }); // runs in the turn background function (15 min limit)
 
   return normalizeAndValidateMapResult(data, current, turn, messages);
 }

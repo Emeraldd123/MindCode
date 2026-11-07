@@ -320,3 +320,20 @@ describe("async chat turns (background function)", () => {
     expect(s.messages).toHaveLength(0);
   });
 });
+
+describe("bubble chat vs. locking mid-reply", () => {
+  it("a lock made while Claude is replying is kept, and the locked bubble's text is not rewritten", async () => {
+    const id = await sid();
+    await call("POST", `/sessions/${id}/messages`, { text: "chat app" });
+    ai.nodeChat = async () => {
+      // the user locks the bubble while Claude is still thinking
+      await call("PATCH", `/sessions/${id}/nodes/n2`, { status: "locked" });
+      return { reply: "ok", label: "REWRITTEN", detail: "REWRITTEN" };
+    };
+    const r = (await call("POST", `/sessions/${id}/nodes/n2/chat`, { text: "rename it" })).body;
+    expect([r.node.status, r.node.label]).toEqual(["locked", "Main page"]);
+    const n2 = byId((await call("GET", `/sessions/${id}`)).body.map.nodes).n2;
+    expect([n2.status, n2.label]).toEqual(["locked", "Main page"]);
+    expect(r.history).toHaveLength(2);
+  });
+});

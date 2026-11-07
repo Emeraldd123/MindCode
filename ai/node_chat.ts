@@ -12,7 +12,7 @@ CRITICAL: If the node's status is "locked", you MUST NOT update its label or det
 
 Respond with a JSON object:
 {
-  "reply": "Conversational reply discussing the bubble with the user",
+  "reply": "Conversational reply about this bubble: at most 120 words, plain text, no headings",
   "label": "Optional updated short label (1-5 words)",
   "detail": "Optional updated detail (1-2 sentences)"
 }
@@ -58,7 +58,7 @@ Please respond with JSON: { "reply": "...", "label"?: "...", "detail"?: "..." }`
     ],
     {
       jsonMode: true,
-      maxTokens: 1000,
+      maxTokens: 2000, // replies were getting cut off mid-JSON at 1000
       timeoutMs: 24000
     }
   );

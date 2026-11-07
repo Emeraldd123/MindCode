@@ -161,13 +161,17 @@ async function route(req: Request, deps: Deps): Promise<Response> {
       const text = await readText(req);
       const history = (s.node_chats[n.id] ??= []);
       const out = await callAI(() => ai.nodeChat(n, s.map, [...history], text));
-      history.push({ role: "user", text, node_id: n.id }, { role: "assistant", text: out.reply ?? "", node_id: n.id });
-      if (n.status !== "locked") {
-        n.label = out.label || n.label;
-        n.detail = out.detail || n.detail;
+      // Re-read: the user may have locked/approved this bubble (or changed others) while Claude was replying.
+      const latest = (await storage.get(s.id)) ?? s;
+      const ln = findNode(latest, n.id) ?? n;
+      const lh = (latest.node_chats[n.id] ??= []);
+      lh.push({ role: "user", text, node_id: n.id }, { role: "assistant", text: out.reply ?? "", node_id: n.id });
+      if (ln.status !== "locked") {
+        ln.label = out.label || ln.label;
+        ln.detail = out.detail || ln.detail;
       }
-      await save();
-      return json({ reply: out.reply ?? "", node: n, history });
+      await storage.put(latest);
+      return json({ reply: out.reply ?? "", node: ln, history: lh });
     }
 
     if (m === "POST" && action === "approve") {
