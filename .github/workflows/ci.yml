@@ -14,26 +14,19 @@ jobs:
       - name: Board scripts parse
         run: bash -n tools/board && bash -n tools/goal
 
-      - name: Set up Python
-        if: hashFiles('requirements.txt', 'api/requirements.txt', 'ai/requirements.txt') != ''
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Python tests
-        if: hashFiles('requirements.txt', 'api/requirements.txt', 'ai/requirements.txt') != ''
-        run: |
-          for f in requirements.txt api/requirements.txt ai/requirements.txt; do
-            [ -f "$f" ] && pip install -r "$f"
-          done
-          pip install pytest
-          python -m pytest -q || [ $? -eq 5 ]   # exit 5 = no tests collected yet
-
       - name: Set up Node
-        if: hashFiles('web/package.json') != ''
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+
+      - name: Backend (functions, api/, ai/) tests and typecheck
+        if: hashFiles('package.json') != ''
+        env:
+          MINDCODE_FAKE_LLM: "1"
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
 
       - name: Web tests and build
         if: hashFiles('web/package.json') != ''
