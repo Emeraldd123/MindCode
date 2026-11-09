@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deconstruct: See what Claude assumed in your prompt</title>
+<style>
+:root{--bg:#0a0c11;--panel:#121621;--panel2:#181d2b;--line:#252c3d;--text:#e7eaf3;--muted:#8b94aa;--user:#39ff88;--inf:#22d3ee;--unk:#ff4fd8;--accent:#a78bfa;--warn:#fbbf24;--r:10px;--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 20px;background:rgba(10,12,17,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.logo{font-family:var(--mono);font-weight:700;letter-spacing:.5px}.logo b{color:var(--user)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;border-radius:8px;padding:6px 12px;color:var(--muted);cursor:pointer}
+nav button.on{color:var(--text);border-color:var(--line);background:var(--panel)}
+.who{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:7px 14px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--user);color:#04140a;border-color:var(--user);font-weight:600}
+.btn.pri:disabled{opacity:.5;cursor:wait}
+.btn.sm{padding:3px 9px;font-size:12px}
+main{max-width:1280px;margin:0 auto;padding:20px}
+.view{display:none}.view.on{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+h1{font-size:40px;line-height:1.1;margin:28px 0 12px}h1 em{font-style:normal;color:var(--user)}
+h2{font-size:16px;margin:0 0 10px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.s-user{--c:var(--user)}.s-inferred{--c:var(--inf)}.s-unknown{--c:var(--unk)}
+.dot.s-user,.dot.s-inferred,.dot.s-unknown{background:var(--c);box-shadow:0 0 8px var(--c)}
+.grid2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+textarea{width:100%;min-height:220px;resize:vertical;background:#0c0f17;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--mono);font-size:13px}
+input[type=text],select{background:#0c0f17;border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item{display:grid;grid-template-columns:4px 92px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--panel2)}
+.item .bar{align-self:stretch;border-radius:4px;background:var(--c)}
+.item .cat{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.item .txt small{display:block;color:var(--muted);font-size:11px}
+.item.approved{border-color:color-mix(in srgb,var(--user) 45%,var(--line))}
+.item.rejected{opacity:.45}.item.rejected .txt span{text-decoration:line-through}
+.acts{display:flex;gap:4px}
+.chip{font-size:11px;border:1px solid var(--c,var(--line));color:var(--c,var(--muted));border-radius:20px;padding:1px 8px;font-family:var(--mono)}
+.meter{height:6px;background:var(--line);border-radius:4px;overflow:hidden}.meter i{display:block;height:100%;background:var(--accent)}
+.files{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 6px}
+.files button.on{border-color:var(--user);color:var(--user)}
+pre{background:#07090e;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;max-height:340px;font:12px/1.55 var(--mono);margin:0;white-space:pre}
+.canvas{background:radial-gradient(circle at 1px 1px,#1c2232 1px,transparent 0) 0 0/18px 18px,var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;overflow-x:auto}
+.goal{max-width:560px;margin:0 auto 28px;text-align:center;padding:14px;border-radius:10px;border:1px solid var(--user);box-shadow:0 0 18px rgba(57,255,136,.18);font-family:var(--mono);font-size:13px}
+.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;border-top:1px dashed var(--line);padding-top:18px}
+.branch h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 8px}
+.node{display:block;width:100%;text-align:left;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 8%,#0c0f17);border-radius:8px;padding:8px;margin-bottom:8px;cursor:pointer;font-size:12px}
+.node.approved{box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}
+.node.rejected{opacity:.4;text-decoration:line-through}
+.node em{font-style:normal;font-size:10px;color:var(--muted);display:block;margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card h3{margin:0 0 4px;font-size:15px}
+.card p{font-family:var(--mono);font-size:12px;color:var(--muted);margin:8px 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}.stats .panel{flex:1;min-width:150px}
+.stats b{font-size:22px;display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal.on{display:flex}.modal .panel{width:min(400px,100%)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);padding:8px 16px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.live{font-size:11px;color:var(--user)}.live::before{content:"●";margin-right:4px}
+.err{color:var(--unk);font-size:12px;min-height:16px}
+@media(max-width:900px){.grid2,.hero{grid-template-columns:1fr}h1{font-size:30px}}
+@media(max-width:520px){main{padding:12px}.item{grid-template-columns:4px 1fr;}.item .cat{grid-column:2}.item .acts{grid-column:2}.who{margin-left:0}}
+</style>
+</head>
+<body>
+<header data-mc-el="e1" data-mc="n6 n10" style="font-size: 10px">
+  <div class="logo" data-mc-el="e2" data-mc="n1 n6">&gt;_ <b>de</b>construct</div>
+  <nav data-mc-el="e3" data-mc="n10">
+    <button data-view="landing" data-mc-el="e4" data-mc="n11" style="font-size: 8px">Landing</button>
+    <button data-view="workspace" data-mc-el="e5" data-mc="n12">Workspace</button>
+    <button data-view="map" data-mc-el="e6" data-mc="n13" style="font-size: 9px; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif">Assumption map</button>
+    <button data-view="dashboard" data-mc-el="e7" data-mc="n14">Team dashboard</button>
+  </nav>
+  <div class="who" id="who" data-mc-el="e8" data-mc="n32 n23" style="font-size: 9px"></div>
+</header>
+
+<main>
+<section class="view" id="v-landing" data-mc-el="e9" data-mc="n11" style="font-size: 13px">
+  <div class="hero">
+    <div data-mc-el="e10" data-mc="n11 n6 n16">
+      <h1>See what Claude <em>actually</em> understood from your prompt.</h1>
+      <p class="muted" style="font-size:16px">Hackathon clock is ticking. Paste a prompt, get it split into requirements, and spot every assumption before it becomes wasted code. Approve, correct, then generate a starter codebase your whole team agreed on.</p>
+      <div class="legend" style="margin:16px 0; font-size: 8px" data-mc-el="e11" data-mc="n7 n21">
+        <span><i class="dot s-user"></i>From your prompt</span><span><i class="dot s-inferred"></i>Inferred default</span><span><i class="dot s-unknown"></i>Unknown, needs a decision</span>
+      </div>
+      <div class="row">
+        <button class="btn pri" id="ctaStart" data-mc-el="e12" data-mc="n11 n15">Deconstruct a prompt →</button>
+        <button class="btn" id="ctaDash" data-mc-el="e13" data-mc="n14">Open team dashboard</button>
+      </div>
+    </div>
+    <div class="panel" data-mc-el="e14" data-mc="n11 n20 n21" style="font-size: 8px">
+      <h2>Example deconstruction</h2>
+      <pre id="exPrompt" style="white-space:pre-wrap;margin-bottom:10px" data-mc-el="e15" data-mc="n8"></pre>
+      <div id="exItems"></div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-workspace" data-mc-el="e16" data-mc="n12">
+  <div class="grid2">
+    <div class="panel" data-mc-el="e17" data-mc="n12 n15">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <h2 style="margin:0">Prompt</h2>
+        <button class="btn sm" id="newPrompt" data-mc-el="e18" data-mc="n12">+ New prompt</button>
+      </div>
+      <input type="text" id="title" placeholder="Session title, e.g. Lost & Found MVP" style="margin-bottom:8px" data-mc-el="e19" data-mc="n14">
+      <textarea id="prompt" placeholder="Paste the prompt your team plans to send to Claude…" data-mc-el="e20" data-mc="n12 n8"></textarea>
+      <div class="err" id="perr"></div>
+      <div class="row" style="justify-content:space-between">
+        <button class="btn pri" id="analyze" data-mc-el="e21" data-mc="n25 n15 n26" style="font-size: 15px">Analyze</button>
+        <span class="muted mono" id="aStatus" data-mc-el="e22" data-mc="n31"></span>
+      </div>
+      <div style="margin-top:16px" data-mc-el="e23" data-mc="n33 n31">
+        <div class="row" style="justify-content:space-between;font-size:12px"><span class="muted">Team free token budget</span><span class="mono" id="tokTxt"></span></div>
+        <div class="meter"><i id="tokBar"></i></div>
+      </div>
+    </div>
+    <div class="panel" data-mc-el="e24" data-mc="n20 n21 n22" style="font-size: 14px">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <h2 style="margin:0">Breakdown <span class="muted" id="bCount"></span></h2>
+        <div class="row">
+          <span class="live" id="liveTag" data-mc-el="e25" data-mc="n23">Team live</span>
+          <button class="btn sm" id="approveAll" data-mc-el="e26" data-mc="n22 n25">Approve all</button>
+          <button class="btn sm" id="toMap" data-mc-el="e27" data-mc="n13">View map</button>
+        </div>
+      </div>
+      <div id="items" data-mc-el="e28" data-mc="n20 n21 n22" style="font-size: 21px"></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px" data-mc-el="e29" data-mc="n24">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">Output</h2>
+      <div class="row">
+        <button class="btn pri" id="genCode" data-mc-el="e30" data-mc="n24 n25">Generate starter code</button>
+        <button class="btn" id="genPrompt" data-mc-el="e31" data-mc="n24 n25">Export refined prompt</button>
+      </div>
+    </div>
+    <p class="muted" id="genHint" style="margin:8px 0 0">Approve items in the breakdown, then generate a codebase built only from what your team agreed on.</p>
+    <div id="genOut" hidden>
+      <div class="files" id="fileTabs" data-mc-el="e32" data-mc="n24"></div>
+      <pre id="fileBody" data-mc-el="e33" data-mc="n24 n8"></pre>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" id="copyFile" data-mc-el="e34" data-mc="n25">Copy</button>
+        <button class="btn sm" id="dlFile" data-mc-el="e35" data-mc="n25">Download file</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-map" data-mc-el="e36" data-mc="n13">
+  <div class="row" style="justify-content:space-between;margin-bottom:12px">
+    <div><h2 style="margin:0" id="mapTitle">Assumption map</h2><div class="legend" data-mc-el="e37" data-mc="n7"><span><i class="dot s-user"></i>User</span><span><i class="dot s-inferred"></i>Inferred</span><span><i class="dot s-unknown"></i>Unknown</span><span class="muted">Click a node to cycle approve / reject / pending</span></div></div>
+    <button class="btn" id="mapBack" data-mc-el="e38" data-mc="n12">← Back to workspace</button>
+  </div>
+  <div class="canvas" id="mapCanvas" data-mc-el="e39" data-mc="n13 n9 n21"></div>
+</section>
+
+<section class="view" id="v-dashboard" data-mc-el="e40" data-mc="n14">
+  <div class="stats" data-mc-el="e41" data-mc="n14 n33">
+    <div class="panel"><span class="muted">Sessions</span><b id="stS">0</b></div>
+    <div class="panel"><span class="muted">Assumptions approved</span><b id="stA">0</b></div>
+    <div class="panel"><span class="muted">Open unknowns</span><b id="stU" style="color:var(--unk)">0</b></div>
+    <div class="panel"><span class="muted">Est. AI spend</span><b id="stC">$0</b></div>
+  </div>
+  <div class="row" style="margin-bottom:12px">
+    <input type="text" id="search" placeholder="Search prompts…" style="flex:2;min-width:180px" data-mc-el="e42" data-mc="n14">
+    <select id="filter" style="flex:1;min-width:150px" data-mc-el="e43" data-mc="n14 n22">
+      <option value="all">All sessions</option><option value="mine">Mine</option><option value="review">Needs review</option><option value="done">Fully reviewed</option>
+    </select>
+    <button class="btn pri" id="dashNew" data-mc-el="e44" data-mc="n12">+ New prompt</button>
+  </div>
+  <div class="cards" id="cards" data-mc-el="e45" data-mc="n14 n23"></div>
+</section>
+</main>
+
+<div class="modal" id="login" data-mc-el="e46" data-mc="n32">
+  <form class="panel" id="loginForm">
+    <h2>Join your team</h2>
+    <p class="muted" style="margin-top:0">Pick a nickname and team name. Teammates using the same team share sessions.</p>
+    <input type="text" id="nick" placeholder="Nickname" maxlength="24" style="margin-bottom:8px" data-mc-el="e47" data-mc="n32">
+    <input type="text" id="team" placeholder="Team name" maxlength="32" data-mc-el="e48" data-mc="n32 n16">
+    <div class="err" id="lerr"></div>
+    <div class="row" style="justify-content:flex-end"><button type="button" class="btn" id="loginCancel">Cancel</button><button class="btn pri" type="submit" data-mc-el="e49" data-mc="n32">Join</button></div>
+  </form>
+</div>
+<div class="toast" id="toast" data-mc-el="e50" data-mc="n15"></div>
+
+<script>
+const mem={};const storage={get(k){try{return JSON.parse(localStorage.getItem(k));}catch{return mem[k]??null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{mem[k]=v;}}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let elc=1000;const T=ids=>`data-mc-el="e${++elc}"`;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const KEY='pd-sessions',FREE_CAP=60000;
+let bc=null;try{bc=new BroadcastChannel('pd-team');bc.onmessage=()=>renderAll();}catch{bc=null;}
+const store={
+  list(){return storage.get(KEY)||[];},
+  save(l){storage.set(KEY,l);try{bc&&bc.postMessage('sync');}catch{}},
+  get(id){return this.list().find(s=>s.id===id);},
+  add(s){const l=this.list();l.unshift(s);this.save(l);return s;},
+  update(id,fn){const l=this.list();const s=l.find(x=>x.id===id);if(s){fn(s);this.save(l);}return s;},
+  remove(id){this.save(this.list().filter(s=>s.id!==id));}
+};
+const user=()=>storage.get('pd-user');
+
+const CATS=['Goal','Audience','Pages','Features','Data','Auth','Design','Hosting'];
+const RULES=[
+ {cat:'Audience',re:/\b(students?|users?|teams?|organi[sz]ers?|people|customers?|commuters?|admins?|developers?|mentors?)\b/i,fb:['unknown','Target users not stated: general public proposed','Not specified, needs a decision']},
+ {cat:'Pages',re:/\b(page|screen|view|dashboard|landing|profile)\b/i,fb:['inferred','One main screen plus a navigation header','Typical default for a hackathon MVP']},
+ {cat:'Data',re:/\b(save|store|database|history|records?|photos?|log)\b/i,fb:['inferred','Persist core records in a managed database','Most apps need saved state']},
+ {cat:'Auth',re:/\b(log ?in|sign ?in|accounts?|auth|oauth)\b/i,fb:['unknown','Sign-in not mentioned: email magic link proposed','Not specified, needs a decision']},
+ {cat:'Design',re:/\b(dark|light|theme|colou?r|minimal|mobile|responsive|style|font|hands-free|voice)\b/i,fb:['inferred','Clean responsive layout, neutral palette','Default when no style is given']},
+ {cat:'Hosting',re:/\b(host|deploy|vercel|server|cloud|aws|bot)\b/i,fb:['inferred','Serverless hosting with a managed database','Cheap and fast for hackathon scale']}
+];
+const FEAT=/\b(let|lets|allow|allows|can|should|post|claim|track|log|search|schedule|step|share|vote|see|create|add|upload)\b/i;
+const sentences=p=>p.replace(/\s+/g,' ').split(/(?<=[.!?;])\s+/).map(s=>s.trim()).filter(Boolean);
+const clip=(s,n=130)=>s.length>n?s.slice(0,n-1)+'…':s;
+function deconstruct(p){
+  const ss=sentences(p),out=[];const mk=(cat,source,text,why)=>({id:uid(),cat,source,text,why,status:'pending',by:null});
+  out.push(mk('Goal','user',clip(ss[0]||p),'Stated in prompt'));
+  RULES.forEach(r=>{const hit=ss.find(s=>r.re.test(s));const m=hit&&hit.match(r.re);
+    out.push(hit?mk(r.cat,'user',clip(hit),`Stated in prompt (“${m[0]}”)`):mk(r.cat,r.fb[0],r.fb[1],r.fb[2]));});
+  const fs=ss.filter(s=>FEAT.test(s));
+  if(fs.length)fs.forEach(s=>out.push(mk('Features','user',clip(s),'Action described in prompt')));
+  else out.push(mk('Features','unknown','Core actions unclear: create, list and edit the main item proposed','Not specified, needs a decision'));
+  if(!/\b(real-?time|live|sync)\b/i.test(p)&&/\b(team|share|organi[sz]ers?|admins?)\b/i.test(p))out.push(mk('Features','inferred','Changes refresh for other viewers without reload','Multi-person use implied'));
+  return out.sort((a,b)=>CATS.indexOf(a.cat)-CATS.indexOf(b.cat));
+}
+const tokensFor=p=>Math.ceil(p.length/4)+650;
+const costOf=t=>t/1e6*9;
+
+function seed(){
+  if(storage.get(KEY))return;
+  const now=Date.now(),H=36e5;
+  const raw=[
+   ['Campus Lost & Found','Build a campus lost-and-found app where students post found items with photos and owners can claim them. Needs a map page and a dashboard for admins.','Priya',now-3*H,4],
+   ['Organizer Ops Bot','A Discord bot dashboard that lets hackathon organizers schedule announcements and track mentor requests. Dark theme, deploy on Vercel.','Marcus',now-9*H,7],
+   ['Commute Carbon Tracker','Make a carbon footprint tracker for commuters. Users log trips and see weekly charts. Save history to a database.','Ana',now-26*H,2],
+   ['Messy Hands Recipes','Voice-first recipe assistant for people cooking with messy hands. Let them search recipes and step through instructions hands-free.','Priya',now-50*H,0]
+  ];
+  const list=raw.map(([title,prompt,author,at,n])=>{const items=deconstruct(prompt);items.slice(0,n).forEach(i=>{i.status='approved';i.by=author;});return{id:uid(),title,prompt,author,team:'Byte Bandits',createdAt:at,tokens:tokensFor(prompt),items};});
+  storage.set(KEY,list);
+}
+
+let view='landing',currentId=storage.get('pd-current'),gen=null,genTab=null,pendingView=null;
+function toast(m){const t=$('#toast');if(!t)return;t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800);}
+function teamSessions(){const u=user();return store.list().filter(s=>!u||s.team===u.team);}
+function current(){return currentId?store.get(currentId):null;}
+function setCurrent(id){currentId=id;storage.set('pd-current',id);gen=null;loadEditor();}
+function go(v){
+  if((v==='workspace'||v==='dashboard'||v==='map')&&!user()){pendingView=v;openLogin();return;}
+  view=v;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+  renderAll();window.scrollTo({top:0,behavior:'smooth'});
+}
+function openLogin(){$('#login').classList.add('on');const n=$('#nick');n&&n.focus();}
+
+function renderHeader(){
+  const u=user(),w=$('#who');if(!w)return;
+  w.innerHTML=u?`<span class="chip" style="--c:var(--accent)">${esc(u.team)}</span><span>${esc(u.nick)}</span><button class="btn sm" id="logout" ${T('n32')}>Sign out</button>`
+   :`<button class="btn sm" id="loginBtn" ${T('n32')}>Join team</button>`;
+}
+function itemRow(i,ro){
+  const acts=ro?`<span class="chip s-${i.source}" style="--c:var(--c)">${i.source}</span>`:
+   i.editing?`<div class="acts"><button class="btn sm" data-act="save" data-id="${i.id}" ${T('n22')}>Save</button></div>`:
+   `<div class="acts"><button class="btn sm" data-act="approve" data-id="${i.id}" title="Approve" aria-label="Approve" ${T('n22 n25')}>✓</button><button class="btn sm" data-act="edit" data-id="${i.id}" title="Edit" aria-label="Edit" ${T('n22')}>✎</button><button class="btn sm" data-act="reject" data-id="${i.id}" title="Reject" aria-label="Reject" ${T('n22')}>✕</button></div>`;
+  const body=i.editing?`<input type="text" id="ed-${i.id}" value="${esc(i.text)}">`:`<span>${esc(i.text)}</span><small>${esc(i.why)}${i.status!=='pending'?` · ${i.status} by ${esc(i.by||'team')}`:''}</small>`;
+  return `<div class="item s-${i.source} ${i.status}" ${T('n20 n21 n7')}><i class="bar"></i><span class="cat">${i.cat}</span><div class="txt">${body}</div>${acts}</div>`;
+}
+function renderLanding(){
+  const ex='Build a habit tracker where teams can share streaks and see a leaderboard. Make it dark.';
+  const p=$('#exPrompt'),c=$('#exItems');if(!p||!c||c.dataset.done)return;
+  p.textContent=ex;c.innerHTML=deconstruct(ex).map(i=>itemRow(i,true)).join('');c.dataset.done=1;
+}
+function loadEditor(){const s=current();const t=$('#title'),p=$('#prompt');if(t)t.value=s?s.title:'';if(p)p.value=s?s.prompt:'';}
+function renderWorkspace(){
+  const s=current(),box=$('#items');if(!box)return;
+  if(!s){box.innerHTML=`<p class="muted" ${T('n15')}>Paste a prompt and hit Analyze. Every requirement Claude picks up appears here, color-coded by where it came from.</p>`;$('#bCount').textContent='';}
+  else{const ap=s.items.filter(i=>i.status==='approved').length;$('#bCount').textContent=`· ${ap}/${s.items.length} approved`;box.innerHTML=s.items.map(i=>itemRow(i)).join('');}
+  const used=teamSessions().reduce((a,x)=>a+(x.tokens||0),0);
+  $('#tokTxt').textContent=`${used.toLocaleString()} / ${FREE_CAP.toLocaleString()} tokens`;
+  $('#tokBar').style.width=Math.min(100,used/FREE_CAP*100)+'%';
+  $('#liveTag').hidden=!bc;
+  renderGen();
+}
+function renderMap(){
+  const c=$('#mapCanvas');if(!c)return;const s=current();
+  if(!s){c.innerHTML=`<p class="muted" ${T('n13')}>No session selected. Analyze a prompt or open one from the dashboard.</p>`;return;}
+  $('#mapTitle').textContent='Assumption map · '+s.title;
+  const goal=s.items.find(i=>i.cat==='Goal');
+  const cols=CATS.filter(c=>c!=='Goal').map(cat=>{const its=s.items.filter(i=>i.cat===cat);if(!its.length)return'';
+    return `<div class="branch" ${T('n13 n20')}><h3>${cat}</h3>${its.map(i=>`<button class="node s-${i.source} ${i.status}" data-node="${i.id}" ${T('n21 n22 n7')}>${esc(i.text)}<em>${i.source} · ${i.status}</em></button>`).join('')}</div>`;}).join('');
+  c.innerHTML=`<div class="goal" ${T('n1 n13')}>${esc(goal?goal.text:s.title)}</div><div class="branches">${cols}</div>`;
+}
+function renderDashboard(){
+  const cards=$('#cards');if(!cards)return;const u=user();
+  const all=teamSessions(),q=($('#search').value||'').toLowerCase(),f=$('#filter').value;
+  const pend=s=>s.items.filter(i=>i.status==='pending').length;
+  const list=all.filter(s=>(s.title+' '+s.prompt).toLowerCase().includes(q)).filter(s=>f==='mine'?u&&s.author===u.nick:f==='review'?pend(s)>0:f==='done'?pend(s)===0:true);
+  let ap=0,un=0,tok=0;all.forEach(s=>{ap+=s.items.filter(i=>i.status==='approved').length;un+=s.items.filter(i=>i.source==='unknown'&&i.status==='pending').length;tok+=s.tokens||0;});
+  $('#stS').textContent=all.length;$('#stA').textContent=ap;$('#stU').textContent=un;$('#stC').textContent='$'+costOf(tok).toFixed(3);
+  cards.innerHTML=list.length?list.map(s=>{const a=s.items.filter(i=>i.status==='approved').length,pct=Math.round(a/s.items.length*100);
+    return `<div class="panel card" ${T('n14 n23')}><h3>${esc(s.title)}</h3><span class="muted" style="font-size:12px">${esc(s.author)} · ${new Date(s.createdAt).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span><p>${esc(s.prompt)}</p>
+    <div class="meter" style="margin-bottom:6px"><i style="width:${pct}%;background:var(--user)"></i></div><div class="row" style="justify-content:space-between"><span class="muted" style="font-size:12px">${a}/${s.items.length} approved</span>
+    <div class="row"><button class="btn sm" data-open="${s.id}" ${T('n12')}>Open</button><button class="btn sm" data-omap="${s.id}" ${T('n13')}>Map</button><button class="btn sm" data-del="${s.id}" ${T('n14')}>Delete</button></div></div></div>`;}).join('')
+   :`<p class="muted" ${T('n14')}>No sessions match. Start a new prompt to fill your team board.</p>`;
+}
+function renderAll(){renderHeader();renderLanding();renderWorkspace();renderMap();renderDashboard();}
+
+function itemAct(act,id){
+  const s=current();if(!s)return;const u=user();
+  if(act==='edit'){s.items.forEach(i=>i.editing=i.id===id);store.update(s.id,x=>x.items=s.items);renderWorkspace();const e=$('#ed-'+id);e&&e.focus();return;}
+  store.update(s.id,x=>{const i=x.items.find(y=>y.id===id);if(!i)return;
+    if(act==='save'){const e=$('#ed-'+id);const v=e?e.value.trim():'';if(!v){toast('Item text cannot be empty');return;}i.text=v;i.source='user';i.why='Corrected by team';i.editing=false;i.status='approved';i.by=u.nick;}
+    if(act==='approve'){i.status=i.status==='approved'?'pending':'approved';i.by=u.nick;}
+    if(act==='reject'){i.status=i.status==='rejected'?'pending':'rejected';i.by=u.nick;}
+    if(act==='cycle'){i.status={pending:'approved',approved:'rejected',rejected:'pending'}[i.status];i.by=u.nick;}});
+  gen=null;renderAll();
+}
+function analyze(){
+  const u=user();if(!u){pendingView='workspace';openLogin();return;}
+  const p=$('#prompt').value.trim(),err=$('#perr');
+  if(p.length<15){err.textContent='Write at least a sentence so there is something to deconstruct.';return;}
+  const used=teamSessions().reduce((a,x)=>a+(x.tokens||0),0);
+  if(used+tokensFor(p)>FREE_CAP){err.textContent='Team free token budget reached for this event.';return;}
+  err.textContent='';const b=$('#analyze');b.disabled=true;$('#aStatus').textContent='Claude is reading your prompt…';
+  setTimeout(()=>{
+    const title=$('#title').value.trim()||clip(sentences(p)[0]||p,40);const items=deconstruct(p),tokens=tokensFor(p);
+    const s=current();
+    if(s)store.update(s.id,x=>{x.prompt=p;x.title=title;x.items=items;x.tokens=(x.tokens||0)+tokens;});
+    else{const n=store.add({id:uid(),title,prompt:p,author:u.nick,team:u.team,createdAt:Date.now(),tokens,items});currentId=n.id;storage.set('pd-current',n.id);}
+    $('#title').value=title;b.disabled=false;$('#aStatus').textContent=`${tokens} tokens · ~$${costOf(tokens).toFixed(4)}`;
+    gen=null;renderAll();toast(`${items.length} items surfaced, ${items.filter(i=>i.source==='unknown').length} unknown`);
+  },550);
+}
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'app';
+const camel=s=>{const w=s.toLowerCase().replace(/[^a-z ]/g,'').split(' ').filter(x=>x&&!['a','an','the','and','to','can','should','let','lets','them','where','that','users','for'].includes(x)).slice(0,3);return w.length?w[0]+w.slice(1).map(x=>x[0].toUpperCase()+x.slice(1)).join(''):'action';};
+function approvedBy(s){const g={};s.items.filter(i=>i.status==='approved').forEach(i=>(g[i.cat]=g[i.cat]||[]).push(i.text));return g;}
+function refinedPrompt(s){const g=approvedBy(s);return `Build "${s.title}".\n`+CATS.filter(c=>g[c]).map(c=>c==='Features'?`Features:\n${g[c].map(x=>'- '+x).join('\n')}`:`${c}: ${g[c].join(' ')}`).join('\n')+`\n\nOnly build what is listed above. Ask before adding anything else.`;}
+function genCode(s){
+  const g=approvedBy(s);if(!Object.keys(g).length)return null;const name=slug(s.title),feats=g.Features||[];
+  const pages=(g.Pages||['Home']).map((p,i)=>`    <section id="page-${i}" class="page"><h2>${esc(clip(p,60))}</h2></section>`).join('\n');
+  const fns=feats.map(f=>`// ${f}\nexport function ${camel(f)}(input) {\n  const item = { id: crypto.randomUUID(), ...input, createdAt: Date.now() };\n  store.add(item);\n  return item;\n}`).join('\n\n')||'// No approved features yet';
+  const files={
+   'README.md':`# ${s.title}\n\nGenerated from ${s.items.filter(i=>i.status==='approved').length} team-approved requirements.\n\n`+Object.entries(g).map(([c,v])=>`## ${c}\n${v.map(x=>'- '+x).join('\n')}`).join('\n\n')+`\n\n## Run\nnpm install && npm run dev`,
+   'index.html':`<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>${s.title}</title>\n</head>\n<body>\n  <header><h1>${s.title}</h1></header>\n  <main>\n${pages}\n  </main>\n  <script type="module" src="app.js"><\/script>\n</body>\n</html>`,
+   'app.js':`// ${s.title} – starter logic\nconst items = [];\nexport const store = {\n  list: () => items,\n  add: (x) => items.push(x),\n};\n\n${fns}\n`
+  };
+  if(g.Data||g.Auth)files['schema.sql']=(g.Auth?`create table users (\n  id uuid primary key default gen_random_uuid(),\n  email text unique not null,\n  created_at timestamptz default now()\n);\n\n`:'')+`create table ${name.replace(/-/g,'_')}_items (\n  id uuid primary key default gen_random_uuid(),\n  title text not null,\n  body text,\n  ${g.Auth?'owner_id uuid references users(id),\n  ':''}created_at timestamptz default now()\n);\n-- ${(g.Data||[]).join(' | ')}`;
+  return files;
+}
+function renderGen(){
+  const out=$('#genOut');if(!out)return;out.hidden=!gen;if(!gen)return;
+  if(!gen[genTab])genTab=Object.keys(gen)[0];
+  $('#fileTabs').innerHTML=Object.keys(gen).map(f=>`<button class="btn sm ${f===genTab?'on':''}" data-file="${esc(f)}" ${T('n24')}>${esc(f)}</button>`).join('');
+  $('#fileBody').textContent=gen[genTab];
+}
+function doGen(kind){
+  const s=current();if(!s){toast('Analyze a prompt first');return;}
+  if(kind==='code'){const f=genCode(s);if(!f){toast('Approve at least one item first');return;}gen=f;genTab='README.md';}
+  else{if(!s.items.some(i=>i.status==='approved')){toast('Approve at least one item first');return;}gen={'refined-prompt.txt':refinedPrompt(s)};genTab='refined-prompt.txt';}
+  renderGen();toast(kind==='code'?'Starter codebase generated':'Refined prompt ready');
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.view)return go(t.dataset.view);
+  if(t.dataset.act)return itemAct(t.dataset.act,t.dataset.id);
+  if(t.dataset.node)return itemAct('cycle',t.dataset.node);
+  if(t.dataset.file){genTab=t.dataset.file;return renderGen();}
+  if(t.dataset.open){setCurrent(t.dataset.open);return go('workspace');}
+  if(t.dataset.omap){setCurrent(t.dataset.omap);return go('map');}
+  if(t.dataset.del){const s=store.get(t.dataset.del);if(s){store.remove(s.id);if(currentId===s.id)setCurrent(null);renderAll();toast(`Deleted “${s.title}”`);}return;}
+  switch(t.id){
+   case 'ctaStart':return go('workspace');
+   case 'ctaDash':return go('dashboard');
+   case 'loginBtn':pendingView=null;return openLogin();
+   case 'logout':storage.set('pd-user',null);renderAll();go('landing');return toast('Signed out');
+   case 'loginCancel':$('#login').classList.remove('on');pendingView=null;return;
+   case 'analyze':return analyze();
+   case 'newPrompt':case 'dashNew':setCurrent(null);go('workspace');renderAll();const p=$('#prompt');p&&p.focus();return;
+   case 'approveAll':{const s=current();if(!s)return toast('Nothing to approve yet');const u=user();store.update(s.id,x=>x.items.forEach(i=>{if(i.status==='pending'){i.status='approved';i.by=u.nick;}}));gen=null;renderAll();return toast('All pending items approved');}
+   case 'toMap':return go('map');
+   case 'mapBack':return go('workspace');
+   case 'genCode':return doGen('code');
+   case 'genPrompt':return doGen('prompt');
+   case 'copyFile':{const txt=gen&&gen[genTab];if(!txt)return;const done=()=>toast('Copied '+genTab);
+     try{navigator.clipboard.writeText(txt).then(done,()=>{selectPre();toast('Selected: press Ctrl+C');});}catch{selectPre();toast('Selected: press Ctrl+C');}return;}
+   case 'dlFile':{const txt=gen&&gen[genTab];if(!txt)return;try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download=genTab;document.body.appendChild(a);a.click();a.remove();toast('Downloading '+genTab);}catch{toast('Download blocked here, use Copy');}return;}
+  }
+});
+function selectPre(){const p=$('#fileBody');if(!p)return;const r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+$('#loginForm').addEventListener('submit',e=>{
+  e.preventDefault();const nick=$('#nick').value.trim(),team=$('#team').value.trim();
+  if(nick.length<2||team.length<2){$('#lerr').textContent='Nickname and team need at least 2 characters.';return;}
+  storage.set('pd-user',{nick,team});$('#lerr').textContent='';$('#login').classList.remove('on');toast(`Welcome, ${nick}`);
+  if(currentId&&!teamSessions().some(s=>s.id===currentId))setCurrent(null);
+  go(pendingView||view);pendingView=null;
+});
+$('#prompt').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')analyze();});
+$('#search').addEventListener('input',renderDashboard);
+$('#filter').addEventListener('change',renderDashboard);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#login').classList.remove('on');});
+
+seed();
+if(currentId&&!store.get(currentId))currentId=null;
+if(!currentId&&store.list()[0])currentId=store.list()[0].id;
+loadEditor();go('landing');
+</script>
+
+<style>
+  [data-mc].mc-hl { outline: 3px solid #17c894 !important; outline-offset: 2px; }
+  [data-mc].mc-hover { outline: 2px dashed #d67408 !important; outline-offset: 2px; }
+  .mc-inspecting, .mc-inspecting * { cursor: crosshair !important; }
+  [data-mc].mc-pinned { outline: 3px solid #ffffff !important; outline-offset: 3px; box-shadow: 0 0 0 7px rgba(23,200,148,.35) !important; }
+  .mc-edit { outline: 3px solid #d67408 !important; outline-offset: 3px; box-shadow: 0 0 0 6px rgba(214,116,8,.18) !important; }
+</style>
+<script>
+(function () {
+  var current = null;
+  function tagged(el) { return el && el.closest ? el.closest('[data-mc]') : null; }
+  function send(el) {
+    parent.postMessage({ type: 'mc-hover', nodes: el ? el.getAttribute('data-mc').split(/\s+/) : [],
+                         el: el ? el.getAttribute('data-mc-el') : null }, '*');
+  }
+  document.addEventListener('mouseover', function (e) {
+    var el = tagged(e.target);
+    if (el === current) return;
+    if (current) current.classList.remove('mc-hover');
+    current = el;
+    if (el) el.classList.add('mc-hover');
+    send(el);
+  });
+  document.documentElement.addEventListener('mouseleave', function () {
+    if (current) current.classList.remove('mc-hover');
+    current = null;
+    send(null);
+  });
+  // In-page links: inside a srcdoc iframe, href="#work" resolves against the PARENT page's URL and
+  // navigates the frame away, so generated sites' nav links and "View my work" buttons looked dead.
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (href.charAt(0) === '#') {
+      e.preventDefault();
+      var id = href.slice(1);
+      var t = id ? (document.getElementById(id) || document.querySelector('[name="' + id + '"]')) : null;
+      try { if (location.hash !== href) history.replaceState(null, '', href); window.dispatchEvent(new HashChangeEvent('hashchange')); } catch (err) {}
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else if (!id) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (/^(https?:|mailto:|tel:)/i.test(href)) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    }
+  }, true);
+
+  // Inspect mode (toggled from MindCode): clicking an element PINS its bubbles, so the highlight
+  // stays while you scroll the map. Click it again (or Esc) to release. Normal clicks are paused.
+  var inspect = false, pinned = null;
+  function unpin() {
+    if (pinned) pinned.classList.remove('mc-pinned');
+    pinned = null;
+    parent.postMessage({ type: 'mc-pin', nodes: [], el: null }, '*');
+  }
+  document.addEventListener('click', function (e) {
+    if (!inspect) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var el = tagged(e.target);
+    if (!el || el === pinned) { unpin(); return; }
+    if (pinned) pinned.classList.remove('mc-pinned');
+    pinned = el;
+    el.classList.add('mc-pinned');
+    parent.postMessage({ type: 'mc-pin', nodes: el.getAttribute('data-mc').split(/\s+/), el: el.getAttribute('data-mc-el'),
+                         text: (el.innerText || '').trim().slice(0, 80) }, '*');
+  }, true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pinned) unpin(); });
+
+  // Right-click any element -> ask MindCode for a targeted change to it.
+  var editEl = null;
+  document.addEventListener('contextmenu', function (e) {
+    var el = tagged(e.target) || e.target;
+    if (!el || el === document.documentElement || el === document.body) return;
+    e.preventDefault();
+    if (editEl) editEl.classList.remove('mc-edit');
+    editEl = el;
+    el.classList.add('mc-edit');
+    parent.postMessage({
+      type: 'mc-edit',
+      el: el.getAttribute('data-mc-el'),
+      nodes: el.getAttribute('data-mc') ? el.getAttribute('data-mc').split(/\s+/) : [],
+      tag: el.tagName.toLowerCase(),
+      text: (el.innerText || el.value || '').trim().slice(0, 160),
+      snippet: el.outerHTML.slice(0, 1500),
+      x: e.clientX,
+      y: e.clientY
+    }, '*');
+  });
+
+  // Design widgets (side panel): describe a bubble's elements, and apply font/text changes live.
+  function byEl(id) {
+    var found = null;
+    document.querySelectorAll('[data-mc-el]').forEach(function (x) { if (!found && x.getAttribute('data-mc-el') === id) found = x; });
+    return found;
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type === 'mc-inspect') {
+      var want = d.nodes || [], items = [];
+      document.querySelectorAll('[data-mc][data-mc-el]').forEach(function (el) {
+        var ids = el.getAttribute('data-mc').split(/\s+/);
+        if (!ids.some(function (n) { return want.indexOf(n) >= 0; })) return;
+        var cs = getComputedStyle(el);
+        items.push({
+          el: el.getAttribute('data-mc-el'),
+          tag: el.tagName.toLowerCase(),
+          text: (el.innerText || el.value || el.getAttribute('placeholder') || '').trim().slice(0, 300),
+          textEditable: el.children.length === 0 && !/^(input|textarea|select|img)$/i.test(el.tagName),
+          fontSize: parseFloat(cs.fontSize) || 16,
+          fontFamily: cs.fontFamily
+        });
+      });
+      parent.postMessage({ type: 'mc-inspect-result', id: d.id, items: items }, '*');
+    } else if (d.type === 'mc-style') {
+      var t = byEl(d.el);
+      if (!t) return;
+      if (d.fontSize !== undefined) t.style.fontSize = d.fontSize ? d.fontSize + 'px' : '';
+      if (d.fontFamily !== undefined) t.style.fontFamily = d.fontFamily || '';
+      if (typeof d.text === 'string' && t.children.length === 0) t.textContent = d.text;
+    } else if (d.type === 'mc-flash') {
+      var f = byEl(d.el);
+      if (!f) return;
+      f.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      f.classList.add('mc-edit');
+      setTimeout(function () { f.classList.remove('mc-edit'); }, 900);
+    }
+  });
+
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.type === 'mc-edit-clear' && editEl) { editEl.classList.remove('mc-edit'); editEl = null; }
+    if (e.data && e.data.type === 'mc-inspect') {
+      inspect = !!e.data.on;
+      document.documentElement.classList.toggle('mc-inspecting', inspect);
+      if (!inspect) unpin();
+    }
+    if (e.data && e.data.type === 'mc-unpin') unpin();
+    if (!e.data || e.data.type !== 'mc-highlight') return;
+    var want = e.data.nodes || [], first = null;
+    document.querySelectorAll('[data-mc]').forEach(function (el) {
+      var hit = el.getAttribute('data-mc').split(/\s+/).some(function (n) { return want.indexOf(n) >= 0; });
+      el.classList.toggle('mc-hl', hit);
+      if (hit && !first) first = el;
+    });
+    if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
+})();
+</script>
+</body>
+</html>
