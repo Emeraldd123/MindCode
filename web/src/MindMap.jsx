@@ -163,7 +163,7 @@ function LensNode({ data }) {
   return (
     <div className="mindmap-lens" style={{ width: data.size, height: data.size }}>
       {data.onTitle ? (
-        <button type="button" className="mindmap-lens-title nodrag nopan" onClick={data.onTitle} title="Show details">
+        <button type="button" className="mindmap-lens-title nodrag nopan" onClick={data.onTitle} title="Show details" aria-label={`Show details for ${data.label}`}>
           {data.label}
         </button>
       ) : (

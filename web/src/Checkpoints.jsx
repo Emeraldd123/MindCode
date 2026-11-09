@@ -49,6 +49,7 @@ export default function Checkpoints({ checkpoints = [], activeId = null, onSelec
               className="restore-checkpoint-btn"
               onClick={() => onRestore?.(activeCheckpoint)}
               title="Roll back the mind map to this checkpoint"
+              aria-label="Restore to this version"
             >
               ↺ Restore this version
             </button>
@@ -57,6 +58,7 @@ export default function Checkpoints({ checkpoints = [], activeId = null, onSelec
               className="back-to-live-btn"
               onClick={() => onSelect?.(null)}
               title="Return to live map"
+              aria-label="Return to live map"
             >
               ← Back to live
             </button>
