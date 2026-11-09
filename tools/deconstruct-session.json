@@ -1,0 +1,3095 @@
+{
+  "id": "458a2ac2-eb7",
+  "messages": [
+    {
+      "role": "user",
+      "text": "We are a hackathon team building a webapp for hackathon teams.  First idea: Deconstruct your prompt to understand it, and Claude’s understanding and assumptions."
+    },
+    {
+      "role": "assistant",
+      "text": "I mapped a full-stack plan for a prompt deconstruction webapp: Claude breaks your prompt into its understanding and assumptions. I assumed a dark hacker style, a desktop-first canvas, Claude API analysis, Postgres storage and Vercel hosting, so please check those. The most important open question is whether the refined output should feed straight into code generation or stay an analysis tool."
+    }
+  ],
+  "map": {
+    "nodes": [
+      {
+        "id": "n1",
+        "label": "Prompt deconstruction for hackathon teams",
+        "detail": "Reveal Claude's understanding and assumptions of prompts",
+        "kind": "goal",
+        "source": "user",
+        "inventiveness": 0,
+        "importance": 5,
+        "status": "proposed",
+        "parent": null,
+        "evidence": [
+          "Deconstruct your prompt to understand it"
+        ],
+        "turn": 1,
+        "facet": "goal"
+      },
+      {
+        "id": "n2",
+        "label": "Design",
+        "detail": "Look, feel and screens",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n1",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n3",
+        "label": "Audience",
+        "detail": "Who uses it and why",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n1",
+        "evidence": [],
+        "turn": 1,
+        "facet": "audience"
+      },
+      {
+        "id": "n4",
+        "label": "Functionality",
+        "detail": "What it does and runs on",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n1",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n5",
+        "label": "Cost",
+        "detail": "Running and growth spend",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n1",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      },
+      {
+        "id": "n6",
+        "label": "Brand: transparent, fast, hacker-friendly",
+        "detail": "Builds trust by exposing AI reasoning",
+        "kind": "style",
+        "source": "inferred",
+        "inventiveness": 0.4,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n7",
+        "label": "Color: dark with neon accents",
+        "detail": "Color-code user, inferred and unknown items",
+        "kind": "style",
+        "source": "inferred",
+        "inventiveness": 0.5,
+        "importance": 2,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n8",
+        "label": "Font: Inter plus monospace",
+        "detail": "Mono font for prompt text",
+        "kind": "style",
+        "source": "inferred",
+        "inventiveness": 0.3,
+        "importance": 2,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n9",
+        "label": "Size: desktop-first dense canvas",
+        "detail": "Laptop use during hackathons; mobile secondary",
+        "kind": "style",
+        "source": "inferred",
+        "inventiveness": 0.3,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n10",
+        "label": "Pages: four core screens",
+        "detail": "Landing, workspace, map, dashboard",
+        "kind": "page",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 4,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n11",
+        "label": "Landing page",
+        "detail": "Header, pitch, example deconstruction, CTA",
+        "kind": "page",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n10",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n12",
+        "label": "Prompt input workspace",
+        "detail": "Write or paste a prompt and analyze it",
+        "kind": "page",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n10",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n13",
+        "label": "Assumption map view",
+        "detail": "Visual breakdown of understanding and assumptions",
+        "kind": "page",
+        "source": "inferred",
+        "inventiveness": 0.4,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n10",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n14",
+        "label": "Team project dashboard",
+        "detail": "Team's saved prompts and sessions",
+        "kind": "page",
+        "source": "inferred",
+        "inventiveness": 0.5,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n10",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n15",
+        "label": "Usability: minimal, one-step analyze",
+        "detail": "Paste a prompt and get a breakdown instantly",
+        "kind": "style",
+        "source": "inferred",
+        "inventiveness": 0.3,
+        "importance": 4,
+        "status": "proposed",
+        "parent": "n2",
+        "evidence": [],
+        "turn": 1,
+        "facet": "design"
+      },
+      {
+        "id": "n16",
+        "label": "Users: hackathon teams",
+        "detail": "Small teams building under time pressure",
+        "kind": "constraint",
+        "source": "user",
+        "inventiveness": 0,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n3",
+        "evidence": [
+          "for hackathon teams"
+        ],
+        "turn": 1,
+        "facet": "audience"
+      },
+      {
+        "id": "n17",
+        "label": "Market: hackathon and AI builders",
+        "detail": "Hackathon participants, expanding to AI-assisted devs",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.5,
+        "importance": 2,
+        "status": "proposed",
+        "parent": "n3",
+        "evidence": [],
+        "turn": 1,
+        "facet": "audience"
+      },
+      {
+        "id": "n18",
+        "label": "Research: interview hackathon participants",
+        "detail": "Find where prompts get misread",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.4,
+        "importance": 3,
+        "status": "approved",
+        "parent": "n3",
+        "evidence": [],
+        "turn": 1,
+        "facet": "audience"
+      },
+      {
+        "id": "n19",
+        "label": "Features: prompt analysis toolkit",
+        "detail": "Core deconstruction plus team workflow",
+        "kind": "feature",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n20",
+        "label": "Prompt deconstruction",
+        "detail": "Split prompt into structured requirement parts",
+        "kind": "feature",
+        "source": "user",
+        "inventiveness": 0,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n19",
+        "evidence": [
+          "Deconstruct your prompt"
+        ],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n21",
+        "label": "Assumption surfacing",
+        "detail": "Show what Claude understood and assumed",
+        "kind": "feature",
+        "source": "user",
+        "inventiveness": 0,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n19",
+        "evidence": [
+          "Claude’s understanding and assumptions"
+        ],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n22",
+        "label": "Approve or edit assumptions",
+        "detail": "Users confirm or correct each item",
+        "kind": "feature",
+        "source": "inferred",
+        "inventiveness": 0.5,
+        "importance": 4,
+        "status": "proposed",
+        "parent": "n19",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n23",
+        "label": "Shared team sessions",
+        "detail": "Teammates review the same breakdown",
+        "kind": "feature",
+        "source": "inferred",
+        "inventiveness": 0.6,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n19",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n24",
+        "label": "Output: code generation",
+        "detail": "Generates a starter codebase from the team's approved assumptions, with the refined prompt available as a secondary export.",
+        "kind": "feature",
+        "source": "unknown",
+        "inventiveness": 0,
+        "importance": 4,
+        "status": "approved",
+        "parent": "n19",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n25",
+        "label": "Buttons: Analyze, Approve, Export",
+        "detail": "Primary actions on the workspace",
+        "kind": "component",
+        "source": "inferred",
+        "inventiveness": 0.3,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n26",
+        "label": "AI integration: Claude analyzes prompts",
+        "detail": "LLM returns structured assumptions",
+        "kind": "api",
+        "source": "user",
+        "inventiveness": 0,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [
+          "Claude’s understanding"
+        ],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n27",
+        "label": "Storage: Postgres",
+        "detail": "Teams, prompts, maps and nodes",
+        "kind": "data",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 4,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n28",
+        "label": "Hosting: Vercel serverless + DB",
+        "detail": "Next.js frontend and API routes",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n29",
+        "label": "Scale: hundreds of users initially",
+        "detail": "Spikes during hackathon weekends",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.3,
+        "importance": 2,
+        "status": "proposed",
+        "parent": "n4",
+        "evidence": [],
+        "turn": 1,
+        "facet": "functionality"
+      },
+      {
+        "id": "n30",
+        "label": "APIs: AI plus auth",
+        "detail": "Few paid external services",
+        "kind": "api",
+        "source": "inferred",
+        "inventiveness": 0.1,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n5",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      },
+      {
+        "id": "n31",
+        "label": "Anthropic Claude API",
+        "detail": "Pay-per-token prompt analysis",
+        "kind": "api",
+        "source": "inferred",
+        "inventiveness": 0.1,
+        "importance": 5,
+        "status": "proposed",
+        "parent": "n30",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      },
+      {
+        "id": "n32",
+        "label": "Login: how do teams sign in?",
+        "detail": "GitHub OAuth, magic link or none?",
+        "kind": "api",
+        "source": "unknown",
+        "inventiveness": 0,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n30",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      },
+      {
+        "id": "n33",
+        "label": "AI usage: per-analysis token spend",
+        "detail": "Roughly cents per prompt; cap free use",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.2,
+        "importance": 3,
+        "status": "proposed",
+        "parent": "n5",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      },
+      {
+        "id": "n34",
+        "label": "Advertising: Devpost, Discord, sponsors",
+        "detail": "Low-cost community channels at hackathons",
+        "kind": "constraint",
+        "source": "inferred",
+        "inventiveness": 0.5,
+        "importance": 2,
+        "status": "proposed",
+        "parent": "n5",
+        "evidence": [],
+        "turn": 1,
+        "facet": "cost"
+      }
+    ],
+    "edges": [
+      {
+        "from": "n1",
+        "to": "n2",
+        "relation": "has"
+      },
+      {
+        "from": "n1",
+        "to": "n3",
+        "relation": "has"
+      },
+      {
+        "from": "n1",
+        "to": "n4",
+        "relation": "has"
+      },
+      {
+        "from": "n1",
+        "to": "n5",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n6",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n7",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n8",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n9",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n10",
+        "relation": "has"
+      },
+      {
+        "from": "n10",
+        "to": "n11",
+        "relation": "has"
+      },
+      {
+        "from": "n10",
+        "to": "n12",
+        "relation": "has"
+      },
+      {
+        "from": "n10",
+        "to": "n13",
+        "relation": "has"
+      },
+      {
+        "from": "n10",
+        "to": "n14",
+        "relation": "has"
+      },
+      {
+        "from": "n2",
+        "to": "n15",
+        "relation": "has"
+      },
+      {
+        "from": "n3",
+        "to": "n16",
+        "relation": "has"
+      },
+      {
+        "from": "n3",
+        "to": "n17",
+        "relation": "has"
+      },
+      {
+        "from": "n3",
+        "to": "n18",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n19",
+        "relation": "has"
+      },
+      {
+        "from": "n19",
+        "to": "n20",
+        "relation": "has"
+      },
+      {
+        "from": "n19",
+        "to": "n21",
+        "relation": "has"
+      },
+      {
+        "from": "n19",
+        "to": "n22",
+        "relation": "has"
+      },
+      {
+        "from": "n19",
+        "to": "n23",
+        "relation": "has"
+      },
+      {
+        "from": "n19",
+        "to": "n24",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n25",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n26",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n27",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n28",
+        "relation": "has"
+      },
+      {
+        "from": "n4",
+        "to": "n29",
+        "relation": "has"
+      },
+      {
+        "from": "n5",
+        "to": "n30",
+        "relation": "has"
+      },
+      {
+        "from": "n30",
+        "to": "n31",
+        "relation": "has"
+      },
+      {
+        "from": "n30",
+        "to": "n32",
+        "relation": "has"
+      },
+      {
+        "from": "n5",
+        "to": "n33",
+        "relation": "has"
+      },
+      {
+        "from": "n5",
+        "to": "n34",
+        "relation": "has"
+      },
+      {
+        "from": "n16",
+        "to": "n6",
+        "relation": "informs"
+      },
+      {
+        "from": "n18",
+        "to": "n15",
+        "relation": "informs"
+      },
+      {
+        "from": "n18",
+        "to": "n34",
+        "relation": "informs"
+      },
+      {
+        "from": "n16",
+        "to": "n19",
+        "relation": "informs"
+      },
+      {
+        "from": "n10",
+        "to": "n19",
+        "relation": "needs"
+      },
+      {
+        "from": "n19",
+        "to": "n30",
+        "relation": "informs"
+      },
+      {
+        "from": "n28",
+        "to": "n30",
+        "relation": "informs"
+      },
+      {
+        "from": "n29",
+        "to": "n28",
+        "relation": "informs"
+      },
+      {
+        "from": "n26",
+        "to": "n33",
+        "relation": "informs"
+      }
+    ]
+  },
+  "builds": [
+    {
+      "id": "b1",
+      "status": "done",
+      "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Deconstruct: See what Claude assumed in your prompt</title>\n<style>\n:root{--bg:#0a0c11;--panel:#121621;--panel2:#181d2b;--line:#252c3d;--text:#e7eaf3;--muted:#8b94aa;--user:#39ff88;--inf:#22d3ee;--unk:#ff4fd8;--accent:#a78bfa;--warn:#fbbf24;--r:10px;--sans:Inter,ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif;--mono:ui-monospace,\"JetBrains Mono\",\"SFMono-Regular\",Menlo,Consolas,monospace}\n*{box-sizing:border-box}\nbody{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}\nbutton,input,textarea,select{font:inherit;color:inherit}\n:focus-visible{outline:2px solid var(--accent);outline-offset:2px}\nheader{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 20px;background:rgba(10,12,17,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}\n.logo{font-family:var(--mono);font-weight:700;letter-spacing:.5px}.logo b{color:var(--user)}\nnav{display:flex;gap:4px;flex-wrap:wrap}\nnav button{background:none;border:1px solid transparent;border-radius:8px;padding:6px 12px;color:var(--muted);cursor:pointer}\nnav button.on{color:var(--text);border-color:var(--line);background:var(--panel)}\n.who{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}\n.btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:7px 14px;cursor:pointer;transition:.15s}\n.btn:hover{border-color:var(--accent)}\n.btn.pri{background:var(--user);color:#04140a;border-color:var(--user);font-weight:600}\n.btn.pri:disabled{opacity:.5;cursor:wait}\n.btn.sm{padding:3px 9px;font-size:12px}\nmain{max-width:1280px;margin:0 auto;padding:20px}\n.view{display:none}.view.on{display:block}\n.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}\nh1{font-size:40px;line-height:1.1;margin:28px 0 12px}h1 em{font-style:normal;color:var(--user)}\nh2{font-size:16px;margin:0 0 10px}\n.muted{color:var(--muted)}\n.mono{font-family:var(--mono)}\n.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}\n.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}\n.s-user{--c:var(--user)}.s-inferred{--c:var(--inf)}.s-unknown{--c:var(--unk)}\n.dot.s-user,.dot.s-inferred,.dot.s-unknown{background:var(--c);box-shadow:0 0 8px var(--c)}\n.grid2{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px}\n.hero{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}\ntextarea{width:100%;min-height:220px;resize:vertical;background:#0c0f17;border:1px solid var(--line);border-radius:8px;padding:12px;font-family:var(--mono);font-size:13px}\ninput[type=text],select{background:#0c0f17;border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}\n.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}\n.item{display:grid;grid-template-columns:4px 92px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--panel2)}\n.item .bar{align-self:stretch;border-radius:4px;background:var(--c)}\n.item .cat{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}\n.item .txt small{display:block;color:var(--muted);font-size:11px}\n.item.approved{border-color:color-mix(in srgb,var(--user) 45%,var(--line))}\n.item.rejected{opacity:.45}.item.rejected .txt span{text-decoration:line-through}\n.acts{display:flex;gap:4px}\n.chip{font-size:11px;border:1px solid var(--c,var(--line));color:var(--c,var(--muted));border-radius:20px;padding:1px 8px;font-family:var(--mono)}\n.meter{height:6px;background:var(--line);border-radius:4px;overflow:hidden}.meter i{display:block;height:100%;background:var(--accent)}\n.files{display:flex;gap:4px;flex-wrap:wrap;margin:10px 0 6px}\n.files button.on{border-color:var(--user);color:var(--user)}\npre{background:#07090e;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;max-height:340px;font:12px/1.55 var(--mono);margin:0;white-space:pre}\n.canvas{background:radial-gradient(circle at 1px 1px,#1c2232 1px,transparent 0) 0 0/18px 18px,var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;overflow-x:auto}\n.goal{max-width:560px;margin:0 auto 28px;text-align:center;padding:14px;border-radius:10px;border:1px solid var(--user);box-shadow:0 0 18px rgba(57,255,136,.18);font-family:var(--mono);font-size:13px}\n.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;border-top:1px dashed var(--line);padding-top:18px}\n.branch h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 8px}\n.node{display:block;width:100%;text-align:left;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 8%,#0c0f17);border-radius:8px;padding:8px;margin-bottom:8px;cursor:pointer;font-size:12px}\n.node.approved{box-shadow:0 0 12px color-mix(in srgb,var(--c) 40%,transparent)}\n.node.rejected{opacity:.4;text-decoration:line-through}\n.node em{font-style:normal;font-size:10px;color:var(--muted);display:block;margin-top:4px}\n.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}\n.card h3{margin:0 0 4px;font-size:15px}\n.card p{font-family:var(--mono);font-size:12px;color:var(--muted);margin:8px 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}\n.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}.stats .panel{flex:1;min-width:150px}\n.stats b{font-size:22px;display:block}\n.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}\n.modal.on{display:flex}.modal .panel{width:min(400px,100%)}\n.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);padding:8px 16px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;z-index:30}\n.toast.on{opacity:1}\n.live{font-size:11px;color:var(--user)}.live::before{content:\"●\";margin-right:4px}\n.err{color:var(--unk);font-size:12px;min-height:16px}\n@media(max-width:900px){.grid2,.hero{grid-template-columns:1fr}h1{font-size:30px}}\n@media(max-width:520px){main{padding:12px}.item{grid-template-columns:4px 1fr;}.item .cat{grid-column:2}.item .acts{grid-column:2}.who{margin-left:0}}\n</style>\n</head>\n<body>\n<header data-mc-el=\"e1\" data-mc=\"n6 n10\" style=\"font-size: 10px\">\n  <div class=\"logo\" data-mc-el=\"e2\" data-mc=\"n1 n6\">&gt;_ <b>de</b>construct</div>\n  <nav data-mc-el=\"e3\" data-mc=\"n10\">\n    <button data-view=\"landing\" data-mc-el=\"e4\" data-mc=\"n11\" style=\"font-size: 8px\">Landing</button>\n    <button data-view=\"workspace\" data-mc-el=\"e5\" data-mc=\"n12\">Workspace</button>\n    <button data-view=\"map\" data-mc-el=\"e6\" data-mc=\"n13\" style=\"font-size: 9px; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif\">Assumption map</button>\n    <button data-view=\"dashboard\" data-mc-el=\"e7\" data-mc=\"n14\">Team dashboard</button>\n  </nav>\n  <div class=\"who\" id=\"who\" data-mc-el=\"e8\" data-mc=\"n32 n23\" style=\"font-size: 9px\"></div>\n</header>\n\n<main>\n<section class=\"view\" id=\"v-landing\" data-mc-el=\"e9\" data-mc=\"n11\" style=\"font-size: 13px\">\n  <div class=\"hero\">\n    <div data-mc-el=\"e10\" data-mc=\"n11 n6 n16\">\n      <h1>See what Claude <em>actually</em> understood from your prompt.</h1>\n      <p class=\"muted\" style=\"font-size:16px\">Hackathon clock is ticking. Paste a prompt, get it split into requirements, and spot every assumption before it becomes wasted code. Approve, correct, then generate a starter codebase your whole team agreed on.</p>\n      <div class=\"legend\" style=\"margin:16px 0; font-size: 8px\" data-mc-el=\"e11\" data-mc=\"n7 n21\">\n        <span><i class=\"dot s-user\"></i>From your prompt</span><span><i class=\"dot s-inferred\"></i>Inferred default</span><span><i class=\"dot s-unknown\"></i>Unknown, needs a decision</span>\n      </div>\n      <div class=\"row\">\n        <button class=\"btn pri\" id=\"ctaStart\" data-mc-el=\"e12\" data-mc=\"n11 n15\">Deconstruct a prompt →</button>\n        <button class=\"btn\" id=\"ctaDash\" data-mc-el=\"e13\" data-mc=\"n14\">Open team dashboard</button>\n      </div>\n    </div>\n    <div class=\"panel\" data-mc-el=\"e14\" data-mc=\"n11 n20 n21\" style=\"font-size: 8px\">\n      <h2>Example deconstruction</h2>\n      <pre id=\"exPrompt\" style=\"white-space:pre-wrap;margin-bottom:10px\" data-mc-el=\"e15\" data-mc=\"n8\"></pre>\n      <div id=\"exItems\"></div>\n    </div>\n  </div>\n</section>\n\n<section class=\"view\" id=\"v-workspace\" data-mc-el=\"e16\" data-mc=\"n12\">\n  <div class=\"grid2\">\n    <div class=\"panel\" data-mc-el=\"e17\" data-mc=\"n12 n15\">\n      <div class=\"row\" style=\"justify-content:space-between;margin-bottom:8px\">\n        <h2 style=\"margin:0\">Prompt</h2>\n        <button class=\"btn sm\" id=\"newPrompt\" data-mc-el=\"e18\" data-mc=\"n12\">+ New prompt</button>\n      </div>\n      <input type=\"text\" id=\"title\" placeholder=\"Session title, e.g. Lost & Found MVP\" style=\"margin-bottom:8px\" data-mc-el=\"e19\" data-mc=\"n14\">\n      <textarea id=\"prompt\" placeholder=\"Paste the prompt your team plans to send to Claude…\" data-mc-el=\"e20\" data-mc=\"n12 n8\"></textarea>\n      <div class=\"err\" id=\"perr\"></div>\n      <div class=\"row\" style=\"justify-content:space-between\">\n        <button class=\"btn pri\" id=\"analyze\" data-mc-el=\"e21\" data-mc=\"n25 n15 n26\" style=\"font-size: 15px\">Analyze</button>\n        <span class=\"muted mono\" id=\"aStatus\" data-mc-el=\"e22\" data-mc=\"n31\"></span>\n      </div>\n      <div style=\"margin-top:16px\" data-mc-el=\"e23\" data-mc=\"n33 n31\">\n        <div class=\"row\" style=\"justify-content:space-between;font-size:12px\"><span class=\"muted\">Team free token budget</span><span class=\"mono\" id=\"tokTxt\"></span></div>\n        <div class=\"meter\"><i id=\"tokBar\"></i></div>\n      </div>\n    </div>\n    <div class=\"panel\" data-mc-el=\"e24\" data-mc=\"n20 n21 n22\" style=\"font-size: 14px\">\n      <div class=\"row\" style=\"justify-content:space-between;margin-bottom:8px\">\n        <h2 style=\"margin:0\">Breakdown <span class=\"muted\" id=\"bCount\"></span></h2>\n        <div class=\"row\">\n          <span class=\"live\" id=\"liveTag\" data-mc-el=\"e25\" data-mc=\"n23\">Team live</span>\n          <button class=\"btn sm\" id=\"approveAll\" data-mc-el=\"e26\" data-mc=\"n22 n25\">Approve all</button>\n          <button class=\"btn sm\" id=\"toMap\" data-mc-el=\"e27\" data-mc=\"n13\">View map</button>\n        </div>\n      </div>\n      <div id=\"items\" data-mc-el=\"e28\" data-mc=\"n20 n21 n22\" style=\"font-size: 21px\"></div>\n    </div>\n  </div>\n  <div class=\"panel\" style=\"margin-top:16px\" data-mc-el=\"e29\" data-mc=\"n24\">\n    <div class=\"row\" style=\"justify-content:space-between\">\n      <h2 style=\"margin:0\">Output</h2>\n      <div class=\"row\">\n        <button class=\"btn pri\" id=\"genCode\" data-mc-el=\"e30\" data-mc=\"n24 n25\">Generate starter code</button>\n        <button class=\"btn\" id=\"genPrompt\" data-mc-el=\"e31\" data-mc=\"n24 n25\">Export refined prompt</button>\n      </div>\n    </div>\n    <p class=\"muted\" id=\"genHint\" style=\"margin:8px 0 0\">Approve items in the breakdown, then generate a codebase built only from what your team agreed on.</p>\n    <div id=\"genOut\" hidden>\n      <div class=\"files\" id=\"fileTabs\" data-mc-el=\"e32\" data-mc=\"n24\"></div>\n      <pre id=\"fileBody\" data-mc-el=\"e33\" data-mc=\"n24 n8\"></pre>\n      <div class=\"row\" style=\"margin-top:8px\">\n        <button class=\"btn sm\" id=\"copyFile\" data-mc-el=\"e34\" data-mc=\"n25\">Copy</button>\n        <button class=\"btn sm\" id=\"dlFile\" data-mc-el=\"e35\" data-mc=\"n25\">Download file</button>\n      </div>\n    </div>\n  </div>\n</section>\n\n<section class=\"view\" id=\"v-map\" data-mc-el=\"e36\" data-mc=\"n13\">\n  <div class=\"row\" style=\"justify-content:space-between;margin-bottom:12px\">\n    <div><h2 style=\"margin:0\" id=\"mapTitle\">Assumption map</h2><div class=\"legend\" data-mc-el=\"e37\" data-mc=\"n7\"><span><i class=\"dot s-user\"></i>User</span><span><i class=\"dot s-inferred\"></i>Inferred</span><span><i class=\"dot s-unknown\"></i>Unknown</span><span class=\"muted\">Click a node to cycle approve / reject / pending</span></div></div>\n    <button class=\"btn\" id=\"mapBack\" data-mc-el=\"e38\" data-mc=\"n12\">← Back to workspace</button>\n  </div>\n  <div class=\"canvas\" id=\"mapCanvas\" data-mc-el=\"e39\" data-mc=\"n13 n9 n21\"></div>\n</section>\n\n<section class=\"view\" id=\"v-dashboard\" data-mc-el=\"e40\" data-mc=\"n14\">\n  <div class=\"stats\" data-mc-el=\"e41\" data-mc=\"n14 n33\">\n    <div class=\"panel\"><span class=\"muted\">Sessions</span><b id=\"stS\">0</b></div>\n    <div class=\"panel\"><span class=\"muted\">Assumptions approved</span><b id=\"stA\">0</b></div>\n    <div class=\"panel\"><span class=\"muted\">Open unknowns</span><b id=\"stU\" style=\"color:var(--unk)\">0</b></div>\n    <div class=\"panel\"><span class=\"muted\">Est. AI spend</span><b id=\"stC\">$0</b></div>\n  </div>\n  <div class=\"row\" style=\"margin-bottom:12px\">\n    <input type=\"text\" id=\"search\" placeholder=\"Search prompts…\" style=\"flex:2;min-width:180px\" data-mc-el=\"e42\" data-mc=\"n14\">\n    <select id=\"filter\" style=\"flex:1;min-width:150px\" data-mc-el=\"e43\" data-mc=\"n14 n22\">\n      <option value=\"all\">All sessions</option><option value=\"mine\">Mine</option><option value=\"review\">Needs review</option><option value=\"done\">Fully reviewed</option>\n    </select>\n    <button class=\"btn pri\" id=\"dashNew\" data-mc-el=\"e44\" data-mc=\"n12\">+ New prompt</button>\n  </div>\n  <div class=\"cards\" id=\"cards\" data-mc-el=\"e45\" data-mc=\"n14 n23\"></div>\n</section>\n</main>\n\n<div class=\"modal\" id=\"login\" data-mc-el=\"e46\" data-mc=\"n32\">\n  <form class=\"panel\" id=\"loginForm\">\n    <h2>Join your team</h2>\n    <p class=\"muted\" style=\"margin-top:0\">Pick a nickname and team name. Teammates using the same team share sessions.</p>\n    <input type=\"text\" id=\"nick\" placeholder=\"Nickname\" maxlength=\"24\" style=\"margin-bottom:8px\" data-mc-el=\"e47\" data-mc=\"n32\">\n    <input type=\"text\" id=\"team\" placeholder=\"Team name\" maxlength=\"32\" data-mc-el=\"e48\" data-mc=\"n32 n16\">\n    <div class=\"err\" id=\"lerr\"></div>\n    <div class=\"row\" style=\"justify-content:flex-end\"><button type=\"button\" class=\"btn\" id=\"loginCancel\">Cancel</button><button class=\"btn pri\" type=\"submit\" data-mc-el=\"e49\" data-mc=\"n32\">Join</button></div>\n  </form>\n</div>\n<div class=\"toast\" id=\"toast\" data-mc-el=\"e50\" data-mc=\"n15\"></div>\n\n<script>\nconst mem={};const storage={get(k){try{return JSON.parse(localStorage.getItem(k));}catch{return mem[k]??null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{mem[k]=v;}}};\nconst $=s=>document.querySelector(s);\nconst esc=s=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));\nlet elc=1000;const T=ids=>`data-mc-el=\"e${++elc}\"`;\nconst uid=()=>Math.random().toString(36).slice(2,9);\nconst KEY='pd-sessions',FREE_CAP=60000;\nlet bc=null;try{bc=new BroadcastChannel('pd-team');bc.onmessage=()=>renderAll();}catch{bc=null;}\nconst store={\n  list(){return storage.get(KEY)||[];},\n  save(l){storage.set(KEY,l);try{bc&&bc.postMessage('sync');}catch{}},\n  get(id){return this.list().find(s=>s.id===id);},\n  add(s){const l=this.list();l.unshift(s);this.save(l);return s;},\n  update(id,fn){const l=this.list();const s=l.find(x=>x.id===id);if(s){fn(s);this.save(l);}return s;},\n  remove(id){this.save(this.list().filter(s=>s.id!==id));}\n};\nconst user=()=>storage.get('pd-user');\n\nconst CATS=['Goal','Audience','Pages','Features','Data','Auth','Design','Hosting'];\nconst RULES=[\n {cat:'Audience',re:/\\b(students?|users?|teams?|organi[sz]ers?|people|customers?|commuters?|admins?|developers?|mentors?)\\b/i,fb:['unknown','Target users not stated: general public proposed','Not specified, needs a decision']},\n {cat:'Pages',re:/\\b(page|screen|view|dashboard|landing|profile)\\b/i,fb:['inferred','One main screen plus a navigation header','Typical default for a hackathon MVP']},\n {cat:'Data',re:/\\b(save|store|database|history|records?|photos?|log)\\b/i,fb:['inferred','Persist core records in a managed database','Most apps need saved state']},\n {cat:'Auth',re:/\\b(log ?in|sign ?in|accounts?|auth|oauth)\\b/i,fb:['unknown','Sign-in not mentioned: email magic link proposed','Not specified, needs a decision']},\n {cat:'Design',re:/\\b(dark|light|theme|colou?r|minimal|mobile|responsive|style|font|hands-free|voice)\\b/i,fb:['inferred','Clean responsive layout, neutral palette','Default when no style is given']},\n {cat:'Hosting',re:/\\b(host|deploy|vercel|server|cloud|aws|bot)\\b/i,fb:['inferred','Serverless hosting with a managed database','Cheap and fast for hackathon scale']}\n];\nconst FEAT=/\\b(let|lets|allow|allows|can|should|post|claim|track|log|search|schedule|step|share|vote|see|create|add|upload)\\b/i;\nconst sentences=p=>p.replace(/\\s+/g,' ').split(/(?<=[.!?;])\\s+/).map(s=>s.trim()).filter(Boolean);\nconst clip=(s,n=130)=>s.length>n?s.slice(0,n-1)+'…':s;\nfunction deconstruct(p){\n  const ss=sentences(p),out=[];const mk=(cat,source,text,why)=>({id:uid(),cat,source,text,why,status:'pending',by:null});\n  out.push(mk('Goal','user',clip(ss[0]||p),'Stated in prompt'));\n  RULES.forEach(r=>{const hit=ss.find(s=>r.re.test(s));const m=hit&&hit.match(r.re);\n    out.push(hit?mk(r.cat,'user',clip(hit),`Stated in prompt (“${m[0]}”)`):mk(r.cat,r.fb[0],r.fb[1],r.fb[2]));});\n  const fs=ss.filter(s=>FEAT.test(s));\n  if(fs.length)fs.forEach(s=>out.push(mk('Features','user',clip(s),'Action described in prompt')));\n  else out.push(mk('Features','unknown','Core actions unclear: create, list and edit the main item proposed','Not specified, needs a decision'));\n  if(!/\\b(real-?time|live|sync)\\b/i.test(p)&&/\\b(team|share|organi[sz]ers?|admins?)\\b/i.test(p))out.push(mk('Features','inferred','Changes refresh for other viewers without reload','Multi-person use implied'));\n  return out.sort((a,b)=>CATS.indexOf(a.cat)-CATS.indexOf(b.cat));\n}\nconst tokensFor=p=>Math.ceil(p.length/4)+650;\nconst costOf=t=>t/1e6*9;\n\nfunction seed(){\n  if(storage.get(KEY))return;\n  const now=Date.now(),H=36e5;\n  const raw=[\n   ['Campus Lost & Found','Build a campus lost-and-found app where students post found items with photos and owners can claim them. Needs a map page and a dashboard for admins.','Priya',now-3*H,4],\n   ['Organizer Ops Bot','A Discord bot dashboard that lets hackathon organizers schedule announcements and track mentor requests. Dark theme, deploy on Vercel.','Marcus',now-9*H,7],\n   ['Commute Carbon Tracker','Make a carbon footprint tracker for commuters. Users log trips and see weekly charts. Save history to a database.','Ana',now-26*H,2],\n   ['Messy Hands Recipes','Voice-first recipe assistant for people cooking with messy hands. Let them search recipes and step through instructions hands-free.','Priya',now-50*H,0]\n  ];\n  const list=raw.map(([title,prompt,author,at,n])=>{const items=deconstruct(prompt);items.slice(0,n).forEach(i=>{i.status='approved';i.by=author;});return{id:uid(),title,prompt,author,team:'Byte Bandits',createdAt:at,tokens:tokensFor(prompt),items};});\n  storage.set(KEY,list);\n}\n\nlet view='landing',currentId=storage.get('pd-current'),gen=null,genTab=null,pendingView=null;\nfunction toast(m){const t=$('#toast');if(!t)return;t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800);}\nfunction teamSessions(){const u=user();return store.list().filter(s=>!u||s.team===u.team);}\nfunction current(){return currentId?store.get(currentId):null;}\nfunction setCurrent(id){currentId=id;storage.set('pd-current',id);gen=null;loadEditor();}\nfunction go(v){\n  if((v==='workspace'||v==='dashboard'||v==='map')&&!user()){pendingView=v;openLogin();return;}\n  view=v;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));\n  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===v));\n  renderAll();window.scrollTo({top:0,behavior:'smooth'});\n}\nfunction openLogin(){$('#login').classList.add('on');const n=$('#nick');n&&n.focus();}\n\nfunction renderHeader(){\n  const u=user(),w=$('#who');if(!w)return;\n  w.innerHTML=u?`<span class=\"chip\" style=\"--c:var(--accent)\">${esc(u.team)}</span><span>${esc(u.nick)}</span><button class=\"btn sm\" id=\"logout\" ${T('n32')}>Sign out</button>`\n   :`<button class=\"btn sm\" id=\"loginBtn\" ${T('n32')}>Join team</button>`;\n}\nfunction itemRow(i,ro){\n  const acts=ro?`<span class=\"chip s-${i.source}\" style=\"--c:var(--c)\">${i.source}</span>`:\n   i.editing?`<div class=\"acts\"><button class=\"btn sm\" data-act=\"save\" data-id=\"${i.id}\" ${T('n22')}>Save</button></div>`:\n   `<div class=\"acts\"><button class=\"btn sm\" data-act=\"approve\" data-id=\"${i.id}\" title=\"Approve\" aria-label=\"Approve\" ${T('n22 n25')}>✓</button><button class=\"btn sm\" data-act=\"edit\" data-id=\"${i.id}\" title=\"Edit\" aria-label=\"Edit\" ${T('n22')}>✎</button><button class=\"btn sm\" data-act=\"reject\" data-id=\"${i.id}\" title=\"Reject\" aria-label=\"Reject\" ${T('n22')}>✕</button></div>`;\n  const body=i.editing?`<input type=\"text\" id=\"ed-${i.id}\" value=\"${esc(i.text)}\">`:`<span>${esc(i.text)}</span><small>${esc(i.why)}${i.status!=='pending'?` · ${i.status} by ${esc(i.by||'team')}`:''}</small>`;\n  return `<div class=\"item s-${i.source} ${i.status}\" ${T('n20 n21 n7')}><i class=\"bar\"></i><span class=\"cat\">${i.cat}</span><div class=\"txt\">${body}</div>${acts}</div>`;\n}\nfunction renderLanding(){\n  const ex='Build a habit tracker where teams can share streaks and see a leaderboard. Make it dark.';\n  const p=$('#exPrompt'),c=$('#exItems');if(!p||!c||c.dataset.done)return;\n  p.textContent=ex;c.innerHTML=deconstruct(ex).map(i=>itemRow(i,true)).join('');c.dataset.done=1;\n}\nfunction loadEditor(){const s=current();const t=$('#title'),p=$('#prompt');if(t)t.value=s?s.title:'';if(p)p.value=s?s.prompt:'';}\nfunction renderWorkspace(){\n  const s=current(),box=$('#items');if(!box)return;\n  if(!s){box.innerHTML=`<p class=\"muted\" ${T('n15')}>Paste a prompt and hit Analyze. Every requirement Claude picks up appears here, color-coded by where it came from.</p>`;$('#bCount').textContent='';}\n  else{const ap=s.items.filter(i=>i.status==='approved').length;$('#bCount').textContent=`· ${ap}/${s.items.length} approved`;box.innerHTML=s.items.map(i=>itemRow(i)).join('');}\n  const used=teamSessions().reduce((a,x)=>a+(x.tokens||0),0);\n  $('#tokTxt').textContent=`${used.toLocaleString()} / ${FREE_CAP.toLocaleString()} tokens`;\n  $('#tokBar').style.width=Math.min(100,used/FREE_CAP*100)+'%';\n  $('#liveTag').hidden=!bc;\n  renderGen();\n}\nfunction renderMap(){\n  const c=$('#mapCanvas');if(!c)return;const s=current();\n  if(!s){c.innerHTML=`<p class=\"muted\" ${T('n13')}>No session selected. Analyze a prompt or open one from the dashboard.</p>`;return;}\n  $('#mapTitle').textContent='Assumption map · '+s.title;\n  const goal=s.items.find(i=>i.cat==='Goal');\n  const cols=CATS.filter(c=>c!=='Goal').map(cat=>{const its=s.items.filter(i=>i.cat===cat);if(!its.length)return'';\n    return `<div class=\"branch\" ${T('n13 n20')}><h3>${cat}</h3>${its.map(i=>`<button class=\"node s-${i.source} ${i.status}\" data-node=\"${i.id}\" ${T('n21 n22 n7')}>${esc(i.text)}<em>${i.source} · ${i.status}</em></button>`).join('')}</div>`;}).join('');\n  c.innerHTML=`<div class=\"goal\" ${T('n1 n13')}>${esc(goal?goal.text:s.title)}</div><div class=\"branches\">${cols}</div>`;\n}\nfunction renderDashboard(){\n  const cards=$('#cards');if(!cards)return;const u=user();\n  const all=teamSessions(),q=($('#search').value||'').toLowerCase(),f=$('#filter').value;\n  const pend=s=>s.items.filter(i=>i.status==='pending').length;\n  const list=all.filter(s=>(s.title+' '+s.prompt).toLowerCase().includes(q)).filter(s=>f==='mine'?u&&s.author===u.nick:f==='review'?pend(s)>0:f==='done'?pend(s)===0:true);\n  let ap=0,un=0,tok=0;all.forEach(s=>{ap+=s.items.filter(i=>i.status==='approved').length;un+=s.items.filter(i=>i.source==='unknown'&&i.status==='pending').length;tok+=s.tokens||0;});\n  $('#stS').textContent=all.length;$('#stA').textContent=ap;$('#stU').textContent=un;$('#stC').textContent='$'+costOf(tok).toFixed(3);\n  cards.innerHTML=list.length?list.map(s=>{const a=s.items.filter(i=>i.status==='approved').length,pct=Math.round(a/s.items.length*100);\n    return `<div class=\"panel card\" ${T('n14 n23')}><h3>${esc(s.title)}</h3><span class=\"muted\" style=\"font-size:12px\">${esc(s.author)} · ${new Date(s.createdAt).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span><p>${esc(s.prompt)}</p>\n    <div class=\"meter\" style=\"margin-bottom:6px\"><i style=\"width:${pct}%;background:var(--user)\"></i></div><div class=\"row\" style=\"justify-content:space-between\"><span class=\"muted\" style=\"font-size:12px\">${a}/${s.items.length} approved</span>\n    <div class=\"row\"><button class=\"btn sm\" data-open=\"${s.id}\" ${T('n12')}>Open</button><button class=\"btn sm\" data-omap=\"${s.id}\" ${T('n13')}>Map</button><button class=\"btn sm\" data-del=\"${s.id}\" ${T('n14')}>Delete</button></div></div></div>`;}).join('')\n   :`<p class=\"muted\" ${T('n14')}>No sessions match. Start a new prompt to fill your team board.</p>`;\n}\nfunction renderAll(){renderHeader();renderLanding();renderWorkspace();renderMap();renderDashboard();}\n\nfunction itemAct(act,id){\n  const s=current();if(!s)return;const u=user();\n  if(act==='edit'){s.items.forEach(i=>i.editing=i.id===id);store.update(s.id,x=>x.items=s.items);renderWorkspace();const e=$('#ed-'+id);e&&e.focus();return;}\n  store.update(s.id,x=>{const i=x.items.find(y=>y.id===id);if(!i)return;\n    if(act==='save'){const e=$('#ed-'+id);const v=e?e.value.trim():'';if(!v){toast('Item text cannot be empty');return;}i.text=v;i.source='user';i.why='Corrected by team';i.editing=false;i.status='approved';i.by=u.nick;}\n    if(act==='approve'){i.status=i.status==='approved'?'pending':'approved';i.by=u.nick;}\n    if(act==='reject'){i.status=i.status==='rejected'?'pending':'rejected';i.by=u.nick;}\n    if(act==='cycle'){i.status={pending:'approved',approved:'rejected',rejected:'pending'}[i.status];i.by=u.nick;}});\n  gen=null;renderAll();\n}\nfunction analyze(){\n  const u=user();if(!u){pendingView='workspace';openLogin();return;}\n  const p=$('#prompt').value.trim(),err=$('#perr');\n  if(p.length<15){err.textContent='Write at least a sentence so there is something to deconstruct.';return;}\n  const used=teamSessions().reduce((a,x)=>a+(x.tokens||0),0);\n  if(used+tokensFor(p)>FREE_CAP){err.textContent='Team free token budget reached for this event.';return;}\n  err.textContent='';const b=$('#analyze');b.disabled=true;$('#aStatus').textContent='Claude is reading your prompt…';\n  setTimeout(()=>{\n    const title=$('#title').value.trim()||clip(sentences(p)[0]||p,40);const items=deconstruct(p),tokens=tokensFor(p);\n    const s=current();\n    if(s)store.update(s.id,x=>{x.prompt=p;x.title=title;x.items=items;x.tokens=(x.tokens||0)+tokens;});\n    else{const n=store.add({id:uid(),title,prompt:p,author:u.nick,team:u.team,createdAt:Date.now(),tokens,items});currentId=n.id;storage.set('pd-current',n.id);}\n    $('#title').value=title;b.disabled=false;$('#aStatus').textContent=`${tokens} tokens · ~$${costOf(tokens).toFixed(4)}`;\n    gen=null;renderAll();toast(`${items.length} items surfaced, ${items.filter(i=>i.source==='unknown').length} unknown`);\n  },550);\n}\nconst slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'app';\nconst camel=s=>{const w=s.toLowerCase().replace(/[^a-z ]/g,'').split(' ').filter(x=>x&&!['a','an','the','and','to','can','should','let','lets','them','where','that','users','for'].includes(x)).slice(0,3);return w.length?w[0]+w.slice(1).map(x=>x[0].toUpperCase()+x.slice(1)).join(''):'action';};\nfunction approvedBy(s){const g={};s.items.filter(i=>i.status==='approved').forEach(i=>(g[i.cat]=g[i.cat]||[]).push(i.text));return g;}\nfunction refinedPrompt(s){const g=approvedBy(s);return `Build \"${s.title}\".\\n`+CATS.filter(c=>g[c]).map(c=>c==='Features'?`Features:\\n${g[c].map(x=>'- '+x).join('\\n')}`:`${c}: ${g[c].join(' ')}`).join('\\n')+`\\n\\nOnly build what is listed above. Ask before adding anything else.`;}\nfunction genCode(s){\n  const g=approvedBy(s);if(!Object.keys(g).length)return null;const name=slug(s.title),feats=g.Features||[];\n  const pages=(g.Pages||['Home']).map((p,i)=>`    <section id=\"page-${i}\" class=\"page\"><h2>${esc(clip(p,60))}</h2></section>`).join('\\n');\n  const fns=feats.map(f=>`// ${f}\\nexport function ${camel(f)}(input) {\\n  const item = { id: crypto.randomUUID(), ...input, createdAt: Date.now() };\\n  store.add(item);\\n  return item;\\n}`).join('\\n\\n')||'// No approved features yet';\n  const files={\n   'README.md':`# ${s.title}\\n\\nGenerated from ${s.items.filter(i=>i.status==='approved').length} team-approved requirements.\\n\\n`+Object.entries(g).map(([c,v])=>`## ${c}\\n${v.map(x=>'- '+x).join('\\n')}`).join('\\n\\n')+`\\n\\n## Run\\nnpm install && npm run dev`,\n   'index.html':`<!doctype html>\\n<html lang=\"en\">\\n<head>\\n  <meta charset=\"utf-8\">\\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\\n  <title>${s.title}</title>\\n</head>\\n<body>\\n  <header><h1>${s.title}</h1></header>\\n  <main>\\n${pages}\\n  </main>\\n  <script type=\"module\" src=\"app.js\"><\\/script>\\n</body>\\n</html>`,\n   'app.js':`// ${s.title} – starter logic\\nconst items = [];\\nexport const store = {\\n  list: () => items,\\n  add: (x) => items.push(x),\\n};\\n\\n${fns}\\n`\n  };\n  if(g.Data||g.Auth)files['schema.sql']=(g.Auth?`create table users (\\n  id uuid primary key default gen_random_uuid(),\\n  email text unique not null,\\n  created_at timestamptz default now()\\n);\\n\\n`:'')+`create table ${name.replace(/-/g,'_')}_items (\\n  id uuid primary key default gen_random_uuid(),\\n  title text not null,\\n  body text,\\n  ${g.Auth?'owner_id uuid references users(id),\\n  ':''}created_at timestamptz default now()\\n);\\n-- ${(g.Data||[]).join(' | ')}`;\n  return files;\n}\nfunction renderGen(){\n  const out=$('#genOut');if(!out)return;out.hidden=!gen;if(!gen)return;\n  if(!gen[genTab])genTab=Object.keys(gen)[0];\n  $('#fileTabs').innerHTML=Object.keys(gen).map(f=>`<button class=\"btn sm ${f===genTab?'on':''}\" data-file=\"${esc(f)}\" ${T('n24')}>${esc(f)}</button>`).join('');\n  $('#fileBody').textContent=gen[genTab];\n}\nfunction doGen(kind){\n  const s=current();if(!s){toast('Analyze a prompt first');return;}\n  if(kind==='code'){const f=genCode(s);if(!f){toast('Approve at least one item first');return;}gen=f;genTab='README.md';}\n  else{if(!s.items.some(i=>i.status==='approved')){toast('Approve at least one item first');return;}gen={'refined-prompt.txt':refinedPrompt(s)};genTab='refined-prompt.txt';}\n  renderGen();toast(kind==='code'?'Starter codebase generated':'Refined prompt ready');\n}\n\ndocument.addEventListener('click',e=>{\n  const t=e.target.closest('button');if(!t)return;\n  if(t.dataset.view)return go(t.dataset.view);\n  if(t.dataset.act)return itemAct(t.dataset.act,t.dataset.id);\n  if(t.dataset.node)return itemAct('cycle',t.dataset.node);\n  if(t.dataset.file){genTab=t.dataset.file;return renderGen();}\n  if(t.dataset.open){setCurrent(t.dataset.open);return go('workspace');}\n  if(t.dataset.omap){setCurrent(t.dataset.omap);return go('map');}\n  if(t.dataset.del){const s=store.get(t.dataset.del);if(s){store.remove(s.id);if(currentId===s.id)setCurrent(null);renderAll();toast(`Deleted “${s.title}”`);}return;}\n  switch(t.id){\n   case 'ctaStart':return go('workspace');\n   case 'ctaDash':return go('dashboard');\n   case 'loginBtn':pendingView=null;return openLogin();\n   case 'logout':storage.set('pd-user',null);renderAll();go('landing');return toast('Signed out');\n   case 'loginCancel':$('#login').classList.remove('on');pendingView=null;return;\n   case 'analyze':return analyze();\n   case 'newPrompt':case 'dashNew':setCurrent(null);go('workspace');renderAll();const p=$('#prompt');p&&p.focus();return;\n   case 'approveAll':{const s=current();if(!s)return toast('Nothing to approve yet');const u=user();store.update(s.id,x=>x.items.forEach(i=>{if(i.status==='pending'){i.status='approved';i.by=u.nick;}}));gen=null;renderAll();return toast('All pending items approved');}\n   case 'toMap':return go('map');\n   case 'mapBack':return go('workspace');\n   case 'genCode':return doGen('code');\n   case 'genPrompt':return doGen('prompt');\n   case 'copyFile':{const txt=gen&&gen[genTab];if(!txt)return;const done=()=>toast('Copied '+genTab);\n     try{navigator.clipboard.writeText(txt).then(done,()=>{selectPre();toast('Selected: press Ctrl+C');});}catch{selectPre();toast('Selected: press Ctrl+C');}return;}\n   case 'dlFile':{const txt=gen&&gen[genTab];if(!txt)return;try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download=genTab;document.body.appendChild(a);a.click();a.remove();toast('Downloading '+genTab);}catch{toast('Download blocked here, use Copy');}return;}\n  }\n});\nfunction selectPre(){const p=$('#fileBody');if(!p)return;const r=document.createRange();r.selectNodeContents(p);const s=getSelection();s.removeAllRanges();s.addRange(r);}\n$('#loginForm').addEventListener('submit',e=>{\n  e.preventDefault();const nick=$('#nick').value.trim(),team=$('#team').value.trim();\n  if(nick.length<2||team.length<2){$('#lerr').textContent='Nickname and team need at least 2 characters.';return;}\n  storage.set('pd-user',{nick,team});$('#lerr').textContent='';$('#login').classList.remove('on');toast(`Welcome, ${nick}`);\n  if(currentId&&!teamSessions().some(s=>s.id===currentId))setCurrent(null);\n  go(pendingView||view);pendingView=null;\n});\n$('#prompt').addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')analyze();});\n$('#search').addEventListener('input',renderDashboard);\n$('#filter').addEventListener('change',renderDashboard);\ndocument.addEventListener('keydown',e=>{if(e.key==='Escape')$('#login').classList.remove('on');});\n\nseed();\nif(currentId&&!store.get(currentId))currentId=null;\nif(!currentId&&store.list()[0])currentId=store.list()[0].id;\nloadEditor();go('landing');\n</script>\n</body>\n</html>",
+      "trace": {
+        "n6": [
+          "e1",
+          "e2",
+          "e10"
+        ],
+        "n10": [
+          "e1",
+          "e3"
+        ],
+        "n1": [
+          "e2"
+        ],
+        "n11": [
+          "e4",
+          "e9",
+          "e10",
+          "e12",
+          "e14"
+        ],
+        "n12": [
+          "e5",
+          "e16",
+          "e17",
+          "e18",
+          "e20",
+          "e38",
+          "e44"
+        ],
+        "n13": [
+          "e6",
+          "e27",
+          "e36",
+          "e39"
+        ],
+        "n14": [
+          "e7",
+          "e13",
+          "e19",
+          "e40",
+          "e41",
+          "e42",
+          "e43",
+          "e45"
+        ],
+        "n32": [
+          "e8",
+          "e46",
+          "e47",
+          "e48",
+          "e49"
+        ],
+        "n23": [
+          "e8",
+          "e25",
+          "e45"
+        ],
+        "n16": [
+          "e10",
+          "e48"
+        ],
+        "n7": [
+          "e11",
+          "e37"
+        ],
+        "n21": [
+          "e11",
+          "e14",
+          "e24",
+          "e28",
+          "e39"
+        ],
+        "n15": [
+          "e12",
+          "e17",
+          "e21",
+          "e50"
+        ],
+        "n20": [
+          "e14",
+          "e24",
+          "e28"
+        ],
+        "n8": [
+          "e15",
+          "e20",
+          "e33"
+        ],
+        "n25": [
+          "e21",
+          "e26",
+          "e30",
+          "e31",
+          "e34",
+          "e35"
+        ],
+        "n26": [
+          "e21"
+        ],
+        "n31": [
+          "e22",
+          "e23"
+        ],
+        "n33": [
+          "e23",
+          "e41"
+        ],
+        "n22": [
+          "e24",
+          "e26",
+          "e28",
+          "e43"
+        ],
+        "n24": [
+          "e29",
+          "e30",
+          "e31",
+          "e32",
+          "e33"
+        ],
+        "n9": [
+          "e39"
+        ]
+      },
+      "checkpoint_id": "c2",
+      "mode": "full",
+      "audit": {
+        "totalElements": 117,
+        "tracedElements": 46,
+        "coveragePct": 39,
+        "nodeBreakdown": {
+          "n6": 3,
+          "n10": 2,
+          "n1": 1,
+          "n11": 5,
+          "n12": 7,
+          "n13": 4,
+          "n14": 8,
+          "n32": 5,
+          "n23": 2,
+          "n16": 2,
+          "n7": 2,
+          "n21": 5,
+          "n15": 4,
+          "n20": 3,
+          "n8": 1,
+          "n25": 6,
+          "n26": 1,
+          "n33": 2,
+          "n31": 1,
+          "n22": 4,
+          "n24": 4,
+          "n9": 1
+        },
+        "untracedNodes": [
+          "n2",
+          "n3",
+          "n4",
+          "n5",
+          "n17",
+          "n18",
+          "n19",
+          "n27",
+          "n28",
+          "n29",
+          "n30",
+          "n34"
+        ]
+      },
+      "quality": {
+        "score": 80,
+        "assumedNotes": 0,
+        "placeholders": 0,
+        "deadLinks": 0,
+        "buttonsWithoutText": 0,
+        "imagesWithoutAlt": 0,
+        "inputsWithoutLabel": 1,
+        "hasViewportMeta": true,
+        "hasTitle": true,
+        "inlineScriptCount": 1,
+        "externalScripts": 1,
+        "issues": [
+          "Contains 1 external script tag(s); apps should be self-contained",
+          "Found 1 input(s) with no associated label, aria-label, or placeholder"
+        ]
+      }
+    },
+    {
+      "id": "b2",
+      "status": "error",
+      "html": "",
+      "trace": {},
+      "checkpoint_id": "c3",
+      "request": {
+        "base": "b1",
+        "instruction": "I dont like this title.",
+        "el": "e10",
+        "nodes": [
+          "n11",
+          "n6",
+          "n16"
+        ],
+        "snippet": "<div data-mc-el=\"e10\" data-mc=\"n11 n6 n16\" class=\"mc-hover mc-edit\">\n      <h1>See what Claude <em>actually</em> understood from your prompt.</h1>\n      <p class=\"muted\" style=\"font-size:16px\">Hackathon clock is ticking. Paste a prompt, get it split into requirements, and spot every assumption before it becomes wasted code. Approve, correct, then generate a starter codebase your whole team agreed on.</p>\n      <div class=\"legend\" style=\"margin: 16px 0px; font-size: 8px;\" data-mc-el=\"e11\" data-mc=\"n7 n21\">\n        <span><i class=\"dot s-user\"></i>From your prompt</span><span><i class=\"dot s-inferred\"></i>Inferred default</span><span><i class=\"dot s-unknown\"></i>Unknown, needs a decision</span>\n      </div>\n      <div class=\"row\">\n        <button class=\"btn pri\" id=\"ctaStart\" data-mc-el=\"e12\" data-mc=\"n11 n15\">Deconstruct a prompt →</button>\n        <button class=\"btn\" id=\"ctaDash\" data-mc-el=\"e13\" data-mc=\"n14\">Open team dashboard</button>\n      </div>\n    </div>"
+      },
+      "error": "The OpenRouter API key was rejected. Check OPENROUTER_API_KEY in the Netlify environment variables."
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "label": "Turn 1: 34 bubbles changed",
+      "turn": 1,
+      "map": {
+        "nodes": [
+          {
+            "id": "n1",
+            "label": "Prompt deconstruction for hackathon teams",
+            "detail": "Reveal Claude's understanding and assumptions of prompts",
+            "kind": "goal",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": null,
+            "evidence": [
+              "Deconstruct your prompt to understand it"
+            ],
+            "turn": 1,
+            "facet": "goal"
+          },
+          {
+            "id": "n2",
+            "label": "Design",
+            "detail": "Look, feel and screens",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n3",
+            "label": "Audience",
+            "detail": "Who uses it and why",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n4",
+            "label": "Functionality",
+            "detail": "What it does and runs on",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n5",
+            "label": "Cost",
+            "detail": "Running and growth spend",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n6",
+            "label": "Brand: transparent, fast, hacker-friendly",
+            "detail": "Builds trust by exposing AI reasoning",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n7",
+            "label": "Color: dark with neon accents",
+            "detail": "Color-code user, inferred and unknown items",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n8",
+            "label": "Font: Inter plus monospace",
+            "detail": "Mono font for prompt text",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n9",
+            "label": "Size: desktop-first dense canvas",
+            "detail": "Laptop use during hackathons; mobile secondary",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n10",
+            "label": "Pages: four core screens",
+            "detail": "Landing, workspace, map, dashboard",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n11",
+            "label": "Landing page",
+            "detail": "Header, pitch, example deconstruction, CTA",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n12",
+            "label": "Prompt input workspace",
+            "detail": "Write or paste a prompt and analyze it",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n13",
+            "label": "Assumption map view",
+            "detail": "Visual breakdown of understanding and assumptions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n14",
+            "label": "Team project dashboard",
+            "detail": "Team's saved prompts and sessions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n15",
+            "label": "Usability: minimal, one-step analyze",
+            "detail": "Paste a prompt and get a breakdown instantly",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n16",
+            "label": "Users: hackathon teams",
+            "detail": "Small teams building under time pressure",
+            "kind": "constraint",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [
+              "for hackathon teams"
+            ],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n17",
+            "label": "Market: hackathon and AI builders",
+            "detail": "Hackathon participants, expanding to AI-assisted devs",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n18",
+            "label": "Research: interview hackathon participants",
+            "detail": "Find where prompts get misread",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n19",
+            "label": "Features: prompt analysis toolkit",
+            "detail": "Core deconstruction plus team workflow",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n20",
+            "label": "Prompt deconstruction",
+            "detail": "Split prompt into structured requirement parts",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Deconstruct your prompt"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n21",
+            "label": "Assumption surfacing",
+            "detail": "Show what Claude understood and assumed",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Claude’s understanding and assumptions"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n22",
+            "label": "Approve or edit assumptions",
+            "detail": "Users confirm or correct each item",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n23",
+            "label": "Shared team sessions",
+            "detail": "Teammates review the same breakdown",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.6,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n24",
+            "label": "Output: analysis or codegen?",
+            "detail": "Export a refined prompt or build the code?",
+            "kind": "feature",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n25",
+            "label": "Buttons: Analyze, Approve, Export",
+            "detail": "Primary actions on the workspace",
+            "kind": "component",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n26",
+            "label": "AI integration: Claude analyzes prompts",
+            "detail": "LLM returns structured assumptions",
+            "kind": "api",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [
+              "Claude’s understanding"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n27",
+            "label": "Storage: Postgres",
+            "detail": "Teams, prompts, maps and nodes",
+            "kind": "data",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n28",
+            "label": "Hosting: Vercel serverless + DB",
+            "detail": "Next.js frontend and API routes",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n29",
+            "label": "Scale: hundreds of users initially",
+            "detail": "Spikes during hackathon weekends",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n30",
+            "label": "APIs: AI plus auth",
+            "detail": "Few paid external services",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n31",
+            "label": "Anthropic Claude API",
+            "detail": "Pay-per-token prompt analysis",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n32",
+            "label": "Login: how do teams sign in?",
+            "detail": "GitHub OAuth, magic link or none?",
+            "kind": "api",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n33",
+            "label": "AI usage: per-analysis token spend",
+            "detail": "Roughly cents per prompt; cap free use",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n34",
+            "label": "Advertising: Devpost, Discord, sponsors",
+            "detail": "Low-cost community channels at hackathons",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          }
+        ],
+        "edges": [
+          {
+            "from": "n1",
+            "to": "n2",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n3",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n4",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n5",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n6",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n7",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n8",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n9",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n10",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n11",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n12",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n13",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n14",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n15",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n16",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n17",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n18",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n19",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n20",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n21",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n22",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n23",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n24",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n25",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n26",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n27",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n28",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n29",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n30",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n31",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n32",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n33",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n34",
+            "relation": "has"
+          },
+          {
+            "from": "n16",
+            "to": "n6",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n15",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n34",
+            "relation": "informs"
+          },
+          {
+            "from": "n16",
+            "to": "n19",
+            "relation": "informs"
+          },
+          {
+            "from": "n10",
+            "to": "n19",
+            "relation": "needs"
+          },
+          {
+            "from": "n19",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n28",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n29",
+            "to": "n28",
+            "relation": "informs"
+          },
+          {
+            "from": "n26",
+            "to": "n33",
+            "relation": "informs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "c2",
+      "label": "Build b1",
+      "turn": 1,
+      "map": {
+        "nodes": [
+          {
+            "id": "n1",
+            "label": "Prompt deconstruction for hackathon teams",
+            "detail": "Reveal Claude's understanding and assumptions of prompts",
+            "kind": "goal",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": null,
+            "evidence": [
+              "Deconstruct your prompt to understand it"
+            ],
+            "turn": 1,
+            "facet": "goal"
+          },
+          {
+            "id": "n2",
+            "label": "Design",
+            "detail": "Look, feel and screens",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n3",
+            "label": "Audience",
+            "detail": "Who uses it and why",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n4",
+            "label": "Functionality",
+            "detail": "What it does and runs on",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n5",
+            "label": "Cost",
+            "detail": "Running and growth spend",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n6",
+            "label": "Brand: transparent, fast, hacker-friendly",
+            "detail": "Builds trust by exposing AI reasoning",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n7",
+            "label": "Color: dark with neon accents",
+            "detail": "Color-code user, inferred and unknown items",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n8",
+            "label": "Font: Inter plus monospace",
+            "detail": "Mono font for prompt text",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n9",
+            "label": "Size: desktop-first dense canvas",
+            "detail": "Laptop use during hackathons; mobile secondary",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n10",
+            "label": "Pages: four core screens",
+            "detail": "Landing, workspace, map, dashboard",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n11",
+            "label": "Landing page",
+            "detail": "Header, pitch, example deconstruction, CTA",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n12",
+            "label": "Prompt input workspace",
+            "detail": "Write or paste a prompt and analyze it",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n13",
+            "label": "Assumption map view",
+            "detail": "Visual breakdown of understanding and assumptions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n14",
+            "label": "Team project dashboard",
+            "detail": "Team's saved prompts and sessions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n15",
+            "label": "Usability: minimal, one-step analyze",
+            "detail": "Paste a prompt and get a breakdown instantly",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n16",
+            "label": "Users: hackathon teams",
+            "detail": "Small teams building under time pressure",
+            "kind": "constraint",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [
+              "for hackathon teams"
+            ],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n17",
+            "label": "Market: hackathon and AI builders",
+            "detail": "Hackathon participants, expanding to AI-assisted devs",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n18",
+            "label": "Research: interview hackathon participants",
+            "detail": "Find where prompts get misread",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n19",
+            "label": "Features: prompt analysis toolkit",
+            "detail": "Core deconstruction plus team workflow",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n20",
+            "label": "Prompt deconstruction",
+            "detail": "Split prompt into structured requirement parts",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Deconstruct your prompt"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n21",
+            "label": "Assumption surfacing",
+            "detail": "Show what Claude understood and assumed",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Claude’s understanding and assumptions"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n22",
+            "label": "Approve or edit assumptions",
+            "detail": "Users confirm or correct each item",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n23",
+            "label": "Shared team sessions",
+            "detail": "Teammates review the same breakdown",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.6,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n24",
+            "label": "Output: code generation",
+            "detail": "Generates a starter codebase from the team's approved assumptions, with the refined prompt available as a secondary export.",
+            "kind": "feature",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 4,
+            "status": "approved",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n25",
+            "label": "Buttons: Analyze, Approve, Export",
+            "detail": "Primary actions on the workspace",
+            "kind": "component",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n26",
+            "label": "AI integration: Claude analyzes prompts",
+            "detail": "LLM returns structured assumptions",
+            "kind": "api",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [
+              "Claude’s understanding"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n27",
+            "label": "Storage: Postgres",
+            "detail": "Teams, prompts, maps and nodes",
+            "kind": "data",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n28",
+            "label": "Hosting: Vercel serverless + DB",
+            "detail": "Next.js frontend and API routes",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n29",
+            "label": "Scale: hundreds of users initially",
+            "detail": "Spikes during hackathon weekends",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n30",
+            "label": "APIs: AI plus auth",
+            "detail": "Few paid external services",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n31",
+            "label": "Anthropic Claude API",
+            "detail": "Pay-per-token prompt analysis",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n32",
+            "label": "Login: how do teams sign in?",
+            "detail": "GitHub OAuth, magic link or none?",
+            "kind": "api",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n33",
+            "label": "AI usage: per-analysis token spend",
+            "detail": "Roughly cents per prompt; cap free use",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n34",
+            "label": "Advertising: Devpost, Discord, sponsors",
+            "detail": "Low-cost community channels at hackathons",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          }
+        ],
+        "edges": [
+          {
+            "from": "n1",
+            "to": "n2",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n3",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n4",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n5",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n6",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n7",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n8",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n9",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n10",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n11",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n12",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n13",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n14",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n15",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n16",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n17",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n18",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n19",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n20",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n21",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n22",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n23",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n24",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n25",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n26",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n27",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n28",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n29",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n30",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n31",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n32",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n33",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n34",
+            "relation": "has"
+          },
+          {
+            "from": "n16",
+            "to": "n6",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n15",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n34",
+            "relation": "informs"
+          },
+          {
+            "from": "n16",
+            "to": "n19",
+            "relation": "informs"
+          },
+          {
+            "from": "n10",
+            "to": "n19",
+            "relation": "needs"
+          },
+          {
+            "from": "n19",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n28",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n29",
+            "to": "n28",
+            "relation": "informs"
+          },
+          {
+            "from": "n26",
+            "to": "n33",
+            "relation": "informs"
+          }
+        ]
+      },
+      "build_id": "b1"
+    },
+    {
+      "id": "c3",
+      "label": "Edit b2: I dont like this title.",
+      "turn": 1,
+      "map": {
+        "nodes": [
+          {
+            "id": "n1",
+            "label": "Prompt deconstruction for hackathon teams",
+            "detail": "Reveal Claude's understanding and assumptions of prompts",
+            "kind": "goal",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": null,
+            "evidence": [
+              "Deconstruct your prompt to understand it"
+            ],
+            "turn": 1,
+            "facet": "goal"
+          },
+          {
+            "id": "n2",
+            "label": "Design",
+            "detail": "Look, feel and screens",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n3",
+            "label": "Audience",
+            "detail": "Who uses it and why",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n4",
+            "label": "Functionality",
+            "detail": "What it does and runs on",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n5",
+            "label": "Cost",
+            "detail": "Running and growth spend",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n1",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n6",
+            "label": "Brand: transparent, fast, hacker-friendly",
+            "detail": "Builds trust by exposing AI reasoning",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n7",
+            "label": "Color: dark with neon accents",
+            "detail": "Color-code user, inferred and unknown items",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n8",
+            "label": "Font: Inter plus monospace",
+            "detail": "Mono font for prompt text",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n9",
+            "label": "Size: desktop-first dense canvas",
+            "detail": "Laptop use during hackathons; mobile secondary",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n10",
+            "label": "Pages: four core screens",
+            "detail": "Landing, workspace, map, dashboard",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n11",
+            "label": "Landing page",
+            "detail": "Header, pitch, example deconstruction, CTA",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n12",
+            "label": "Prompt input workspace",
+            "detail": "Write or paste a prompt and analyze it",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n13",
+            "label": "Assumption map view",
+            "detail": "Visual breakdown of understanding and assumptions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n14",
+            "label": "Team project dashboard",
+            "detail": "Team's saved prompts and sessions",
+            "kind": "page",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n10",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n15",
+            "label": "Usability: minimal, one-step analyze",
+            "detail": "Paste a prompt and get a breakdown instantly",
+            "kind": "style",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n2",
+            "evidence": [],
+            "turn": 1,
+            "facet": "design"
+          },
+          {
+            "id": "n16",
+            "label": "Users: hackathon teams",
+            "detail": "Small teams building under time pressure",
+            "kind": "constraint",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [
+              "for hackathon teams"
+            ],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n17",
+            "label": "Market: hackathon and AI builders",
+            "detail": "Hackathon participants, expanding to AI-assisted devs",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n18",
+            "label": "Research: interview hackathon participants",
+            "detail": "Find where prompts get misread",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.4,
+            "importance": 3,
+            "status": "approved",
+            "parent": "n3",
+            "evidence": [],
+            "turn": 1,
+            "facet": "audience"
+          },
+          {
+            "id": "n19",
+            "label": "Features: prompt analysis toolkit",
+            "detail": "Core deconstruction plus team workflow",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n20",
+            "label": "Prompt deconstruction",
+            "detail": "Split prompt into structured requirement parts",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Deconstruct your prompt"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n21",
+            "label": "Assumption surfacing",
+            "detail": "Show what Claude understood and assumed",
+            "kind": "feature",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [
+              "Claude’s understanding and assumptions"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n22",
+            "label": "Approve or edit assumptions",
+            "detail": "Users confirm or correct each item",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n23",
+            "label": "Shared team sessions",
+            "detail": "Teammates review the same breakdown",
+            "kind": "feature",
+            "source": "inferred",
+            "inventiveness": 0.6,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n24",
+            "label": "Output: code generation",
+            "detail": "Generates a starter codebase from the team's approved assumptions, with the refined prompt available as a secondary export.",
+            "kind": "feature",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 4,
+            "status": "approved",
+            "parent": "n19",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n25",
+            "label": "Buttons: Analyze, Approve, Export",
+            "detail": "Primary actions on the workspace",
+            "kind": "component",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n26",
+            "label": "AI integration: Claude analyzes prompts",
+            "detail": "LLM returns structured assumptions",
+            "kind": "api",
+            "source": "user",
+            "inventiveness": 0,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [
+              "Claude’s understanding"
+            ],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n27",
+            "label": "Storage: Postgres",
+            "detail": "Teams, prompts, maps and nodes",
+            "kind": "data",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 4,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n28",
+            "label": "Hosting: Vercel serverless + DB",
+            "detail": "Next.js frontend and API routes",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n29",
+            "label": "Scale: hundreds of users initially",
+            "detail": "Spikes during hackathon weekends",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.3,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n4",
+            "evidence": [],
+            "turn": 1,
+            "facet": "functionality"
+          },
+          {
+            "id": "n30",
+            "label": "APIs: AI plus auth",
+            "detail": "Few paid external services",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n31",
+            "label": "Anthropic Claude API",
+            "detail": "Pay-per-token prompt analysis",
+            "kind": "api",
+            "source": "inferred",
+            "inventiveness": 0.1,
+            "importance": 5,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n32",
+            "label": "Login: how do teams sign in?",
+            "detail": "GitHub OAuth, magic link or none?",
+            "kind": "api",
+            "source": "unknown",
+            "inventiveness": 0,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n30",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n33",
+            "label": "AI usage: per-analysis token spend",
+            "detail": "Roughly cents per prompt; cap free use",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.2,
+            "importance": 3,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          },
+          {
+            "id": "n34",
+            "label": "Advertising: Devpost, Discord, sponsors",
+            "detail": "Low-cost community channels at hackathons",
+            "kind": "constraint",
+            "source": "inferred",
+            "inventiveness": 0.5,
+            "importance": 2,
+            "status": "proposed",
+            "parent": "n5",
+            "evidence": [],
+            "turn": 1,
+            "facet": "cost"
+          }
+        ],
+        "edges": [
+          {
+            "from": "n1",
+            "to": "n2",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n3",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n4",
+            "relation": "has"
+          },
+          {
+            "from": "n1",
+            "to": "n5",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n6",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n7",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n8",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n9",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n10",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n11",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n12",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n13",
+            "relation": "has"
+          },
+          {
+            "from": "n10",
+            "to": "n14",
+            "relation": "has"
+          },
+          {
+            "from": "n2",
+            "to": "n15",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n16",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n17",
+            "relation": "has"
+          },
+          {
+            "from": "n3",
+            "to": "n18",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n19",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n20",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n21",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n22",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n23",
+            "relation": "has"
+          },
+          {
+            "from": "n19",
+            "to": "n24",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n25",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n26",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n27",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n28",
+            "relation": "has"
+          },
+          {
+            "from": "n4",
+            "to": "n29",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n30",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n31",
+            "relation": "has"
+          },
+          {
+            "from": "n30",
+            "to": "n32",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n33",
+            "relation": "has"
+          },
+          {
+            "from": "n5",
+            "to": "n34",
+            "relation": "has"
+          },
+          {
+            "from": "n16",
+            "to": "n6",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n15",
+            "relation": "informs"
+          },
+          {
+            "from": "n18",
+            "to": "n34",
+            "relation": "informs"
+          },
+          {
+            "from": "n16",
+            "to": "n19",
+            "relation": "informs"
+          },
+          {
+            "from": "n10",
+            "to": "n19",
+            "relation": "needs"
+          },
+          {
+            "from": "n19",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n28",
+            "to": "n30",
+            "relation": "informs"
+          },
+          {
+            "from": "n29",
+            "to": "n28",
+            "relation": "informs"
+          },
+          {
+            "from": "n26",
+            "to": "n33",
+            "relation": "informs"
+          }
+        ]
+      },
+      "build_id": "b2"
+    }
+  ],
+  "next_node_seq": 35,
+  "turn": {
+    "status": "done",
+    "changed": [
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+      "n6",
+      "n7",
+      "n8",
+      "n9",
+      "n10",
+      "n11",
+      "n12",
+      "n13",
+      "n14",
+      "n15",
+      "n16",
+      "n17",
+      "n18",
+      "n19",
+      "n20",
+      "n21",
+      "n22",
+      "n23",
+      "n24",
+      "n25",
+      "n26",
+      "n27",
+      "n28",
+      "n29",
+      "n30",
+      "n31",
+      "n32",
+      "n33",
+      "n34"
+    ],
+    "started_at": 1794087648802
+  },
+  "last_turn_at": 1794087648802,
+  "last_build_at": 1794153679147
+}
