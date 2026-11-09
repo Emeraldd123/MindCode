@@ -368,7 +368,7 @@ export default function NodeDrawer({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={saveEdit}
             onKeyDown={editKeyDown}
-            aria-label="Bubble detail"
+            aria-label="Edit bubble detail"
             placeholder="Describe this bubble (Ctrl+Enter to save)"
             className="w-full resize-none rounded-md border border-ai/50 bg-raised px-2 py-1.5 font-serif text-[14.5px] leading-relaxed text-foreground outline-none"
           />
