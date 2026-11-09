@@ -103,7 +103,7 @@ function Drafts({ drafts, pick, onPick, onAdd }) {
             setWriting(false);
           }}
         >
-          <input autoFocus value={text} onChange={(e) => setText(e.target.value)} onBlur={() => setWriting(false)} placeholder="Your own…" />
+          <input autoFocus value={text} onChange={(e) => setText(e.target.value)} onBlur={() => setWriting(false)} placeholder="Your own…" aria-label="Write your own idea" />
         </form>
       ) : (
         <button type="button" className="dr-link" onClick={() => setWriting(true)}>+ Write my own</button>

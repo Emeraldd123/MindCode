@@ -296,6 +296,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                 type="button"
                 className={`mode-btn ${viewMode === 'desktop' ? 'active' : ''}`}
                 onClick={() => setViewMode('desktop')}
+                aria-pressed={viewMode === 'desktop'}
                 title="Desktop view"
               >
                 Desktop
@@ -304,6 +305,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                 type="button"
                 className={`mode-btn ${viewMode === 'mobile' ? 'active' : ''}`}
                 onClick={() => setViewMode('mobile')}
+                aria-pressed={viewMode === 'mobile'}
                 title="Mobile view (390px)"
               >
                 Mobile
@@ -320,6 +322,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               className="preview-download"
               href={api.getBuildDownloadUrl(sessionId, shown.id)}
               download={`mindcode-${shown.id}.html`}
+              aria-label="Download standalone HTML"
               title="Download standalone app HTML"
             >
               ↓
@@ -329,6 +332,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
             className="build-btn"
             onClick={() => handleBuild(false)}
             disabled={!canBuild || isCoolingDown}
+            aria-busy={pending}
             title={isCoolingDown ? formatCooldown(cooldownSeconds) : !canBuild ? 'Describe your app first' : shown ? 'Apply your map changes (small changes are patched in seconds)' : 'Generate the app from the map'}
           >
             {isCoolingDown ? formatCooldown(cooldownSeconds) : pending ? 'Building…' : shown ? '⚡ Update' : '⚡ Build App'}
@@ -339,6 +343,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               className="preview-download"
               onClick={() => handleBuild(true)}
               disabled={!canBuild || isCoolingDown}
+              aria-label="Regenerate whole app"
               title={isCoolingDown ? formatCooldown(cooldownSeconds) : "Regenerate the whole app from the map (slower)"}
             >
               Full
@@ -588,6 +593,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               onChange={(e) => setEditText(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) sendEdit(e); }}
               placeholder="e.g. make this button scroll to the projects"
+              aria-label="Describe requested changes"
               className="w-full resize-none rounded-lg border border-hairline bg-background px-2.5 py-2 font-sans text-[13px] text-foreground outline-none placeholder:text-dim focus:border-ai/50"
               disabled={editSending}
             />
@@ -596,6 +602,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               <button
                 type="submit"
                 disabled={!editText.trim() || editSending || isCoolingDown}
+                aria-busy={editSending}
                 className="cursor-pointer rounded-md border-0 bg-ai px-3 py-1.5 text-xs font-semibold text-[#0b1a14] disabled:cursor-default disabled:opacity-40"
               >
                 {isCoolingDown ? formatCooldown(cooldownSeconds) : editSending ? 'Sending…' : 'Request change'}
