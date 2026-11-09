@@ -564,6 +564,7 @@ export default function NodeDrawer({
                   disabled={actionLoading}
                   className="flex cursor-pointer items-start gap-2 rounded-md border border-dashed border-ai/50 bg-transparent px-2.5 py-1.5 text-left font-sans text-[12.5px] text-foreground hover:bg-ai/10 disabled:opacity-50"
                   title="Add as a child bubble"
+                  aria-label={`Add ${sg.label} as a child bubble`}
                 >
                   <Plus className="mt-0.5 size-3.5 shrink-0 text-ai" />
                   <span>

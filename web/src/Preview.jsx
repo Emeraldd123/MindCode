@@ -321,6 +321,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               href={api.getBuildDownloadUrl(sessionId, shown.id)}
               download={`mindcode-${shown.id}.html`}
               title="Download standalone app HTML"
+              aria-label="Download standalone app HTML"
             >
               ↓
             </a>
@@ -340,6 +341,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               onClick={() => handleBuild(true)}
               disabled={!canBuild || isCoolingDown}
               title={isCoolingDown ? formatCooldown(cooldownSeconds) : "Regenerate the whole app from the map (slower)"}
+              aria-label="Regenerate the whole app from the map"
             >
               Full
             </button>
@@ -532,7 +534,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               <h4>Build Failed</h4>
             </div>
             <p className="error-text">{lastError.error || 'An unexpected error occurred during build.'}</p>
-            <button type="button" className="retry-btn" onClick={() => handleBuild(true)} disabled={!canBuild}>
+            <button type="button" className="retry-btn" onClick={() => handleBuild(true)} disabled={!canBuild} aria-label="Retry build">
               Retry build
             </button>
           </div>

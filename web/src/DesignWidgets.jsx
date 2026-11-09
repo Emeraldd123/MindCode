@@ -91,6 +91,7 @@ export default function DesignWidgets({ sessionId, node, map, onError = () => {}
                 className="min-w-0 truncate border-0 bg-transparent p-0 text-left text-[12.5px] font-medium text-foreground shadow-none hover:underline"
                 style={{ background: 'transparent', border: 0, padding: 0, color: 'inherit' }}
                 title="Show in the preview"
+                aria-label={`Flash element ${it.el}`}
                 onClick={() => flashElement(it.el)}
               >
                 {elementLabel(it)}
