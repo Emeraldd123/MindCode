@@ -6,7 +6,8 @@
     "test": "node node_modules/vitest/vitest.mjs run",
     "test:smoke": "node node_modules/vitest/vitest.mjs run api/smoke.test.ts",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
-    "dev": "netlify dev"
+    "dev": "netlify dev",
+    "postinstall": "npm install --prefix web"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8"
