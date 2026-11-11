@@ -404,10 +404,10 @@ export default function NodeDrawer({
 
         {/* Shape the map yourself: add, connect, delete */}
         <div className="flex gap-1.5">
-          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'child' ? null : 'child')} title="Add a bubble under this one">
+          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'child' ? null : 'child')} title="Add a bubble under this one" aria-expanded={panel === 'child'}>
             <Plus /> Add child
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'connect' ? null : 'connect')} disabled={!otherNodes.length} title="Link this bubble to another">
+          <Button variant="ghost" size="sm" onClick={() => setPanel(panel === 'connect' ? null : 'connect')} disabled={!otherNodes.length} title="Link this bubble to another" aria-expanded={panel === 'connect'}>
             <Link2 /> Connect
           </Button>
           <Button variant="ghost" size="sm" className="ml-auto hover:text-unknown" onClick={handleDelete} disabled={actionLoading} title="Delete this bubble" aria-label="Delete bubble">

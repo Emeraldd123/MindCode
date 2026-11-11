@@ -297,6 +297,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                 className={`mode-btn ${viewMode === 'desktop' ? 'active' : ''}`}
                 onClick={() => setViewMode('desktop')}
                 title="Desktop view"
+                aria-pressed={viewMode === 'desktop'}
               >
                 Desktop
               </button>
@@ -305,6 +306,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
                 className={`mode-btn ${viewMode === 'mobile' ? 'active' : ''}`}
                 onClick={() => setViewMode('mobile')}
                 title="Mobile view (390px)"
+                aria-pressed={viewMode === 'mobile'}
               >
                 Mobile
               </button>
@@ -321,6 +323,7 @@ export default function Preview({ sessionId, map, builds = [], setBuilds, buildI
               href={api.getBuildDownloadUrl(sessionId, shown.id)}
               download={`mindcode-${shown.id}.html`}
               title="Download standalone app HTML"
+              aria-label="Download standalone app HTML"
             >
               ↓
             </a>

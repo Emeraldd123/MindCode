@@ -183,7 +183,7 @@ export default function Chat({
             })}
 
             {loading && (
-              <div className="flex items-center gap-1.5 py-1" aria-label="Claude is thinking">
+              <div className="flex items-center gap-1.5 py-1" aria-label="Claude is thinking" role="status" aria-live="polite">
                 {[0, 1, 2].map((i) => (
                   <span
                     key={i}

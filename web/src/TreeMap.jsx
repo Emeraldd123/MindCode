@@ -64,6 +64,7 @@ function BubbleNode({ data }) {
           className="flex w-6 shrink-0 cursor-pointer items-center justify-center border-0 border-l border-hairline bg-transparent text-dim hover:bg-accent hover:text-foreground"
           title={collapsed ? 'Expand branch' : 'Collapse branch'}
           aria-label={collapsed ? 'Expand branch' : 'Collapse branch'}
+          aria-expanded={!collapsed}
         >
           {collapsed ? <Plus className="size-3" /> : <Minus className="size-3" />}
         </button>
